@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reservation Form</title>
+</head>
+<body>
+    <h2>Reservation Form</h2>
+    <form method="post" action="{% url 'reservation_view' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Submit Reservation">
+    </form>
+
+    <h3>Available Hosts</h3>
+    <ul>
+        {% for host in hosts %}
+            <li>{{ host.host_name }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
