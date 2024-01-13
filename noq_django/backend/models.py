@@ -33,7 +33,7 @@ class Reservation(models.Model):
     host = models.ForeignKey(Host, on_delete=models.CASCADE, blank=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    update_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
         return f"{self.host} {self.user_id} {self.start_date}"
