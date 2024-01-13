@@ -5,8 +5,8 @@ from datetime import datetime
 
 class Host(models.Model):
     name = models.CharField(max_length=80)
-    address1 = models.CharField(max_length=80)
-    address2 = models.CharField(max_length=80)
+    street = models.CharField(max_length=80)
+    city = models.CharField(max_length=80)
     count_of_available_places = models.IntegerField()
     total_available_places = models.IntegerField()
 
@@ -14,7 +14,9 @@ class Host(models.Model):
         db_table = "hosts"
 
     def __str__(self) -> str:
-        return f"{self.name} {self.address1}, {self.address2}"
+        rsrv_count = Reservation.objects.filter(host=self).count()
+        
+        return f"{self.name}, {self.city} ({rsrv_count})"
 
 
 class User(models.Model):
@@ -50,22 +52,26 @@ class Reservation(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
-        return f"{self.start_date} {self.user.name} på {self.host.name}"
+        return f"{self.start_date} {self.user.name} [{self.host.name} {self.host.city}]"
     
     class Meta:
         db_table = "reservations"
         
     
     def save(self, *args, **kwargs):
+
+        nbr_available = self.host.total_available_places
+        
+        booked = Reservation.objects.filter(host=self.host, start_date = self.start_date).count()
+        
+        if booked + 1 >nbr_available:
+            raise ValidationError(("Host is fully booked"), code="full")
+
         # Check if there is another reservation for the same user and date
         existing_reservation = Reservation.objects.filter(user=self.user, start_date=self.start_date).first()
         
         if existing_reservation:
-            # Raise a validation error or handle it as per your requirement
             raise ValidationError(("User already has a reservation for the same date."), code="already_booked")
-        
-
-
 
         super().save(*args, **kwargs)
 
