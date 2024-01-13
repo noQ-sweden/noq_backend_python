@@ -8,9 +8,8 @@ class Host(models.Model):
     count_of_available_places = models.IntegerField()
     total_available_places = models.IntegerField()
 
-#    class Meta:
-#        db_table = "hosts"
-#        managed = True
+    class Meta:
+        db_table = "hosts"
 
     def __str__(self) -> str:
         return f"{self.name} {self.address1}, {self.address2}"
@@ -21,6 +20,8 @@ class User(models.Model):
     phone = models.CharField(max_length=100)
     email = models.CharField(max_length=100)
     unokod = models.CharField(max_length=20)
+    class Meta:
+        db_table = "users"
 
     def __str__(self) -> str:
         return f"{self.name} {self.unokod}"
@@ -36,6 +37,10 @@ class Reservation(models.Model):
 
     def __str__(self) -> str:
         return f"{self.host} {self.user_id} {self.start_date}"
+    
+    class Meta:
+        db_table = "reservations"
+
 
 
 class Room(models.Model):
@@ -44,3 +49,6 @@ class Room(models.Model):
     host = models.ForeignKey(Host, on_delete=models.CASCADE, blank=False)
     # active for future use to track if room is possible to book
     # effective_date for future use to track active status
+   
+    class Meta:
+        db_table = "rooms"
