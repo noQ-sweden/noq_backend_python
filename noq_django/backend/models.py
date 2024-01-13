@@ -28,11 +28,11 @@ class User(models.Model):
         
     def first_reservation(self):
         """Första bokningen för denne user"""
-        first_booking = Reservation.objects.filter(user=self).order_by('-start_date').first()
+        first_booking = Reservation.objects.filter(user=self).order_by('start_date').first()
         return first_booking.booking_date if first_booking else None
 
     def __str__(self) -> str:
-        rsrv = Reservation.objects.filter(user=self).first()
+        rsrv = Reservation.objects.filter(user=self).order_by('-start_date').first()
         
         startdate = ""
         if rsrv:
