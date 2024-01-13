@@ -27,16 +27,17 @@ class User(models.Model):
         db_table = "users"
         
     def first_reservation(self):
-        first_booking = Reservation.objects.filter(user=self).order_by('start_date').first()
+        """Första bokningen för denne user"""
+        first_booking = Reservation.objects.filter(user=self).order_by('-start_date').first()
         return first_booking.booking_date if first_booking else None
 
     def __str__(self) -> str:
-        first_booking = Reservation.objects.filter(user=self).first()
+        rsrv = Reservation.objects.filter(user=self).first()
         
         startdate = ""
-        if first_booking:
-            startdate = first_booking.start_date
-            # return f"{self.name} {first_booking.start_date}"
+        if rsrv:
+            startdate = rsrv.start_date
+            
         return f"{self.name} ({startdate})"
 
 
@@ -63,7 +64,7 @@ class Reservation(models.Model):
             # Raise a validation error or handle it as per your requirement
             raise ValidationError(("User already has a reservation for the same date."), code="already_booked")
         
-        #             raise ValidationError(_("User already has a reservation for the same date."), code="invalid"))
+
 
 
         super().save(*args, **kwargs)
