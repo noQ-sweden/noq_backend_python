@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+from datetime import datetime
 
 
 class Host(models.Model):
@@ -20,11 +22,22 @@ class User(models.Model):
     phone = models.CharField(max_length=100)
     email = models.CharField(max_length=100)
     unokod = models.CharField(max_length=20)
+    
     class Meta:
         db_table = "users"
+        
+    def first_reservation(self):
+        first_booking = Reservation.objects.filter(user=self).order_by('start_date').first()
+        return first_booking.booking_date if first_booking else None
 
     def __str__(self) -> str:
-        return f"{self.name} {self.unokod}"
+        first_booking = Reservation.objects.filter(user=self).first()
+        
+        startdate = ""
+        if first_booking:
+            startdate = first_booking.start_date
+            # return f"{self.name} {first_booking.start_date}"
+        return f"{self.name} ({startdate})"
 
 
 class Reservation(models.Model):
@@ -36,10 +49,24 @@ class Reservation(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
-        return f"{self.host} {self.user_id} {self.start_date}"
+        return f"{self.start_date} {self.user.name} på {self.host.name}"
     
     class Meta:
         db_table = "reservations"
+        
+    
+    def save(self, *args, **kwargs):
+        # Check if there is another reservation for the same user and date
+        existing_reservation = Reservation.objects.filter(user=self.user, start_date=self.start_date).first()
+        
+        if existing_reservation:
+            # Raise a validation error or handle it as per your requirement
+            raise ValidationError(("User already has a reservation for the same date."), code="already_booked")
+        
+        #             raise ValidationError(_("User already has a reservation for the same date."), code="invalid"))
+
+
+        super().save(*args, **kwargs)
 
 
 
