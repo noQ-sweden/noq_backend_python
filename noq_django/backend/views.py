@@ -6,8 +6,7 @@ from . import forms
 
 
 def index(request):
-    return HttpResponse("Welcome to NoQ")
-
+    return render(request, "index.html")
 
 def reservation_view(request):
     if request.method == "POST":
@@ -21,3 +20,18 @@ def reservation_view(request):
         form = forms.ReservationForm()
     myhosts = models.Host.objects.all()
     return render(request, "reservation.html", {"form": form, "hosts": myhosts})
+
+
+def user_view(request):
+    if request.method == "POST":
+        form = forms.ReservationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect(
+                "success_page"
+            )  # Redirect to a success page or another appropriate URL
+    else:
+        form = forms.ReservationForm()
+    myhosts = models.Host.objects.all()
+    return render(request, "reservation.html", {"form": form, "hosts": myhosts})
+

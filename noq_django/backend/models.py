@@ -14,32 +14,38 @@ class Host(models.Model):
 
     def __str__(self) -> str:
         rsrv_count = Reservation.objects.filter(host=self).count()
-        
-        return f"{self.name}, {self.city}: {self.total_available_places} platser ({rsrv_count} bokade)"
+
+        return f"{self.name}, {self.city}: {self.total_available_places} platser ({rsrv_count} reserverade totalt)"
+
 
 
 class User(models.Model):
-    name = models.CharField(max_length=100)
+    first_name = models.CharField(max_length=32)
+    last_name = models.CharField(max_length=32)
+    gender = models.CharField(max_length=1, default=None, blank=True) # [('N','-'),('M', 'Man'), ('F', 'Kvinna')]
     phone = models.CharField(max_length=100)
+
     email = models.CharField(max_length=100)
     unokod = models.CharField(max_length=20)
-    
+
     class Meta:
         db_table = "users"
         
     def first_reservation(self):
         """Första bokningen för denne user"""
-        first_booking = Reservation.objects.filter(user=self).order_by('start_date').first()
+        first_booking = (
+            Reservation.objects.filter(user=self).order_by("start_date").first()
+        )
         return first_booking.booking_date if first_booking else None
 
     def __str__(self) -> str:
-        rsrv = Reservation.objects.filter(user=self).order_by('-start_date').first()
-        
+        rsrv = Reservation.objects.filter(user=self).order_by("-start_date").first()
+
         startdate = ""
         if rsrv:
             startdate = rsrv.start_date
-            
-        return f"{self.name} ({startdate})"
+
+        return f"{self.first_name} {self.last_name} ({startdate})"
 
 
 class Reservation(models.Model):
@@ -51,37 +57,86 @@ class Reservation(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
-        return f"{self.start_date} {self.user.name} [{self.host.name} {self.host.city}]"
-    
+        return f"{self.start_date} {self.user.first_name} {self.user.last_name} [{self.host.name} {self.host.city}]"
+
     class Meta:
         db_table = "reservations"
-        
-    
-    def save(self, *args, **kwargs):
 
+    def save(self, *args, **kwargs):
         nbr_available = self.host.total_available_places
-        
-        booked = Reservation.objects.filter(host=self.host, start_date = self.start_date).count()
-        
-        if booked + 1 >nbr_available:
+
+        booked = Reservation.objects.filter(
+            host=self.host, start_date=self.start_date
+        ).count()
+
+        if booked + 1 > nbr_available:
             raise ValidationError(("Host is fully booked"), code="full")
 
         # Check if there is another reservation for the same user and date
-        existing_reservation = Reservation.objects.filter(user=self.user, start_date=self.start_date).first()
-        
+        existing_reservation = Reservation.objects.filter(
+            user=self.user, start_date=self.start_date
+        ).first()
+
         if existing_reservation:
-            raise ValidationError(("User already has a reservation for the same date."), code="already_booked")
+            raise ValidationError(
+                ("User already has a reservation for the same date."),
+                code="already_booked",
+            )
 
         super().save(*args, **kwargs)
 
 
-
 class Room(models.Model):
+    """
+    Ersätts av ProductBooking eftersom inte allt som bokas
+    är ett Room. Room passar inte för exempelvis Lunch
+    """
+
     description = models.CharField(max_length=100)
     total_places = models.IntegerField()
     host = models.ForeignKey(Host, on_delete=models.CASCADE, blank=False)
     # active for future use to track if room is possible to book
     # effective_date for future use to track active status
-   
+
+
+class Product(models.Model):
+    """
+    Product är en generalisering som möjliggör att ett härbärge
+    kan ha flera olika rumstyper och även annat som Lunch i gemenskap
+    """
+
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=100)
+    total_places = models.IntegerField()
+    host = models.ForeignKey(Host, on_delete=models.PROTECT, blank=True)
+
     class Meta:
-        db_table = "rooms"
+        db_table = "product"
+
+    def __str__(self) -> str:
+        return f"{self.user.first_name} {self.user.last_name} på {self.host.name} ({self.total_places} platser)"
+
+
+class ProductRule(models.Model):
+    name = models.CharField(max_length=40)
+    slug = models.CharField(max_length=12)  # Kortnamn exempelvis "women-only"
+    host = models.ForeignKey(Product, on_delete=models.PROTECT, blank=True)
+
+    class Meta:
+        db_table = "product_rule"
+
+    def __str__(self) -> str:
+        return f"{self.user.first_name} {self.user.last_name}"
+
+
+class ProductBooking(models.Model):
+    start_date = models.DateField()
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, blank=False)
+    host = models.ForeignKey(Host, on_delete=models.CASCADE, blank=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False)
+
+    class Meta:
+        db_table = "product_booking"
+
+    def __str__(self) -> str:
+        return f"{self.start_date} - {self.product.name} på {self.host.name}, {self.host.city} för {self.user.first_name} {self.user.last_name}"

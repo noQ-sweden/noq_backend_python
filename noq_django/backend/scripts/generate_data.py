@@ -47,23 +47,31 @@ def add_users(nbr: int):
     print("\n---- USERS ----")
     if len(User.objects.all())>=nbr:
         return
-
+    
     while len(User.objects.all())<nbr:
-        namn = faker.name()
         
-        if User.objects.filter(name=namn).values():
+        
+        gender = "M" if random.randint(0, 1) > 0 else "F"
+        
+        first_name:str = str(faker.first_name_female()) if gender == "M" else str(faker.first_name_male())
+        last_name:str = str(faker.last_name()),
+        
+        if User.objects.filter(first_name=first_name, last_name=last_name).values():
             continue
         
         user = User(
-            name=namn,
+            first_name=first_name,
+            last_name = last_name,
             phone="070" + f"{random.randint(0,9)}-{random.randint(121212,909090)}",
-            email=namn.lower().replace(" ", ".") + "@hotmejl.se",
+            email=f'{first_name}.{last_name}@hotmejl.se',
             unokod=f"{random.randint(1000,9999)}",
+            gender = gender
         )
         user.save()
 
 def add_reservations(nbr: int, days_ahead: int=3):
     faker = Faker("sv_SE")
+    faker.seed_instance()
     max_exceptions = 20
     exceptions = 0
 
@@ -96,5 +104,5 @@ def add_reservations(nbr: int, days_ahead: int=3):
 
 def run():
     add_hosts(7)
-    add_users(25)
-    add_reservations(100, 5)
+    add_users(12)
+    add_reservations(40, 7)
