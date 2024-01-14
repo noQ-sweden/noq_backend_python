@@ -7,7 +7,6 @@ class Host(models.Model):
     name = models.CharField(max_length=80)
     street = models.CharField(max_length=80)
     city = models.CharField(max_length=80)
-    count_of_available_places = models.IntegerField()
     total_available_places = models.IntegerField()
 
     class Meta:
@@ -16,7 +15,7 @@ class Host(models.Model):
     def __str__(self) -> str:
         rsrv_count = Reservation.objects.filter(host=self).count()
         
-        return f"{self.name}, {self.city} ({rsrv_count})"
+        return f"{self.name}, {self.city}: {self.total_available_places} platser ({rsrv_count} bokade)"
 
 
 class User(models.Model):
