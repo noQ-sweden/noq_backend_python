@@ -71,10 +71,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'noq_django.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# Temporärt bytt till sqlite under utvecklingen
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
