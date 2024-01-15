@@ -18,11 +18,12 @@ class Host(models.Model):
         return f"{self.name}, {self.city}: {self.total_available_places} platser ({rsrv_count} reserverade totalt)"
 
 
-
 class User(models.Model):
     first_name = models.CharField(max_length=32)
     last_name = models.CharField(max_length=32)
-    gender = models.CharField(max_length=1, default=None, blank=True) # [('N','-'),('M', 'Man'), ('F', 'Kvinna')]
+    gender = models.CharField(
+        max_length=1, default=None, blank=True
+    )  # [('N','-'),('M', 'Man'), ('F', 'Kvinna')]
     phone = models.CharField(max_length=100)
 
     email = models.CharField(max_length=100)
@@ -30,7 +31,7 @@ class User(models.Model):
 
     class Meta:
         db_table = "users"
-        
+
     def first_reservation(self):
         """Första bokningen för denne user"""
         first_booking = (
@@ -99,6 +100,17 @@ class Room(models.Model):
     # effective_date for future use to track active status
 
 
+class ProductRule(models.Model):
+    name = models.CharField(max_length=12)
+    description = models.CharField(max_length=40, default="")
+
+    class Meta:
+        db_table = "product_rule"
+
+    def __str__(self) -> str:
+        return f"{self.name} - {self.description}"
+
+
 class Product(models.Model):
     """
     Product är en generalisering som möjliggör att ett härbärge
@@ -109,24 +121,13 @@ class Product(models.Model):
     description = models.CharField(max_length=100)
     total_places = models.IntegerField()
     host = models.ForeignKey(Host, on_delete=models.PROTECT, blank=True)
+    product_rule = models.ForeignKey(ProductRule, on_delete=models.PROTECT, null=True, blank=True)
 
     class Meta:
         db_table = "product"
 
     def __str__(self) -> str:
-        return f"{self.user.first_name} {self.user.last_name} på {self.host.name} ({self.total_places} platser)"
-
-
-class ProductRule(models.Model):
-    name = models.CharField(max_length=40)
-    slug = models.CharField(max_length=12)  # Kortnamn exempelvis "women-only"
-    host = models.ForeignKey(Product, on_delete=models.PROTECT, blank=True)
-
-    class Meta:
-        db_table = "product_rule"
-
-    def __str__(self) -> str:
-        return f"{self.user.first_name} {self.user.last_name}"
+        return f"{self.name} ({self.total_places} platser)"
 
 
 class ProductBooking(models.Model):
