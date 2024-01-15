@@ -1,8 +1,22 @@
 # yourapp/forms.py
 
 from django import forms
-
+from datetime import datetime, timedelta
 from . import models
+
+
+class IndexForm(forms.Form):
+    idag = datetime.now() + timedelta(days=1)
+    datum = forms.DateField(initial=idag)
+
+    class Meta:
+        fields = ["datum"]
+
+
+class BookRoomForm(forms.Form):
+    namn = forms.CharField()
+    class Meta:
+        fields = ["host","user"]
 
 
 class ReservationForm(forms.ModelForm):
