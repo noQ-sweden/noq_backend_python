@@ -3,7 +3,7 @@
 from  icecream import ic
 import sys
 
-from backend.models import Host, Reservation, User, Product, ProductRule, ProductBooking
+from backend.models import Host, Reservation, User, Product, Region, ProductBooking
 
 def kontrollera(typ: str) -> bool:
     answer = input(f"Är du säker på att du vill ta bort alla {typ}?")
@@ -16,7 +16,7 @@ def count():
     
     ic(ProductBooking.objects.all().count())
     ic(Product.objects.all().count())
-    ic(ProductRule.objects.all().count())
+    # ic(Region.objects.all().count())
     
     ic(Host.objects.all().count())
     ic(User.objects.all().count())
@@ -41,10 +41,10 @@ def run():
             prd.delete()
             ic(prd, "borttagen")
 
-    if kontrollera("produktregler"):
-        for prd in ProductRule.objects.all():
-            prd.delete()
-            ic(prd, "borttagen")
+    # if kontrollera("regioner"):
+    #     for prd in Region.objects.all():
+    #         prd.delete()
+    #         ic(prd, "borttagen")
 
     if kontrollera("användare"):
         for user in User.objects.all():

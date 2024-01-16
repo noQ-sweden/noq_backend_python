@@ -1,14 +1,10 @@
-{% extends "base.html" %}
-
-{% block content %}
-<h2>Sök boende</h2>
+{% extends "base.html" %} {% block content %}
+<h2>Index</h2>
 <form method="post" action="{% url 'index_view' %}">
-    {% csrf_token %}
-    {{ form.as_p }}
-    {% for host in hosts %}
-    <p><a href="/book/{{ host.id }}">{{ host.name }} {{ host.city }}</a></p>
-    {% endfor %}
-    <input type="submit" value="Sök">
+  {% csrf_token %} {{ form.as_p }} {% for host in hosts %}
+  <p><a href="/book/{{ host.id }}">{{ host.host_name }} {{ host.city }}</a></p>
+  {% endfor %}
+  <input type="submit" value="Sök" />
 </form>
 
 {% endblock %}

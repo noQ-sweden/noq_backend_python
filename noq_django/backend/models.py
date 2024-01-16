@@ -3,10 +3,19 @@ from django.core.exceptions import ValidationError
 from datetime import datetime
 
 
+class Region(models.Model):
+    region_name = models.CharField(max_length=80)
+
+    class Meta:
+        db_table = "regions"
+
+
 class Host(models.Model):
-    name = models.CharField(max_length=80)
+    host_name = models.CharField(max_length=80)
     street = models.CharField(max_length=80)
-    city = models.CharField(max_length=80)
+    postcode = models.CharField(max_length=5, default="")
+    city = models.CharField(max_length=80, default="")
+    region = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=False)
     total_available_places = models.IntegerField()
 
     class Meta:
@@ -15,7 +24,7 @@ class Host(models.Model):
     def __str__(self) -> str:
         rsrv_count = Reservation.objects.filter(host=self).count()
 
-        return f"{self.name}, {self.city}: {self.total_available_places} platser ({rsrv_count} reserverade totalt)"
+        return f"{self.host_name}, {self.city}: {self.total_available_places} platser ({rsrv_count} reserverade totalt)"
 
 
 class User(models.Model):
@@ -24,10 +33,20 @@ class User(models.Model):
     gender = models.CharField(
         max_length=1, default=None, blank=True
     )  # [('N','-'),('M', 'Man'), ('F', 'Kvinna')]
-    phone = models.CharField(max_length=100)
+    street = models.CharField(max_length=80, default="")
+    postcode = models.CharField(max_length=5, default="")
 
-    email = models.CharField(max_length=100)
-    unokod = models.CharField(max_length=20)
+    city = models.CharField(max_length=80, default="")
+    country = models.CharField(max_length=25, default="")
+
+    phone = models.CharField(max_length=20)
+    email = models.CharField(max_length=40)
+
+    unokod = models.CharField(max_length=10)
+    day_of_birth = models.DateField(default=None, null=True)
+    personnr_lastnr = models.CharField(max_length=4, default="")
+
+    region = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=False)
 
     class Meta:
         db_table = "users"
@@ -58,7 +77,7 @@ class Reservation(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
-        return f"{self.start_date} {self.user.first_name} {self.user.last_name} [{self.host.name} {self.host.city}]"
+        return f"{self.start_date} {self.user.first_name} {self.user.last_name} [{self.host.host_name} {self.host.city}]"
 
     class Meta:
         db_table = "reservations"
@@ -87,30 +106,6 @@ class Reservation(models.Model):
         super().save(*args, **kwargs)
 
 
-class Room(models.Model):
-    """
-    Ersätts av ProductBooking eftersom inte allt som bokas
-    är ett Room. Room passar inte för exempelvis Lunch
-    """
-
-    description = models.CharField(max_length=100)
-    total_places = models.IntegerField()
-    host = models.ForeignKey(Host, on_delete=models.CASCADE, blank=False)
-    # active for future use to track if room is possible to book
-    # effective_date for future use to track active status
-
-
-class ProductRule(models.Model):
-    name = models.CharField(max_length=12)
-    description = models.CharField(max_length=40, default="")
-
-    class Meta:
-        db_table = "product_rule"
-
-    def __str__(self) -> str:
-        return f"{self.name} - {self.description}"
-
-
 class Product(models.Model):
     """
     Product är en generalisering som möjliggör att ett härbärge
@@ -121,13 +116,15 @@ class Product(models.Model):
     description = models.CharField(max_length=100)
     total_places = models.IntegerField()
     host = models.ForeignKey(Host, on_delete=models.PROTECT, blank=True)
-    product_rule = models.ForeignKey(ProductRule, on_delete=models.PROTECT, null=True, blank=True)
+    type = models.CharField(max_length=12, default="")  # ex "endast kvinnor"
 
     class Meta:
         db_table = "product"
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.total_places} platser)"
+        booking_count = ProductBooking.objects.filter(host=self).count()
+
+        return f"{self.description} ({self.total_places} platser på {self.host.host_name}, {self.host.city} ({booking_count} bokade)"
 
 
 class ProductBooking(models.Model):
@@ -140,4 +137,4 @@ class ProductBooking(models.Model):
         db_table = "product_booking"
 
     def __str__(self) -> str:
-        return f"{self.start_date} - {self.product.name} på {self.host.name}, {self.host.city} för {self.user.first_name} {self.user.last_name}"
+        return f"{self.start_date} - {self.product.name} på {self.host.host_name}, {self.host.city} för {self.user.first_name} {self.user.last_name}"

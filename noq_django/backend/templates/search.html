@@ -1,0 +1,16 @@
+{% extends "main.html" %} {% block sidebar %}
+<h3>Sök boende</h3>
+<form method="post" action="{% url 'index_view' %}">
+  {% csrf_token %} {{ form.as_p }}
+  <input type="submit" value="Sök" />
+  {% endblock %} {% block content %}
+  <form method="post" action="{% url 'index_view' %}">
+    {% csrf_token %} {% for host in hosts %}
+    <p>
+      <a href="/book/{{ host.id }}">{{ host.host_name }} {{ host.city }}</a>
+    </p>
+    {% endfor %}
+  </form>
+
+  {% endblock %}
+</form>

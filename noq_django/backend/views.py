@@ -8,13 +8,14 @@ from . import forms
 def index_view(request):
     myhosts = {}
     if request.method == "POST":
-        form = forms.IndexForm(request.POST)
+        form = forms.SearchForm(request.POST)
         if form.is_valid():
             # form.save()
             myhosts = models.Host.objects.all()
+            return render(request, "list.html", {"form": form, "hosts": myhosts})
     else:
         form = forms.IndexForm()
-    return render(request, "index.html", {"form": form, "hosts": myhosts})
+    return render(request, "search.html", {"form": form, "hosts": myhosts})
 
 
 def reservation_view(request):
@@ -38,11 +39,11 @@ def book_room_view(request, host_id):
     return host_id
     rooms = {}
     host = models.Host.objects.get(host_id)
-    name = host.name
+    name = host.host_name
     if request.method == "POST":
         form = forms.BookRoomForm(request.POST)
         if form.is_valid():
-           render(request, "book_room.html", {"form": form})
+            render(request, "book_room.html", {"form": form})
     else:
         form = forms.BookRoomForm()
     return render(request, "book_room.html", {"form": form})

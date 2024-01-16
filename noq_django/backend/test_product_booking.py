@@ -2,7 +2,7 @@ import unittest
 from icecream import ic
 from django.test import TestCase
 
-from .models import User, UserType, Product, ProductRule, ProductBooking
+from .models import User, UserType, Product, Region, ProductBooking
 
 
 def test_first():

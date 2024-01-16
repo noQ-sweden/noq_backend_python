@@ -12,6 +12,12 @@ class IndexForm(forms.Form):
     class Meta:
         fields = ["datum"]
 
+class SearchForm(forms.Form):
+    idag = datetime.now() + timedelta(days=1)
+    
+
+    class Meta:
+        fields = ["datum"]
 
 class BookRoomForm(forms.Form):
     namn = forms.CharField()

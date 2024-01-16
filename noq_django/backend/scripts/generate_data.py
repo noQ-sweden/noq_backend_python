@@ -3,8 +3,29 @@ from datetime import datetime, timedelta
 from icecream import ic
 from faker import Faker
 
-from backend.models import Host, User, Reservation, Product, ProductRule, ProductBooking
+from backend.models import Host, User, Reservation, Product, Region, ProductBooking
 
+
+def add_region(nbr: int) -> int:
+    regioner = [
+        "Farsta",
+        "Stockholm City",
+        "Göteborg",
+    ]
+
+    print("\n---- REGION ----")
+
+    for name in Region.objects.all():
+
+        region_name = name
+
+        regio = Region(
+            name=name
+        )
+
+        regio.save()
+
+        ic(regio, "added")
 
 def add_hosts(nbr: int) -> int:
     faker = Faker("sv_SE")
@@ -13,7 +34,7 @@ def add_hosts(nbr: int) -> int:
         "Korskyrkan",
         "Grimmans Akutboende",
         "Stadsmissionen",
-        "gemenskap",
+        "Ny gemenskap",
         "Bostället",
     ]
 
@@ -25,11 +46,11 @@ def add_hosts(nbr: int) -> int:
         ic(id)
         host_name = härbärge[id]
 
-        if Host.objects.filter(name=host_name, city=city).values():
+        if Host.objects.filter(host_name=host_name, city=city).values():
             continue
 
         host = Host(
-            name=host_name,
+            host_name=host_name,
             street=faker.street_address(),
             city=faker.city(),
             total_available_places=random.randint(1, 4),
@@ -105,27 +126,28 @@ def add_reservations(nbr: int, days_ahead: int = 3):
 
 
 def add_products(nbr: int = 3):
-    woman_only = ProductRule(name="women-only", description="Endast för kvinnor")
-    if not ProductRule.objects.filter(name=woman_only.name):
-        woman_only.save()
 
     for host in Host.objects.all():
+        places = random.randint(2, 6)
         if not Product.objects.filter(host=host, name="rum"):
             rum = Product.objects.create(
-                name="rum",
-                description="Rum med sovplatser",
-                total_places=random.randint(2, 6),
+                name="room",
+                description=f"Rum med {places} sovplatser",
+                total_places=places,
                 host=host,
+                type="room"
             )
-    woman_only = Product.objects.create(
+    
+        woman_only = Product.objects.create(
                 name="woman-only",
-                description="Rum för kvinnor",
-                total_places=random.randint(2, 6),
+                description="Rum för kvinnor med {places} bäddar",
+                total_places=places,
                 host=host,
-                product_rule=woman_only
+                type="woman-only"
             )
 
 def run():
+    add_region(3)
     add_hosts(7)
     add_products(2)
     add_users(12)
