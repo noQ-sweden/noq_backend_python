@@ -15,17 +15,16 @@ def add_region(nbr: int) -> int:
 
     print("\n---- REGION ----")
 
-    for name in Region.objects.all():
+    if len(Region.objects.all()) >= nbr:
+        return
 
-        region_name = name
+    for namn in regioner:
+        region = Region(region_name=namn)
 
-        regio = Region(
-            name=name
-        )
+        region.save()
 
-        regio.save()
+        ic(region, "added")
 
-        ic(regio, "added")
 
 def add_hosts(nbr: int) -> int:
     faker = Faker("sv_SE")
@@ -126,7 +125,6 @@ def add_reservations(nbr: int, days_ahead: int = 3):
 
 
 def add_products(nbr: int = 3):
-
     for host in Host.objects.all():
         places = random.randint(2, 6)
         if not Product.objects.filter(host=host, name="rum"):
@@ -135,16 +133,17 @@ def add_products(nbr: int = 3):
                 description=f"Rum med {places} sovplatser",
                 total_places=places,
                 host=host,
-                type="room"
+                type="room",
             )
-    
+
         woman_only = Product.objects.create(
-                name="woman-only",
-                description="Rum för kvinnor med {places} bäddar",
-                total_places=places,
-                host=host,
-                type="woman-only"
-            )
+            name="woman-only",
+            description="Rum för kvinnor med {places} bäddar",
+            total_places=places,
+            host=host,
+            type="woman-only",
+        )
+
 
 def run():
     add_region(3)

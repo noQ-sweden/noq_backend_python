@@ -130,7 +130,6 @@ class Product(models.Model):
 class ProductBooking(models.Model):
     start_date = models.DateField()
     product = models.ForeignKey(Product, on_delete=models.CASCADE, blank=False)
-    host = models.ForeignKey(Host, on_delete=models.CASCADE, blank=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False)
 
     class Meta:
