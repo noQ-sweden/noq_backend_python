@@ -2,8 +2,9 @@ from ninja import NinjaAPI, Schema
 from backend.models import User, Host
 from typing import List
 from django.shortcuts import get_object_or_404
+from ninja.security import django_auth, HttpBearer
 
-api = NinjaAPI()
+api = NinjaAPI(csrf=True)
 
 
 class UserIn(Schema):
@@ -23,8 +24,8 @@ class UserOut(Schema):
     gender: str
 
 
-# User List view
-@api.get("/user", response=List[UserOut])
+# User List view, demands django user logged on
+@api.get("/user", auth=django_auth, response=List[UserOut])
 def list_users(request):
     qs = User.objects.all()
     return qs
@@ -73,7 +74,20 @@ def list_host(request):
     return qs
 
 
-@api.get("/user/{host_id}", response=HostOut)
+@api.get("/host/{host_id}", response=HostOut)
 def get_host(request, host_id: int):
     host = get_object_or_404(Host, id=host_id)
     return host
+
+
+# Only for testing api token functionality
+class AuthBearer(HttpBearer):
+    def authenticate(self, request, token):
+        if token == "supersecret":
+            return token
+
+
+# Only for testing api token functionality
+@api.get("/bearer", auth=AuthBearer())
+def bearer(request):
+    return {"token": request.auth}
