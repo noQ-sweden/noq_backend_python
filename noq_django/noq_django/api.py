@@ -44,8 +44,9 @@ def create_user(request, payload: UserIn):
 
 
 class HostIn(Schema):
-    name: str
+    host_name: str
     street: str
+    postcode: str
     city: str
     total_available_places: int
 
@@ -53,8 +54,9 @@ class HostIn(Schema):
 # Response to creating host
 class HostOut(Schema):
     id: int
-    name: str
+    host_name: str
     street: str
+    postcode: str
     city: str
     total_available_places: int
 
@@ -62,4 +64,16 @@ class HostOut(Schema):
 @api.post("/host", response=HostOut)
 def create_host(request, payload: HostIn):
     host = Host.objects.create(**payload.dict())
+    return host
+
+
+@api.get("/host", response=List[HostOut])
+def list_host(request):
+    qs = Host.objects.all()
+    return qs
+
+
+@api.get("/user/{host_id}", response=HostOut)
+def get_host(request, host_id: int):
+    host = get_object_or_404(Host, id=host_id)
     return host
