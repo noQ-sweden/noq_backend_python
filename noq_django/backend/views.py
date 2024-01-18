@@ -15,19 +15,25 @@ def example(request):
 
 def available_list(request):
     datum = request.POST["datum"]
-    queryset = models.ProductBooking.objects.filter(start_date=datum).select_related('product').all()
-    
+    queryset = (
+        models.ProductBooking.objects.filter(start_date=datum)
+        .select_related("product")
+        .all()
+    )
+
     # queryset = models.Product.objects.all()  # Customize the query as needed
     available = tables.AvailableProducts(queryset)
     # ic(available)
-    date_format = '%Y-%m-%d'
+    date_format = "%Y-%m-%d"
 
-    idag:datetime = datetime.strptime(datum, date_format)
+    idag: datetime = datetime.strptime(datum, date_format)
     imorgon = idag + timedelta(days=1)
-    form = forms.IndexForm(initial={
-            'datum': imorgon
-            })
-    return render(request, "available_list.html", {"table": available, "form": form, "bokningsdag":idag.strftime("%Y-%m-%d") })
+    form = forms.IndexForm(initial={"datum": imorgon})
+    return render(
+        request,
+        "available_list.html",
+        {"table": available, "form": form, "bokningsdag": idag.strftime("%Y-%m-%d")},
+    )
 
 
 def index_view(request):
@@ -45,16 +51,16 @@ def index_view(request):
 
 def reservation_view(request):
     if request.method == "POST":
-        form = forms.ReservationForm(request.POST)
+        form = forms.BookRoomForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect(
                 "success_page"
             )  # Redirect to a success page or another appropriate URL
     else:
-        form = forms.ReservationForm()
+        form = forms.BookRoomForm()
     myhosts = models.Host.objects.all()
-    return render(request, "reservation.html", {"form": form, "hosts": myhosts})
+    return render(request, "book_room.html", {"form": form, "hosts": myhosts})
 
 
 def book_room_view(request, host_id):
@@ -72,17 +78,3 @@ def book_room_view(request, host_id):
     else:
         form = forms.BookRoomForm()
     return render(request, "book_room.html", {"form": form})
-
-
-def user_view(request):
-    if request.method == "POST":
-        form = forms.ReservationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect(
-                "success_page"
-            )  # Redirect to a success page or another appropriate URL
-    else:
-        form = forms.ReservationForm()
-    myhosts = models.Host.objects.all()
-    return render(request, "reservation.html", {"form": form, "hosts": myhosts})

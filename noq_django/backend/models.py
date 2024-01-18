@@ -25,9 +25,7 @@ class Host(models.Model):
         db_table = "hosts"
 
     def __str__(self) -> str:
-        rsrv_count = Reservation.objects.filter(host=self).count()
-
-        return f"{self.host_name}, {self.city}: {self.total_available_places} platser ({rsrv_count} reserverade totalt)"
+        return f"{self.host_name}, {self.city}: {self.total_available_places} platser"
 
 
 class User(models.Model):
@@ -54,13 +52,6 @@ class User(models.Model):
     class Meta:
         db_table = "users"
 
-    def first_reservation(self):
-        """Första bokningen för denne user"""
-        first_booking = (
-            Reservation.objects.filter(user=self).order_by("start_date").first()
-        )
-        return first_booking.booking_date if first_booking else None
-
     def name(self) -> str:
         return f"{self.first_name}, {self.last_name}"
 
@@ -72,44 +63,6 @@ class User(models.Model):
         #     startdate = rsrv.start_date
 
         return f"{self.first_name} {self.last_name}"
-
-
-class Reservation(models.Model):
-    start_date = models.DateField()
-    # End date default to start_date +1 ?
-    host = models.ForeignKey(Host, on_delete=models.CASCADE, blank=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self) -> str:
-        return f"{self.start_date} {self.user.first_name} {self.user.last_name} [{self.host.host_name} {self.host.city}]"
-
-    class Meta:
-        db_table = "reservations"
-
-    def save(self, *args, **kwargs):
-        nbr_available = self.host.total_available_places
-
-        booked = Reservation.objects.filter(
-            host=self.host, start_date=self.start_date
-        ).count()
-
-        if booked + 1 > nbr_available:
-            raise ValidationError(("Host is fully booked"), code="full")
-
-        # Check if there is another reservation for the same user and date
-        existing_reservation = Reservation.objects.filter(
-            user=self.user, start_date=self.start_date
-        ).first()
-
-        if existing_reservation:
-            raise ValidationError(
-                ("User already has a reservation for the same date."),
-                code="already_booked",
-            )
-
-        super().save(*args, **kwargs)
 
 
 class Product(models.Model):
@@ -128,6 +81,12 @@ class Product(models.Model):
         db_table = "product"
 
     def __str__(self) -> str:
+        available = None # ProductAvailable.objects.filter(product=self).first()
+        
+        if available:
+            left = available.places_left
+            return f"{self.description} på {self.host.host_name}, {self.host.city} {left} platser kvar"
+
         return f"{self.description} på {self.host.host_name}, {self.host.city}"
         # booking_count = ProductBooking.objects.filter(product=self).count()
 
@@ -136,26 +95,31 @@ class Product(models.Model):
 
 class ProductBooking(models.Model):
     start_date = models.DateField(verbose_name="Datum")
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, blank=False, verbose_name="Bokning")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, verbose_name="Brukare")
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, blank=False, verbose_name="Bokning"
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, blank=False, verbose_name="Brukare"
+    )
 
     class Meta:
         db_table = "product_booking"
-        
+
     def save(self, *args, **kwargs):
+        self.start_date = self.start_date
         nbr_available = self.product.total_places
 
         # Check gender for room type = "woman-only"
         product_type = self.product.type
 
         if product_type == "woman-only":
-            
-            if self.user.gender!="K":
+            if self.user.gender != "K":
                 print("woman-only", self.user.gender, "nekad")
-                raise ValidationError(f"Rum för kvinnor kan inte bokas av {self.user.gender}", code="woman-only")
-            else:
-                print("woman-only:", self.user.gender, self.product.description, "OK")
-        
+                raise ValidationError(
+                    f"Rum för kvinnor kan inte bokas av män",
+                    code="woman-only",
+                )
+
         # Is Host fully booked?
         booked = ProductBooking.objects.filter(
             product=self.product, start_date=self.start_date
@@ -164,12 +128,12 @@ class ProductBooking(models.Model):
         if booked + 1 > nbr_available:
             raise ValidationError(("Fullbokat rum"), code="full")
 
-        # Check if there is another reservation for the same user and date
-        existing_reservation = ProductBooking.objects.filter(
+        # Check if there is another booking for the same user and date
+        existing_booking = ProductBooking.objects.filter(
             user=self.user, start_date=self.start_date
         ).first()
 
-        if existing_reservation:
+        if existing_booking:
             raise ValidationError(
                 ("Har redan en bokning samma dag!"),
                 code="already_booked",
@@ -177,8 +141,47 @@ class ProductBooking(models.Model):
 
         if product_type == "woman-only":
             print("woman-only", self.user.gender, self.user.first_name)
-            
+
         super().save(*args, **kwargs)
 
+        # Uppdatera ProductAvailable
+        bookings = ProductBooking.objects.filter(
+            product=self.product, start_date=self.start_date
+        ).count()
+
+        left = self.product.total_places - bookings
+        
+        if bookings == 0:
+            raise ValidationError("Bookings IS ZERO")
+
+        availability_record = ProductAvailable.objects.filter(product=self.product).first()
+
+        if availability_record:
+            availability_record.places_left = left
+            availability_record.save()
+        else:
+            product_available = ProductAvailable(
+                available_date=self.start_date,
+                product=Product.objects.get(id=self.product.id),
+                places_left=left,
+            )
+            product_available.save()
+
+        
+
     def __str__(self) -> str:
-        return f'{self.start_date.strftime("%Y-%m-%d")}: {self.user.first_name} {self.user.last_name} har bokat {self.product.description} på {self.product.host.host_name}, {self.product.host.city}'
+        return f'{self.start_date}: {self.user.first_name} {self.user.last_name} har bokat {self.product.description} på {self.product.host.host_name}, {self.product.host.city}'
+
+
+class ProductAvailable(models.Model):
+    available_date = models.DateField(verbose_name="Datum")
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, blank=False, verbose_name="Bokning"
+    )
+    places_left = models.IntegerField(verbose_name="Platser kvar", default=0)
+
+    class Meta:
+        db_table = "product_available"
+    
+    def __str__(self) -> str:
+        return f'{self.available_date}: {self.product.description} på {self.product.host.host_name}, {self.product.host.city} har {self.places_left} platser kvar'

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from icecream import ic
 from faker import Faker
 
-from backend.models import Host, User, Reservation, Product, Region, ProductBooking
+from backend.models import Host, User, Product, Region, ProductBooking
 
 
 def add_region(nbr: int) -> int:

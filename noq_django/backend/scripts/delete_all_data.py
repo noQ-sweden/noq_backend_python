@@ -3,7 +3,7 @@
 from  icecream import ic
 import sys
 
-from backend.models import Host, Reservation, User, Product, Region, ProductBooking
+from backend.models import Host, User, Product, Region, ProductBooking, ProductAvailable
 
 flag_all = False
 
@@ -11,6 +11,7 @@ def kontrollera(typ: str) -> bool:
 
     global flag_all    
     if flag_all:
+        print(f"Tar bort alla {typ}")
         return True
     
     answer = input(f"Vill du ta bort alla {typ}(ja/nej/alla)?")
@@ -21,8 +22,8 @@ def kontrollera(typ: str) -> bool:
     return answer.lower() in ["j","ja","y","yes"]
 
 def count():
-    ic(Reservation.objects.all().count())
     
+    ic(ProductAvailable.objects.all().count())
     ic(ProductBooking.objects.all().count())
     ic(Product.objects.all().count())
     ic(Region.objects.all().count())
@@ -35,11 +36,6 @@ def run():
     
     count()
 
-    if kontrollera("reservationer"):
-        for rsrv in Reservation.objects.all():
-            ic(rsrv, "borttagen")
-            rsrv.delete()
-
     if kontrollera("bokningar"):
         for booking in ProductBooking.objects.all():
             booking.delete()
@@ -49,6 +45,16 @@ def run():
         for region in Region.objects.all():
             region.delete()
             ic(region, "borttagen")
+
+    if kontrollera("produkter available"):
+        for prd in ProductAvailable.objects.all():
+            prd.delete()
+            print(prd, "borttagen")
+
+    if kontrollera("bokningar"):
+        for prd in ProductBooking.objects.all():
+            prd.delete()
+            print(prd, "borttagen")
 
     if kontrollera("produkter"):
         for prd in Product.objects.all():

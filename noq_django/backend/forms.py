@@ -32,12 +32,6 @@ class BookRoomForm(forms.Form):
         fields = ["host", "user"]
 
 
-class ReservationForm(forms.ModelForm):
-    class Meta:
-        model = models.Reservation
-        fields = ["host", "start_date", "user"]
-
-
 class UserForm(forms.ModelForm):
     class Meta:
         model = models.User
