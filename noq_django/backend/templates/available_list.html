@@ -9,8 +9,9 @@
     {% csrf_token %} {{ form.datum}}
     <input type="submit" value="Sök" />
   </form>
-    <!-- Empty row -->
+    
     <div style="margin-bottom: 20px;"></div>
+    <p>Bokade {{ bokningsdag }}:</p>
 {% render_table table %}
 
 

@@ -27,7 +27,7 @@ def available_list(request):
     form = forms.IndexForm(initial={
             'datum': imorgon
             })
-    return render(request, "available_list.html", {"table": available, "form": form})
+    return render(request, "available_list.html", {"table": available, "form": form, "bokningsdag":idag.strftime("%Y-%m-%d") })
 
 
 def index_view(request):

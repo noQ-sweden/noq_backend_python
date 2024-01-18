@@ -70,10 +70,10 @@ def add_users(nbr: int):
         return
 
     while len(User.objects.all()) < nbr:
-        gender = "M" if random.randint(0, 1) > 0 else "F"
+        gender = "M" if random.randint(0, 1) > 0 else "K"
 
         first_name: str = (
-            faker.first_name_female() if gender == "F" else faker.first_name_male()
+            faker.first_name_female() if gender == "K" else faker.first_name_male()
         )
 
         last_name: str = faker.last_name()
@@ -94,25 +94,26 @@ def add_users(nbr: int):
         user.save()
 
 
-def add_reservations(nbr: int, days_ahead: int = 3):
+def add_product_bookings(nbr: int, days_ahead: int = 3):
     faker = Faker("sv_SE")
     faker.seed_instance()
     max_exceptions = 20
     exceptions = 0
 
-    print("\n---- RESERVATION ----")
+    print("\n---- PRODUCT BOOKINGS ----")
 
-    product_1st = Product.objects.order_by("id").first()
-    user_1st = User.objects.order_by("id").first()
+    product_min_id = Product.objects.order_by("id").first()
+    user_min_id = User.objects.order_by("id").first()
 
     while len(ProductBooking.objects.all()) < nbr and exceptions < max_exceptions:
-        prd_id = product_1st.id + random.randint(0, Host.objects.all().count() - 3)
-        user_id = user_1st.id + random.randint(0, User.objects.all().count() - 5)
+        product_id = product_min_id.id + random.randint(
+            0, Host.objects.all().count() - 3
+        )
+        user_id = user_min_id.id + random.randint(0, User.objects.all().count() - 5)
 
-        ic(prd_id, user_id)
         booking = ProductBooking(
             start_date=datetime.now() + timedelta(days=random.randint(1, days_ahead)),
-            product=Product.objects.get(id=prd_id),
+            product=Product.objects.get(id=product_id),
             user=User.objects.get(id=user_id),
         )
 
@@ -132,7 +133,7 @@ def add_products(nbr: int = 3):
         if not Product.objects.filter(host=host, name="rum"):
             rum = Product.objects.create(
                 name="room",
-                description=f"Rum med {places} sovplatser",
+                description=f"{places}-bäddsrum",
                 total_places=places,
                 host=host,
                 type="room",
@@ -140,7 +141,7 @@ def add_products(nbr: int = 3):
 
         woman_only = Product.objects.create(
             name="woman-only",
-            description=f"Rum för kvinnor med {places} bäddar",
+            description=f"{places}-bäddsrum för kvinnor",
             total_places=places,
             host=host,
             type="woman-only",
@@ -152,4 +153,4 @@ def run():
     add_hosts(7)
     add_products(2)
     add_users(12)
-    add_reservations(40, 7)
+    add_product_bookings(40, 7)

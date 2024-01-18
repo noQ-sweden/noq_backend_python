@@ -135,9 +135,9 @@ class Product(models.Model):
 
 
 class ProductBooking(models.Model):
-    start_date = models.DateField()
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, blank=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False)
+    start_date = models.DateField(verbose_name="Datum")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, blank=False, verbose_name="Bokning")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, verbose_name="Brukare")
 
     class Meta:
         db_table = "product_booking"
@@ -145,12 +145,24 @@ class ProductBooking(models.Model):
     def save(self, *args, **kwargs):
         nbr_available = self.product.total_places
 
+        # Check gender for room type = "woman-only"
+        product_type = self.product.type
+
+        if product_type == "woman-only":
+            
+            if self.user.gender!="K":
+                print("woman-only", self.user.gender, "nekad")
+                raise ValidationError(f"Rum för kvinnor kan inte bokas av {self.user.gender}", code="woman-only")
+            else:
+                print("woman-only:", self.user.gender, self.product.description, "OK")
+        
+        # Is Host fully booked?
         booked = ProductBooking.objects.filter(
             product=self.product, start_date=self.start_date
         ).count()
 
         if booked + 1 > nbr_available:
-            raise ValidationError(("Host is fully booked"), code="full")
+            raise ValidationError(("Fullbokat rum"), code="full")
 
         # Check if there is another reservation for the same user and date
         existing_reservation = ProductBooking.objects.filter(
@@ -159,11 +171,14 @@ class ProductBooking(models.Model):
 
         if existing_reservation:
             raise ValidationError(
-                ("User already is booked the same date."),
+                ("Har redan en bokning samma dag!"),
                 code="already_booked",
             )
 
+        if product_type == "woman-only":
+            print("woman-only", self.user.gender, self.user.first_name)
+            
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        return f"{self.start_date} har {self.user.first_name} {self.user.last_name} bokat {self.product.description} på {self.product.host.host_name}, {self.product.host.city}"
+        return f'{self.start_date.strftime("%Y-%m-%d")}: {self.user.first_name} {self.user.last_name} har bokat {self.product.description} på {self.product.host.host_name}, {self.product.host.city}'
