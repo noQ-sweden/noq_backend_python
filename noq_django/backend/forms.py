@@ -52,15 +52,5 @@ class AvailableProducts(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
-        # self.helper.layout = Layout("start_date", "product", "user")
-        self.helper.layout = Layout(
-            Fieldset(
-                "first arg is the legend of the fieldset",
-                "like_website",
-                "favorite_number",
-                "favorite_color",
-                "favorite_food",
-                "notes",
-            ),
-            Submit("submit", "Submit", css_class="button white"),
-        )
+        self.helper.layout = Layout("product", "user")
+        

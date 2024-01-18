@@ -141,6 +141,29 @@ class ProductBooking(models.Model):
 
     class Meta:
         db_table = "product_booking"
+        
+    def save(self, *args, **kwargs):
+        nbr_available = self.product.total_places
+
+        booked = ProductBooking.objects.filter(
+            product=self.product, start_date=self.start_date
+        ).count()
+
+        if booked + 1 > nbr_available:
+            raise ValidationError(("Host is fully booked"), code="full")
+
+        # Check if there is another reservation for the same user and date
+        existing_reservation = ProductBooking.objects.filter(
+            user=self.user, start_date=self.start_date
+        ).first()
+
+        if existing_reservation:
+            raise ValidationError(
+                ("User already is booked the same date."),
+                code="already_booked",
+            )
+
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"{self.start_date} har {self.user.first_name} {self.user.last_name} bokat {self.product.description} på {self.product.host.host_name}, {self.product.host.city}"

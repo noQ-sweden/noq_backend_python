@@ -1,4 +1,5 @@
 from icecream import ic
+from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 
@@ -18,8 +19,14 @@ def available_list(request):
     
     # queryset = models.Product.objects.all()  # Customize the query as needed
     available = tables.AvailableProducts(queryset)
-    ic(available)
-    form = forms.IndexForm()
+    # ic(available)
+    date_format = '%Y-%m-%d'
+
+    idag:datetime = datetime.strptime(datum, date_format)
+    imorgon = idag + timedelta(days=1)
+    form = forms.IndexForm(initial={
+            'datum': imorgon
+            })
     return render(request, "available_list.html", {"table": available, "form": form})
 
 
