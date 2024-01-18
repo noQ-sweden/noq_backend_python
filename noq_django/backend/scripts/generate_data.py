@@ -85,9 +85,11 @@ def add_users(nbr: int):
             first_name=first_name,
             last_name=last_name,
             phone="070" + f"{random.randint(0,9)}-{random.randint(121212,909090)}",
-            email=f"{first_name}.{last_name}@hotmejl.se",
+            email=f"{first_name}.{last_name}@hotmejl.se".lower(),
             unokod=f"{random.randint(1000,9999)}",
             gender=gender,
+            street=faker.street_address(),
+            city=faker.city(),
         )
         user.save()
 
@@ -100,28 +102,28 @@ def add_reservations(nbr: int, days_ahead: int = 3):
 
     print("\n---- RESERVATION ----")
 
-    host_1st = Host.objects.order_by("id").first()
+    product_1st = Product.objects.order_by("id").first()
     user_1st = User.objects.order_by("id").first()
 
-    while len(Reservation.objects.all()) < nbr and exceptions < max_exceptions:
-        host_id = host_1st.id + random.randint(0, Host.objects.all().count() - 3)
+    while len(ProductBooking.objects.all()) < nbr and exceptions < max_exceptions:
+        prd_id = product_1st.id + random.randint(0, Host.objects.all().count() - 3)
         user_id = user_1st.id + random.randint(0, User.objects.all().count() - 5)
 
-        ic(host_id, user_id)
-        reservation = Reservation(
+        ic(prd_id, user_id)
+        booking = ProductBooking(
             start_date=datetime.now() + timedelta(days=random.randint(1, days_ahead)),
-            host=Host.objects.get(id=host_id),
+            product=Product.objects.get(id=prd_id),
             user=User.objects.get(id=user_id),
         )
 
         try:
-            reservation.save()
+            booking.save()
             exceptions = 0
         except Exception as ex:
-            ic(ex, reservation)
+            ic(ex, booking)
             exceptions += 1
         else:
-            print("User reservation added")
+            print("Booking added")
 
 
 def add_products(nbr: int = 3):
@@ -138,7 +140,7 @@ def add_products(nbr: int = 3):
 
         woman_only = Product.objects.create(
             name="woman-only",
-            description="Rum för kvinnor med {places} bäddar",
+            description=f"Rum för kvinnor med {places} bäddar",
             total_places=places,
             host=host,
             type="woman-only",

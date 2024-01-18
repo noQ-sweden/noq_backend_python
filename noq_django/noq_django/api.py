@@ -33,7 +33,7 @@ def list_users(request):
 
 # User Detail view
 @api.get("/user/{user_id}", response=UserOut)
-def get_employee(request, user_id: int):
+def get_user(request, user_id: int):
     user = get_object_or_404(User, id=user_id)
     return user
 

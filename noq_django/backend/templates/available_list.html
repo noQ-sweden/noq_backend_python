@@ -1,16 +1,17 @@
-{% extends "base.html" %} 
+{% extends 'base.html' %}
 {% load crispy_forms_tags %}
 
-{% block sidebar %}
+{% load render_table from django_tables2 %}
 
-  {% endblock %} {% block content %}
-  <p><b>Sök boende:</b></p>
+{% block content %}
+<p><b>Sök boende:</b></p>
   <form method="post" action="{% url 'available_list' %}">
     {% csrf_token %} {{ form.datum}}
     <input type="submit" value="Sök" />
   </form>
     <!-- Empty row -->
     <div style="margin-bottom: 20px;"></div>
-  
-  {% endblock %}
-</form>
+{% render_table table %}
+
+
+{% endblock %}

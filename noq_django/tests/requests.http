@@ -1,0 +1,56 @@
+POST http://127.0.0.1:8000/api/user
+Content-Type: application/application/json
+X-CSRFToken: w1yFqz53aKE6dvHDIfRJGQR9jGsngpFNVxNrMphBMNbFDgiqzIAVJtG5DsG1lKp7
+
+
+###
+GET http://127.0.0.1:8000/api/docs
+Content-Type: application/application/json
+
+
+###
+POST http://127.0.0.1:8000/api/user
+Content-Type: application/application/json
+Cookie: sessionid=supersecret
+X-CSRFToken: w1yFqz53aKE6dvHDIfRJGQR9jGsngpFNVxNrMphBMNbFDgiqzIAVJtG5DsG1lKp7
+
+###
+GET http://127.0.0.1:8000/api/user
+Content-Type: application/xml
+Authorization: Bearer supersecret
+X-CSRFToken: w1yFqz53aKE6dvHDIfRJGQR9jGsngpFNVxNrMphBMNbFDgiqzIAVJtG5DsG1lKp7
+
+
+###
+curl --request GET \
+  --url http://127.0.0.1:8000/api/user \
+  --header 'user-agent: vscode-restclient'
+
+###
+curl -X 'GET' \
+  'http://127.0.0.1:8000/api/user' \
+  -H 'accept: application/json' \
+  -H 'Cookie: sessionid=supersecret' \
+  -H 'X-CSRFToken: w1yFqz53aKE6dvHDIfRJGQR9jGsngpFNVxNrMphBMNbFDgiqzIAVJtG5DsG1lKp7'
+
+
+###
+curl --request GET \
+  --url http://127.0.0.1:8000/api/bearer \
+  --header 'content-type: application/application/json' \
+  --header 'user-agent: vscode-restclient' \
+  --header 'Authorization: Bearer supersecret'
+
+###
+curl -X 'GET' \
+  'http://127.0.0.1:8000/api/user' \
+  -H 'accept: application/json' \
+  -H 'X-CSRFToken: E7SDBZQlvAo7asq8WxId4GZq13KNMAE63D7pXP2T7DVGAd1VN0rp7jOmlPYrRVoq'
+
+
+###
+curl -X 'GET' \
+  'http://127.0.0.1:8000/api/user/1' \
+  -H 'accept: */*' \
+  -H 'Authorization: Bearer supersecret' \
+  -H 'X-CSRFToken: ynQbwpSYunH5BRrWtxgSQBTgWB7own0d67pmsImShNbDEA6PYVSauejhMaAzEsHG'

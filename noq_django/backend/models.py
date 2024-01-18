@@ -9,6 +9,9 @@ class Region(models.Model):
     class Meta:
         db_table = "regions"
 
+    def __str__(self) -> str:
+        return self.region_name
+
 
 class Host(models.Model):
     host_name = models.CharField(max_length=80)
@@ -58,14 +61,17 @@ class User(models.Model):
         )
         return first_booking.booking_date if first_booking else None
 
+    def name(self) -> str:
+        return f"{self.first_name}, {self.last_name}"
+
     def __str__(self) -> str:
-        rsrv = Reservation.objects.filter(user=self).order_by("-start_date").first()
+        # rsrv = ProductBooking.objects.filter(user=self).order_by("-start_date").first()
 
-        startdate = ""
-        if rsrv:
-            startdate = rsrv.start_date
+        # startdate = ""
+        # if rsrv:
+        #     startdate = rsrv.start_date
 
-        return f"{self.first_name} {self.last_name} ({startdate})"
+        return f"{self.first_name} {self.last_name}"
 
 
 class Reservation(models.Model):
@@ -115,16 +121,17 @@ class Product(models.Model):
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=100)
     total_places = models.IntegerField()
-    host = models.ForeignKey(Host, on_delete=models.PROTECT, blank=True)
+    host = models.ForeignKey(Host, on_delete=models.CASCADE, blank=True)
     type = models.CharField(max_length=12, default="")  # ex "endast kvinnor"
 
     class Meta:
         db_table = "product"
 
     def __str__(self) -> str:
-        booking_count = ProductBooking.objects.filter(host=self).count()
+        return f"{self.description} på {self.host.host_name}, {self.host.city}"
+        # booking_count = ProductBooking.objects.filter(product=self).count()
 
-        return f"{self.description} ({self.total_places} platser på {self.host.host_name}, {self.host.city} ({booking_count} bokade)"
+        # return f"{self.description} ({self.total_places} platser på {self.host.host_name}, {self.host.city} ({booking_count} bokade)"
 
 
 class ProductBooking(models.Model):
@@ -136,4 +143,4 @@ class ProductBooking(models.Model):
         db_table = "product_booking"
 
     def __str__(self) -> str:
-        return f"{self.start_date} - {self.product.name} på {self.host.host_name}, {self.host.city} för {self.user.first_name} {self.user.last_name}"
+        return f"{self.start_date} har {self.user.first_name} {self.user.last_name} bokat {self.product.description} på {self.product.host.host_name}, {self.product.host.city}"

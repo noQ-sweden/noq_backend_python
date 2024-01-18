@@ -1,8 +1,26 @@
+from icecream import ic
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 
 from . import models
 from . import forms
+from . import tables
+
+
+def example(request):
+    context = {"form": forms.ExampleForm()}
+    return render(request, "example.html", context)
+
+
+def available_list(request):
+    datum = request.POST["datum"]
+    queryset = models.ProductBooking.objects.filter(start_date=datum).select_related('product').all()
+    
+    # queryset = models.Product.objects.all()  # Customize the query as needed
+    available = tables.AvailableProducts(queryset)
+    ic(available)
+    form = forms.IndexForm()
+    return render(request, "available_list.html", {"table": available, "form": form})
 
 
 def index_view(request):
@@ -12,7 +30,7 @@ def index_view(request):
         if form.is_valid():
             # form.save()
             myhosts = models.Host.objects.all()
-            return render(request, "list.html", {"form": form, "hosts": myhosts})
+            return render(request, "search.html", {"form": form, "hosts": myhosts})
     else:
         form = forms.IndexForm()
     return render(request, "search.html", {"form": form, "hosts": myhosts})
