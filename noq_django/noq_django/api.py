@@ -1,8 +1,9 @@
 from ninja import NinjaAPI, Schema
-from backend.models import User, Host
+from backend.models import User, Host, Product, ProductBooking, ProductAvailable
 from typing import List
 from django.shortcuts import get_object_or_404
 from ninja.security import django_auth, HttpBearer
+from datetime import date
 
 api = NinjaAPI(csrf=True)
 
@@ -78,6 +79,51 @@ def list_host(request):
 def get_host(request, host_id: int):
     host = get_object_or_404(Host, id=host_id)
     return host
+
+
+class ProductDetail(Schema):
+    id: int
+    name: str
+    description: str
+    total_places: int
+    host: HostOut = None
+    type: str
+
+
+@api.get("/product", response=List[ProductDetail])
+def list_product(request):
+    product_list = Product.objects.select_related("host")
+    return product_list
+
+
+@api.get("/product/{product_id}", response=ProductDetail)
+def get_product(request, product_id: int):
+    product = get_object_or_404(Product, id=product_id)
+    return product
+
+
+# class BookingDetail(Schema):
+#     start_date: date
+#     # product: Product
+#     # user: User
+
+
+# @api.get("/booking/{product_id}", response=BookingDetail)
+# def get_booking(request, product_id: int):
+#     booking = get_object_or_404(ProductBooking, id=product_id)
+#     return booking
+
+
+# class BookingAvailable(Schema):
+#     available_date: date
+#     # product: Product
+#     # places_left: int
+
+
+# @api.get("/available/{product_id}", response=BookingAvailable)
+# def get_booking_availability(request, product_id: int):
+#     avail = get_object_or_404(ProductBooking, id=product_id)
+#     return avail
 
 
 # Only for testing api token functionality

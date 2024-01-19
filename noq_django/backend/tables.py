@@ -5,6 +5,8 @@ from .models import ProductBooking
 
 
 class AvailableProducts(tables.Table):
+    boka = tables.TemplateColumn('<a href="{{record.url}}">{{record.name}}</a>')
+
     class Meta:
         model = ProductBooking
-        fields = ("product", "user")
+        fields = ("product", "user", "boka")

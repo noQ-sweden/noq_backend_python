@@ -96,7 +96,7 @@ class Product(models.Model):
 class ProductBooking(models.Model):
     start_date = models.DateField(verbose_name="Datum")
     product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, blank=False, verbose_name="Bokning"
+        Product, on_delete=models.CASCADE, blank=False, verbose_name="Plats"
     )
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, blank=False, verbose_name="Brukare"

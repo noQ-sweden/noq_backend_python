@@ -1,6 +1,8 @@
 from icecream import ic
 from datetime import datetime, timedelta
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+
+
 from django.http import HttpResponse
 
 from . import models
@@ -25,14 +27,15 @@ def available_list(request):
     available = tables.AvailableProducts(queryset)
     # ic(available)
     date_format = "%Y-%m-%d"
-
+    for a in queryset:
+        ic(a)    
     idag: datetime = datetime.strptime(datum, date_format)
     imorgon = idag + timedelta(days=1)
     form = forms.IndexForm(initial={"datum": imorgon})
     return render(
         request,
         "available_list.html",
-        {"table": available, "form": form, "bokningsdag": idag.strftime("%Y-%m-%d")},
+        {"table": available,"objects": queryset, "form": form, "bokningsdag": idag.strftime("%Y-%m-%d")},
     )
 
 
@@ -64,6 +67,9 @@ def reservation_view(request):
 
 
 def book_room_view(request, host_id):
+    product = get_object_or_404(models.Product, host_id=host_id)
+    return render(request, "book_room.html", {"obj": product})
+
     form = forms.BookRoomForm()
     myhosts = models.Host.objects.all()
     return render(request, "book_room.html", {"form": form})
