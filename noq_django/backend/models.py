@@ -12,15 +12,15 @@ class Region(models.Model):
     def __str__(self) -> str:
         return self.region_name
 
-class City (models.Model):
-    name = models.CharField()
 
 class Host(models.Model):
     host_name = models.CharField(max_length=80)
     street = models.CharField(max_length=80)
     postcode = models.CharField(max_length=5, default="")
     city = models.CharField(max_length=80, default="")
-    region = models.ForeignKey(Region, on_delete=models.CASCADE, null=False, blank=False)
+    region = models.ForeignKey(
+        Region, on_delete=models.CASCADE, null=False, blank=False
+    )
     total_available_places = models.IntegerField()
 
     class Meta:
@@ -49,7 +49,9 @@ class User(models.Model):
     day_of_birth = models.DateField(default=None, null=True)
     personnr_lastnr = models.CharField(max_length=4, default="")
 
-    region = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=False)
+    region = models.ForeignKey(
+        Region, on_delete=models.CASCADE, null=False, blank=False
+    )
 
     class Meta:
         db_table = "users"
@@ -83,8 +85,8 @@ class Product(models.Model):
         db_table = "product"
 
     def __str__(self) -> str:
-        available = None # ProductAvailable.objects.filter(product=self).first()
-        
+        available = None  # ProductAvailable.objects.filter(product=self).first()
+
         if available:
             left = available.places_left
             return f"{self.description} på {self.host.host_name}, {self.host.city} {left} platser kvar"
@@ -95,7 +97,7 @@ class Product(models.Model):
         # return f"{self.description} ({self.total_places} platser på {self.host.host_name}, {self.host.city} ({booking_count} bokade)"
 
 
-class ProductBooking(models.Model):
+class Booking(models.Model):
     start_date = models.DateField(verbose_name="Datum")
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, blank=False, verbose_name="Plats"
@@ -123,7 +125,7 @@ class ProductBooking(models.Model):
                 )
 
         # Is Host fully booked?
-        booked = ProductBooking.objects.filter(
+        booked = Booking.objects.filter(
             product=self.product, start_date=self.start_date
         ).count()
 
@@ -131,7 +133,7 @@ class ProductBooking(models.Model):
             raise ValidationError(("Fullbokat rum"), code="full")
 
         # Check if there is another booking for the same user and date
-        existing_booking = ProductBooking.objects.filter(
+        existing_booking = Booking.objects.filter(
             user=self.user, start_date=self.start_date
         ).first()
 
@@ -147,35 +149,33 @@ class ProductBooking(models.Model):
         super().save(*args, **kwargs)
 
         # Uppdatera ProductAvailable
-        bookings = ProductBooking.objects.filter(
+        bookings = Booking.objects.filter(
             product=self.product, start_date=self.start_date
         ).count()
 
         left = self.product.total_places - bookings
-        
+
         if bookings == 0:
             raise ValidationError("Bookings IS ZERO")
 
-        availability_record = ProductAvailable.objects.filter(product=self.product).first()
+        availability_record = Available.objects.filter(product=self.product).first()
 
         if availability_record:
             availability_record.places_left = left
             availability_record.save()
         else:
-            product_available = ProductAvailable(
+            product_available = Available(
                 available_date=self.start_date,
                 product=Product.objects.get(id=self.product.id),
                 places_left=left,
             )
             product_available.save()
 
-        
-
     def __str__(self) -> str:
-        return f'{self.start_date}: {self.user.first_name} {self.user.last_name} har bokat {self.product.description} på {self.product.host.host_name}, {self.product.host.city}'
+        return f"{self.start_date}: {self.user.first_name} {self.user.last_name} har bokat {self.product.description} på {self.product.host.host_name}, {self.product.host.city}"
 
 
-class ProductAvailable(models.Model):
+class Available(models.Model):
     available_date = models.DateField(verbose_name="Datum")
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, blank=False, verbose_name="Bokning"
@@ -184,6 +184,6 @@ class ProductAvailable(models.Model):
 
     class Meta:
         db_table = "product_available"
-    
+
     def __str__(self) -> str:
-        return f'{self.available_date}: {self.product.description} på {self.product.host.host_name}, {self.product.host.city} har {self.places_left} platser kvar'
+        return f"{self.available_date}: {self.product.description} på {self.product.host.host_name}, {self.product.host.city} har {self.places_left} platser kvar"

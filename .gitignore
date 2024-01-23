@@ -162,3 +162,10 @@ cython_debug/
 #.idea/
 noq_django/.vscode/*
 *.sqlite*
+app/node_modules/
+app/
+
+
+
+
+

@@ -5,29 +5,54 @@ from backend.models import (
     Region,
     Product,
     Booking,
-    ProductAvailable,
+    Available,
 )
+
+from api_schemas import (
+    RegionSchema,
+    UserSchema,
+    UserPostSchema,
+    HostSchema,
+    HostPostSchema,
+    HostPatchSchema,
+    ProductSchema,
+    BookingSchema,
+    AvailableSchema,
+    AuthBearer,
+)
+
 from typing import List
 from django.shortcuts import get_object_or_404
 from ninja.security import django_auth, django_auth_superuser, HttpBearer
-from datetime import date
+from datetime import date, timedelta
 
 api = NinjaAPI(csrf=False)
 
+docs = """
 
-class RegionSchema(ModelSchema):
-    """
+    Generell namnsättning för alla API:er
+    
+    /objects    GET     listar ett objekt, med metodnamn list_object, kan även ha filterparametrar
+    /objects/id GET     hämtar en unik instans av objekt(/objects/id), med metodnamn object_detail(id)
+    /objects/id POST    skapar ett objekt, med metodnamn object_add
+    /objects/id PATCH   uppdaterar ett objekt, med metodnamn object_update(id)
+    /objects/id DELETE  tar bort ett objekt, med metodnamn object_delete(id)
 
-    Region
+"""
 
-    Exempelvis Stockholm City och Farsta
 
-    Varje Host tillhör en Region
-    """
+# User List view, demands django user logged on
+@api.get("/user", auth=django_auth, response=List[UserSchema])
+def list_users(request):
+    qs = User.objects.all()
+    return qs
 
-    class Meta:
-        model = Region
-        fields = "__all__"
+
+# User Detail view
+@api.get("/user/{user_id}", response=UserSchema)
+def get_user(request, user_id: int):
+    user = get_object_or_404(User, id=user_id)
+    return user
 
 
 # Detta är mallen för en LIST-anrop
@@ -37,22 +62,8 @@ def region_list(request):
     return list
 
 
-class UserSchema(ModelSchema):
-    """
-    User - för både Brukare och användare i systemet
-
-    Varje user tillhör en Region
-    """
-
-    # region: RegionSchema
-
-    class Meta:
-        model = User
-        fields = "__all__"
-
-
 # Mall för List
-@api.get("/user", response=List[UserSchema])
+@api.get("/users", auth=django_auth, response=List[UserSchema])
 def user_list(request):
     list = User.objects
     return list
@@ -65,21 +76,6 @@ def user_detail(request, user_id: int):
     return obj
 
 
-class UserPostSchema(Schema):
-    """
-    User för POST-anrop
-
-    """
-
-    first_name: str
-    last_name: str
-    gender: str
-    phone: str
-    email: str
-    region_id: int
-    unokod: str = None
-
-
 # Mall för POST-anrop
 @api.post("/user", response=UserSchema)
 def create_user(request, payload: UserPostSchema):
@@ -87,132 +83,71 @@ def create_user(request, payload: UserPostSchema):
     return obj
 
 
-class UserSchema(ModelSchema):
-    """
-
-    Host
-
-    Exempelvis Stadsmissionen, Stockholm
-
-    Varje Host tillhör en Region
-    """
-
-    region: RegionSchema
-
-    class Meta:
-        model = Host
-        fields = "__all__"
-
-
 # Mall för List
-@api.get("/host", response=List[UserSchema])
+@api.get("/hosts", response=List[HostSchema])
 def host_list(request):
     list = Host.objects
     return list
 
 
 # Mall för Detail
-@api.get("/host/{host_id}", response=UserSchema)
+@api.get("/hosts/{host_id}", response=HostSchema)
 def host_detail(request, host_id: int):
     host = get_object_or_404(Host, id=host_id)
     return host
 
 
-# Mall för Add dvs POST
-class HostPostSchema(ModelSchema):
-    """
-    Host eller Härbärge för POST
-
-    """
-
-    region: int
-
-    class Meta:
-        model = Host
-        exclude = ["id"]
-        fields = "__all__"
-
-
 ## Mall för POST Add
-@api.post("/host", response=UserSchema)
+@api.post("/hosts", response=UserSchema)
 def create_host(request, payload: HostPostSchema):
     host = Host.objects.create(**payload.dict())
     return host
 
 
-class HostPatchSchema(ModelSchema):
-    class Meta:
-        model = Host
-        fields = ["id"]  # Note: all these fields are required on model level
-        fields_optional = "__all__"
+## Mall för PATCH, dvs Update
+@api.patch("/hosts", response=UserSchema)
+def host_update(request, payload: HostPatchSchema):
+    pass
+    # not implemented yet
+    # host = Host.objects.create(**payload.dict())
+    # return host
 
 
-@api.patch("/host", response=UserSchema)
-def host_edit(request, payload: HostPatchSchema):
-    host = Host.objects.create(**payload.dict())
-    return host
-
-
-class ProductSchema(Schema):
-    id: int
-    name: str
-    description: str
-    total_places: int
-    host: UserSchema = None
-    type: str
-
-
-@api.get("/product", response=List[ProductSchema])
+@api.get("/products", response=List[ProductSchema])
 def product_list(request):
-    product_list = Product.objects.select_related("host")
+    product_list = Product.objects
     return product_list
 
 
-@api.get("/product/{product_id}", response=ProductSchema)
+@api.get("/products/{product_id}", response=ProductSchema)
 def product_detail(request, product_id: int):
     product = get_object_or_404(Product, id=product_id)
     return product
 
 
-class BookingSchema(Schema):
-    start_date: date
-    product: ProductSchema
-    user: UserSchema
-
-
-@api.get("/booking", response=List[BookingSchema])
+@api.get("/bookings", response=List[BookingSchema])
 def list_booking(request):
     booking_list = Booking.objects.select_related("product")
     return booking_list
 
 
-@api.get("/booking/{product_id}", response=BookingSchema)
-def get_booking(request, product_id: int):
+@api.get("/bookings/{product_id}", response=BookingSchema)
+def booking_detail(request, product_id: int):
     booking = get_object_or_404(Booking, id=product_id)
     return booking
 
 
-class Available(Schema):
-    available_date: date
-    product: ProductSchema
-    places_left: int
+@api.get("/available/{delta_days}", response=List[AvailableSchema])
+def list_available(request, delta_days: int):
+    selected_date = date.today() + timedelta(days=delta_days)
+    list = Available.objects.filter(available_date=selected_date)
+    return list
 
 
-@api.get("/available/{id}", response=Available)
-def booking_detail(request, id: int):
+@api.get("/available/{id}", response=AvailableSchema)
+def available_detail(request, id: int):
     avail = get_object_or_404(Booking, id=id)
     return avail
-
-
-# Only for testing api token functionality
-class AuthBearer(HttpBearer):
-    """
-    AuthBearer för Authorization
-    """
-
-    def authenticate(self, request, token):
-        if token == "supersecret":
-            return token
 
 
 # Only for testing api token functionality

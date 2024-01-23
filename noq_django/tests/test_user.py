@@ -16,3 +16,5 @@ class test_UserTestClass(TestCase):
         tom = User.objects.get(name="Tom")
         
         self.assertIsNotNone(tom)
+        
+        

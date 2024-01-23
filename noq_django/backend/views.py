@@ -18,9 +18,7 @@ def example(request):
 def available_list(request):
     datum = request.POST["datum"]
     queryset = (
-        models.ProductBooking.objects.filter(start_date=datum)
-        .select_related("product")
-        .all()
+        models.Booking.objects.filter(start_date=datum).select_related("product").all()
     )
 
     # queryset = models.Product.objects.all()  # Customize the query as needed
@@ -28,14 +26,19 @@ def available_list(request):
     # ic(available)
     date_format = "%Y-%m-%d"
     for a in queryset:
-        ic(a)    
+        ic(a)
     idag: datetime = datetime.strptime(datum, date_format)
     imorgon = idag + timedelta(days=1)
     form = forms.IndexForm(initial={"datum": imorgon})
     return render(
         request,
         "available_list.html",
-        {"table": available,"objects": queryset, "form": form, "bokningsdag": idag.strftime("%Y-%m-%d")},
+        {
+            "table": available,
+            "objects": queryset,
+            "form": form,
+            "bokningsdag": idag.strftime("%Y-%m-%d"),
+        },
     )
 
 

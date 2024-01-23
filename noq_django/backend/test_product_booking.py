@@ -2,7 +2,7 @@ import unittest
 from icecream import ic
 from django.test import TestCase
 
-from .models import User, UserType, Product, Region, ProductBooking
+from .models import User, UserType, Product, Region, Booking
 
 
 def test_first():
@@ -24,8 +24,14 @@ class test_ProductBooking(TestCase):
         man.save()
         woman = UserType(name="woman")
         woman.save()
-        
-        user = User(name="Tom Sawyer", user_type = man, phone="123", email="a@e.se", unokod="UNO1234")
+
+        user = User(
+            name="Tom Sawyer",
+            user_type=man,
+            phone="123",
+            email="a@e.se",
+            unokod="UNO1234",
+        )
         user.save()
 
         self.assertIsNotNone(user)

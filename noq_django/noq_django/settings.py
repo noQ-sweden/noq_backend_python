@@ -25,7 +25,12 @@ SECRET_KEY = "django-insecure-l3o_ieey@d#^e-#kkk9efo7okg^fm-_q4-iq0h-=lftjnf%cn^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS=['127.0.0.1', 'localhost']
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8080",
+]
+
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 
 # Application definition
@@ -40,11 +45,12 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_extensions",
     "crispy_forms",
-    "django_tables2",
+    "corsheaders",
     "crispy_bootstrap4",
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -73,6 +79,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "noq_django.wsgi.application"
+
+CORS_ALLOWED_ORIGIN_REGEXES: True
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
