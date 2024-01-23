@@ -12,13 +12,15 @@ class Region(models.Model):
     def __str__(self) -> str:
         return self.region_name
 
+class City (models.Model):
+    name = models.CharField()
 
 class Host(models.Model):
     host_name = models.CharField(max_length=80)
     street = models.CharField(max_length=80)
     postcode = models.CharField(max_length=5, default="")
     city = models.CharField(max_length=80, default="")
-    region = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=False)
+    region = models.ForeignKey(Region, on_delete=models.CASCADE, null=False, blank=False)
     total_available_places = models.IntegerField()
 
     class Meta:

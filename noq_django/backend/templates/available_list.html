@@ -12,11 +12,11 @@
     
     <div style="margin-bottom: 20px;"></div>
     <p>Bokade {{ bokningsdag }}:</p>
-
+    {% render_table table %}
 <ul class="book-list">
   {% for obj in objects %}
       <li >
-          <a href="{% url 'book_room_view' host_id=obj.id %}">{{ obj.product }}</a>
+          <a href="{% url 'book_room_view' host_id=obj.product_id %}">{{ obj.product }}</a>
         </li>
   {% endfor %}
 </ul>

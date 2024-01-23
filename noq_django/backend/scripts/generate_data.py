@@ -11,6 +11,8 @@ def add_region(nbr: int) -> int:
         "Farsta",
         "Stockholm City",
         "Göteborg",
+        "Skåne",
+        "Övriga landet",
     ]
 
     print("\n---- REGION ----")
@@ -42,16 +44,21 @@ def add_hosts(nbr: int) -> int:
     while len(Host.objects.all()) < nbr:
         city = faker.city()
         id = random.randint(0, len(härbärge) - 1)
-        ic(id)
         host_name = härbärge[id]
 
+        # Hoppa över om det är samma namn och stad
         if Host.objects.filter(host_name=host_name, city=city).values():
             continue
-
+        
+        regioner = Region.objects.all()
+        id = random.randint(0, len(regioner) - 1)
+        
+        
         host = Host(
             host_name=host_name,
             street=faker.street_address(),
             city=faker.city(),
+            region=regioner[id],
             total_available_places=random.randint(1, 4),
         )
 
@@ -149,7 +156,7 @@ def add_products(nbr: int = 3):
 
 
 def run():
-    add_region(3)
+    add_region(5)
     add_hosts(7)
     add_products(2)
     add_users(12)
