@@ -8,7 +8,7 @@ from backend.models import (
     Available,
 )
 
-from api_schemas import (
+from .api_schemas import (
     RegionSchema,
     UserSchema,
     UserPostSchema,
