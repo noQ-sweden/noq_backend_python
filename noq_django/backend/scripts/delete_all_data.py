@@ -45,7 +45,7 @@ def run():
             region.delete()
             ic(region, "borttagen")
 
-    if kontrollera("produkter available"):
+    if kontrollera("tillgängliga produkter"):
         for prd in Available.objects.all():
             prd.delete()
             print(prd, "borttagen")

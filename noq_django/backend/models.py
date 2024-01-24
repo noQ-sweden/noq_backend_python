@@ -118,13 +118,13 @@ class Booking(models.Model):
 
         if product_type == "woman-only":
             if self.user.gender != "K":
-                print("woman-only", self.user.gender, "nekad")
+                # print("woman-only", self.user.gender, "nekad")
                 raise ValidationError(
                     f"Rum för kvinnor kan inte bokas av män",
                     code="woman-only",
                 )
 
-        # Is Host fully booked?
+        # Is room fully booked?
         booked = Booking.objects.filter(
             product=self.product, start_date=self.start_date
         ).count()
@@ -144,7 +144,7 @@ class Booking(models.Model):
             )
 
         if product_type == "woman-only":
-            print("woman-only", self.user.gender, self.user.first_name)
+            print("Rum för kvinnor bokades av", self.user.first_name)
 
         super().save(*args, **kwargs)
 
@@ -153,21 +153,23 @@ class Booking(models.Model):
             product=self.product, start_date=self.start_date
         ).count()
 
-        left = self.product.total_places - bookings
+        places_left = self.product.total_places - bookings
 
         if bookings == 0:
             raise ValidationError("Bookings IS ZERO")
 
-        availability_record = Available.objects.filter(product=self.product).first()
+        availability_record = Available.objects.filter(
+            product=self.product, available_date=self.start_date
+        ).first()
 
         if availability_record:
-            availability_record.places_left = left
+            availability_record.places_left = places_left
             availability_record.save()
         else:
             product_available = Available(
                 available_date=self.start_date,
                 product=Product.objects.get(id=self.product.id),
-                places_left=left,
+                places_left=places_left,
             )
             product_available.save()
 

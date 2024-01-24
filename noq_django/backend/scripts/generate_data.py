@@ -76,7 +76,6 @@ def add_users(nbr: int):
         return
 
     while len(User.objects.all()) < nbr:
-        
         regioner = Region.objects.all()
         id = random.randint(0, len(regioner) - 1)
 
@@ -94,7 +93,7 @@ def add_users(nbr: int):
         user = User(
             first_name=first_name,
             last_name=last_name,
-            region = regioner[id],
+            region=regioner[id],
             phone="070" + f"{random.randint(0,9)}-{random.randint(121212,909090)}",
             email=f"{first_name}.{last_name}@hotmejl.se".lower(),
             unokod=f"{random.randint(1000,9999)}",
@@ -122,19 +121,22 @@ def add_product_bookings(nbr: int, days_ahead: int = 3):
         )
         user_id = user_min_id.id + random.randint(0, User.objects.all().count() - 5)
 
-        booking = Booking(
-            start_date=datetime.now() + timedelta(days=random.randint(1, days_ahead)),
-            product=Product.objects.get(id=product_id),
-            user=User.objects.get(id=user_id),
-        )
-
         try:
+            brukare = User.objects.get(id=user_id)
+            datum = datetime.now() + timedelta(days=random.randint(1, days_ahead))
+            if brukare:
+                booking = Booking(
+                    start_date=datum,
+                    product=Product.objects.get(id=product_id),
+                    user=brukare,
+                )
+
             booking.save()
             exceptions = 0
         except Exception as ex:
             exceptions += 1
         else:
-            print("Booking added")
+            print(f'Bokning tillagd {datum.strftime("%Y-%m-%d")}: {brukare.first_name} {brukare.last_name}')
 
 
 def add_products(nbr: int = 3):
