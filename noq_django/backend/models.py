@@ -85,11 +85,11 @@ class Product(models.Model):
         db_table = "product"
 
     def __str__(self) -> str:
-        available = None  # ProductAvailable.objects.filter(product=self).first()
+        # available = None  # ProductAvailable.objects.filter(product=self).first()
 
-        if available:
-            left = available.places_left
-            return f"{self.description} på {self.host.host_name}, {self.host.city} {left} platser kvar"
+        # if available:
+        #     left = available.places_left
+        #     return f"{self.description} på {self.host.host_name}, {self.host.city} {left} platser kvar"
 
         return f"{self.description} på {self.host.host_name}, {self.host.city}"
         # booking_count = ProductBooking.objects.filter(product=self).count()
@@ -102,6 +102,7 @@ class Booking(models.Model):
     Booking är en bokning av en produkt av en User
     Se också regelverk vid Save()
     """
+
     start_date = models.DateField(verbose_name="Datum")
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, blank=False, verbose_name="Plats"
@@ -147,7 +148,7 @@ class Booking(models.Model):
                 code="already_booked",
             )
 
-        # Check for special rules 
+        # Check for special rules
         if product_type == "woman-only":
             print("Rum för kvinnor bokades av", self.user.first_name)
 
@@ -191,4 +192,3 @@ class Available(models.Model):
 
     def __str__(self) -> str:
         return f"{self.available_date}: {self.product.description} på {self.product.host.host_name}, {self.product.host.city} har {self.places_left} platser kvar"
-

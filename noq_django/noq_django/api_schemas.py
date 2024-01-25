@@ -96,7 +96,7 @@ class HostPatchSchema(ModelSchema):
     Host eller Härbärge för PATCH (update)
 
     """
-    
+
     class Meta:
         model = Host
         fields = ["id"]  # Note: all these fields are required on model level
@@ -106,10 +106,11 @@ class HostPatchSchema(ModelSchema):
 class ProductSchema(Schema):
     """
     Product
-    Product är en generalisering istället för exempelvis Room 
-    som gör det möjligt att Härbärge kan erbjuda många tjänster. 
+    Product är en generalisering istället för exempelvis Room
+    som gör det möjligt att Härbärge kan erbjuda många tjänster.
     Exempelvis rum eller luncher
     """
+
     id: int
     name: str
     description: str
@@ -120,19 +121,32 @@ class ProductSchema(Schema):
 
 class BookingSchema(Schema):
     """
-    Booking för att boka en Product
-    
+    Booking för att bokningar av en Product
+
     """
+
     start_date: date
     product: ProductSchema
     user: UserSchema
 
 
+class BookingPostSchema(Schema):
+    """
+    Booking för att boka en Product
+
+    """
+    start_date: date
+    product_id: int
+    user_id: int
+
+
+
 class AvailableSchema(Schema):
     """
     Available för att kunna se om en Product har tillgängliga platser
-    
+
     """
+
     id: int
     available_date: date
     product: ProductSchema

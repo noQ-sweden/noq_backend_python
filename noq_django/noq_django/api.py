@@ -17,6 +17,7 @@ from .api_schemas import (
     HostPatchSchema,
     ProductSchema,
     BookingSchema,
+    BookingPostSchema,
     AvailableSchema,
     AuthBearer,
 )
@@ -28,11 +29,11 @@ from datetime import date, timedelta
 
 api = NinjaAPI(csrf=False)
 
-docs = """
+documentation = """
 
     Generell namnsättning för alla API:er
     
-    /objects    GET     listar ett objekt, med metodnamn list_object, kan även ha filterparametrar
+    /objects    GET     listar ett objekt, med metodnamn objects_list, kan även ha filterparametrar
     /objects/id GET     hämtar en unik instans av objekt(/objects/id), med metodnamn object_detail(id)
     /objects/id POST    skapar ett objekt, med metodnamn object_add
     /objects/id PATCH   uppdaterar ett objekt, med metodnamn object_update(id)
@@ -42,8 +43,8 @@ docs = """
 
 
 # User List view, demands django user logged on
-@api.get("/user", auth=django_auth, response=List[UserSchema])
-def list_users(request):
+@api.get("/users", response=List[UserSchema])
+def users_list(request):
     qs = User.objects.all()
     return qs
 
@@ -70,14 +71,14 @@ def user_list(request):
 
 
 # User Detail view
-@api.get("/user/{user_id}", response=UserSchema)
+@api.get("/users/{user_id}", response=UserSchema)
 def user_detail(request, user_id: int):
     obj = get_object_or_404(User, id=user_id)
     return obj
 
 
 # Mall för POST-anrop
-@api.post("/user", response=UserSchema)
+@api.post("/users", response=UserSchema)
 def create_user(request, payload: UserPostSchema):
     obj = User.objects.create(**payload.dict())
     return obj
@@ -95,6 +96,15 @@ def host_list(request):
 def host_detail(request, host_id: int):
     host = get_object_or_404(Host, id=host_id)
     return host
+
+
+# Mall för sub lists
+@api.get("/hosts/{host_id}/products", response=list[ProductSchema])
+def host_detail(request, host_id: int):
+    host = get_object_or_404(Host, id=host_id)
+    
+    list = Product.objects.filter(host=host)
+    return list
 
 
 ## Mall för POST Add
@@ -125,15 +135,30 @@ def product_detail(request, product_id: int):
     return product
 
 
-@api.get("/bookings", response=List[BookingSchema])
-def list_booking(request):
-    booking_list = Booking.objects.select_related("product")
+@api.get("/bookings/{delta_days}", response=List[BookingSchema])
+def list_booking(request, delta_days: int):
+    selected_date = date.today() + timedelta(days=delta_days)
+    booking_list = Booking.objects.filter(start_date=selected_date)
     return booking_list
 
 
 @api.get("/bookings/{product_id}", response=BookingSchema)
 def booking_detail(request, product_id: int):
     booking = get_object_or_404(Booking, id=product_id)
+    return booking
+
+
+# Book a Product
+@api.post("/bookings", response=BookingSchema)
+def booking_add(request, data: BookingPostSchema):
+    
+    product = get_object_or_404(Product, id=data.product_id)
+    user = get_object_or_404(User, id=data.user_id)
+    booking = Booking.objects.create(
+        start_date = data.start_date, 
+        product = product,
+        user = user
+        )
     return booking
 
 
