@@ -41,8 +41,8 @@ def available_list(product_id: int, days_ahead: int = 10):
     start_date=datetime.now() + timedelta(days_ahead)
     
     
-    avail = Available.objects.filter(product_id = product_id, available_date = start_date)
-    ic(avail)
+    available = Available.objects.filter(product_id = product_id, available_date = start_date)
+    ic(available)
     
 
 def add_products():

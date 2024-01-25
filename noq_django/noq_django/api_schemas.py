@@ -114,7 +114,7 @@ class ProductSchema(Schema):
     name: str
     description: str
     total_places: int
-    host: UserSchema = None
+    host: HostSchema = None
     type: str
 
 

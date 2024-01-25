@@ -98,6 +98,10 @@ class Product(models.Model):
 
 
 class Booking(models.Model):
+    """
+    Booking är en bokning av en produkt av en User
+    Se också regelverk vid Save()
+    """
     start_date = models.DateField(verbose_name="Datum")
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, blank=False, verbose_name="Plats"
@@ -143,28 +147,26 @@ class Booking(models.Model):
                 code="already_booked",
             )
 
+        # Check for special rules 
         if product_type == "woman-only":
             print("Rum för kvinnor bokades av", self.user.first_name)
 
         super().save(*args, **kwargs)
 
-        # Uppdatera ProductAvailable
+        # Uppdatera Available
         bookings = Booking.objects.filter(
             product=self.product, start_date=self.start_date
         ).count()
 
         places_left = self.product.total_places - bookings
 
-        if bookings == 0:
-            raise ValidationError("Bookings IS ZERO")
-
-        availability_record = Available.objects.filter(
+        existing_availability = Available.objects.filter(
             product=self.product, available_date=self.start_date
         ).first()
 
-        if availability_record:
-            availability_record.places_left = places_left
-            availability_record.save()
+        if existing_availability:
+            existing_availability.places_left = places_left
+            existing_availability.save()
         else:
             product_available = Available(
                 available_date=self.start_date,
@@ -189,3 +191,4 @@ class Available(models.Model):
 
     def __str__(self) -> str:
         return f"{self.available_date}: {self.product.description} på {self.product.host.host_name}, {self.product.host.city} har {self.places_left} platser kvar"
+

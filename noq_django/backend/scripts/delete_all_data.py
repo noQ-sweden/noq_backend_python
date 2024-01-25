@@ -43,7 +43,7 @@ def run():
     if kontrollera("regioner"):
         for region in Region.objects.all():
             region.delete()
-            ic(region, "borttagen")
+            # ic(region, "borttagen")
 
     if kontrollera("tillgängliga produkter"):
         for prd in Available.objects.all():
@@ -70,4 +70,4 @@ def run():
             ic(host, "borttagen")
             host.delete()
 
-    count()
+    # count()
