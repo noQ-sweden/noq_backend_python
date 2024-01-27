@@ -3,29 +3,43 @@ from datetime import datetime, timedelta
 from icecream import ic
 from faker import Faker
 
-from backend.models import Host, User, Product, Region, Booking
+from .delete_all_data import reset_all_data
+
+from backend.models import Host, UserDetails, Product, Region, Booking
+
+
+def get_regioner():
+    return [
+        ["Göteborg", ["Göteborg", "Mölndal", "Hammarkullen"]],
+        ["Farsta", ["Farsta", "Handen"]],
+        ["Stockholm City", ["Stockholm", "Solna", "Sundbyberg"]],
+        ["Skåne", ["Malmö", "Trelleborg", "Lund"]],
+        ["Övriga landet", ["Umeå", "Sundsvall", "Örebro"]],
+    ]
+
+
+def get_region(index: int):
+    list = get_regioner()
+    return list[index][0]
+
+
+def get_cities(index: int):
+    list = get_regioner()
+    return list[index][1]
 
 
 def add_region(nbr: int) -> int:
-    regioner = [
-        "Farsta",
-        "Stockholm City",
-        "Göteborg",
-        "Skåne",
-        "Övriga landet",
-    ]
-
     print("\n---- REGION ----")
 
     if len(Region.objects.all()) >= nbr:
         return
 
-    for namn in regioner:
-        region = Region(region_name=namn)
+    for region in get_regioner():
+        region = Region(name=region[0])
 
         region.save()
 
-        ic(region, "added")
+        print(region, "tillagd")
 
 
 def add_hosts(nbr: int) -> int:
@@ -40,30 +54,32 @@ def add_hosts(nbr: int) -> int:
     ]
 
     print("\n---- HOSTS ----")
-
     while len(Host.objects.all()) < nbr:
-        city = faker.city()
-        id = random.randint(0, len(härbärge) - 1)
-        host_name = härbärge[id]
-
-        # Hoppa över om det är samma namn och stad
-        if Host.objects.filter(host_name=host_name, city=city).values():
-            continue
+        ix = random.randint(0, len(härbärge) - 1)
+        host_name = härbärge[ix]
 
         regioner = Region.objects.all()
-        id = random.randint(0, len(regioner) - 1)
+        ix = random.randint(0, len(regioner) - 1)
+
+        region = get_region(ix)
+        region_obj = Region.objects.filter(name=region).first()
+
+        if not region_obj:
+            raise ValueError(f"Region is null! ({region} and {region_obj})")
+
+        stad = random.choice(get_cities(ix))
+
+        # Hoppa över om det är samma namn och stad
+        if Host.objects.filter(name=host_name, city=stad).count() > 0:
+            continue
 
         host = Host(
-            host_name=host_name,
-            street=faker.street_address(),
-            city=faker.city(),
-            region=regioner[id],
-            total_available_places=random.randint(1, 4),
+            name=host_name, street=faker.street_address(), city=stad, region=region_obj
         )
 
         host.save()
 
-        ic(host, "added")
+        print(f"{host} i region {region} tillagd")
 
     return
 
@@ -72,14 +88,25 @@ def add_users(nbr: int):
     faker = Faker("sv_SE")
 
     print("\n---- USERS ----")
-    if len(User.objects.all()) >= nbr:
+    if len(UserDetails.objects.all()) >= nbr:
         return
 
-    while len(User.objects.all()) < nbr:
+    while len(UserDetails.objects.all()) < nbr:
         regioner = Region.objects.all()
         id = random.randint(0, len(regioner) - 1)
 
         gender = "M" if random.randint(0, 1) > 0 else "K"
+
+        regioner = Region.objects.all()
+        ix = random.randint(0, len(regioner) - 1)
+
+        region = get_region(ix)
+        region_obj = Region.objects.filter(name=region).first()
+
+        if not region_obj:
+            raise ValueError(f"Region is null! ({region} and {region_obj})")
+
+        stad = random.choice(get_cities(ix))
 
         first_name: str = (
             faker.first_name_female() if gender == "K" else faker.first_name_male()
@@ -87,24 +114,26 @@ def add_users(nbr: int):
 
         last_name: str = faker.last_name()
 
-        if User.objects.filter(first_name=first_name, last_name=last_name).values():
+        if UserDetails.objects.filter(
+            first_name=first_name, last_name=last_name
+        ).values():
             continue
 
-        user = User(
+        user = UserDetails(
             first_name=first_name,
             last_name=last_name,
-            region=regioner[id],
+            region=region_obj,
             phone="070" + f"{random.randint(0,9)}-{random.randint(121212,909090)}",
             email=f"{first_name}.{last_name}@hotmejl.se".lower(),
             unokod=f"{random.randint(1000,9999)}",
             gender=gender,
             street=faker.street_address(),
-            city=faker.city(),
+            city=stad,
         )
         user.save()
 
 
-def add_product_bookings(nbr: int, days_ahead: int = 3):
+def add_product_bookings(nbr: int, days_ahead: int = 3, verbose: bool = False):
     faker = Faker("sv_SE")
     faker.seed_instance()
     max_exceptions = 20
@@ -113,17 +142,22 @@ def add_product_bookings(nbr: int, days_ahead: int = 3):
     print("\n---- PRODUCT BOOKINGS ----")
 
     product_min_id = Product.objects.order_by("id").first()
-    user_min_id = User.objects.order_by("id").first()
+    user_min_id = UserDetails.objects.order_by("id").first()
 
     while len(Booking.objects.all()) < nbr and exceptions < max_exceptions:
         product_id = product_min_id.id + random.randint(
-            0, Host.objects.all().count() - 3
+            0, Product.objects.all().count() - 1
         )
-        user_id = user_min_id.id + random.randint(0, User.objects.all().count() - 5)
+        user_id = user_min_id.id + random.randint(
+            0, UserDetails.objects.all().count() - 5
+        )
 
         try:
-            brukare = User.objects.get(id=user_id)
-            datum = datetime.now() + timedelta(days=random.randint(1, days_ahead))
+            brukare = UserDetails.objects.get(id=user_id)
+            datum = datetime.now() + timedelta(days=random.randint(0, days_ahead))
+            if verbose:
+                print(f'{brukare} {datum.strftime("%Y-%m-%d")}:')
+
             if brukare:
                 booking = Booking(
                     start_date=datum,
@@ -135,8 +169,12 @@ def add_product_bookings(nbr: int, days_ahead: int = 3):
             exceptions = 0
         except Exception as ex:
             exceptions += 1
+            if verbose:
+                print("Exception:", ex)
         else:
-            print(f'Bokning tillagd {datum.strftime("%Y-%m-%d")}: {brukare.first_name} {brukare.last_name}')
+            print(
+                f'Bokning tillagd {datum.strftime("%Y-%m-%d")} {booking.product} för {booking.user.name()} {booking.product.host.region}'
+            )
 
 
 def add_products(nbr: int = 3):
@@ -160,9 +198,29 @@ def add_products(nbr: int = 3):
         )
 
 
-def run():
+def run(*args):
+    docs = """
+    generate test data
+    
+    python manage.py runscript generate_data 
+    
+    Args: [--script-args v2]
+    
+    """
+    print(docs)
+    v2_arg = "v2" in args
+
+    if "reset" in args:
+        reset_all_data()
+
+    antal_hosts = len(Host.objects.all())
+    antal_bookings = len(Host.objects.all())
+    if antal_hosts > 0 or antal_bookings > 0:
+        print("---- Tabellerna innehåller data -----")
+        print("HOSTS:", antal_hosts, "BOOKINGS:", antal_bookings)
     add_region(5)
-    add_hosts(7)
-    add_products(2)
-    add_users(12)
-    add_product_bookings(40, 7)
+    add_hosts(10)
+    add_products(6)
+    add_users(16)
+
+    add_product_bookings(40, 7, v2_arg)

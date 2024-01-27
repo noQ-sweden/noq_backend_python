@@ -3,7 +3,7 @@
 from icecream import ic
 import sys
 
-from backend.models import Host, User, Product, Region, Booking, Available
+from backend.models import Host, UserDetails, Product, Region, Booking, Available
 
 flag_all = False
 
@@ -14,12 +14,14 @@ def kontrollera(typ: str) -> bool:
         print(f"Tar bort alla {typ}")
         return True
 
-    answer = input(f"Vill du ta bort alla {typ}(ja/nej/alla)?")
+    answer = input(f"Vill du ta bort {typ}(ja/nej/alla)?")
     if answer.lower() in ["q", "quit"]:
         sys.exit()
     if answer.lower().startswith("a"):
         flag_all = True
-    return answer.lower() in ["j", "ja", "y", "yes"]
+        return flag_all
+    else:
+        return answer.lower() in ["j", "ja", "y", "yes"]
 
 
 def count():
@@ -29,45 +31,69 @@ def count():
     ic(Region.objects.all().count())
 
     ic(Host.objects.all().count())
-    ic(User.objects.all().count())
+    ic(UserDetails.objects.all().count())
 
 
-def run():
-    count()
+def reset_all_data(all: bool = False):
+    global flag_all
 
-    if kontrollera("bokningar"):
-        for booking in Booking.objects.all():
-            booking.delete()
-            ic(booking, "borttagen")
+    flag_all = all
 
     if kontrollera("regioner"):
+        print("Tar bort regioner")
         for region in Region.objects.all():
             region.delete()
             # ic(region, "borttagen")
 
+    if kontrollera("bokningar"):
+        for booking in Booking.objects.all():
+            booking.delete()
+            # ic(booking, "borttagen")
+
     if kontrollera("tillgängliga produkter"):
         for prd in Available.objects.all():
             prd.delete()
-            print(prd, "borttagen")
+            # print(prd, "borttagen")
 
     if kontrollera("bokningar"):
         for prd in Booking.objects.all():
             prd.delete()
-            print(prd, "borttagen")
+            # print(prd, "borttagen")
 
     if kontrollera("produkter"):
         for prd in Product.objects.all():
             prd.delete()
-            print(prd, "borttagen")
+            # print(prd, "borttagen")
 
     if kontrollera("användare"):
-        for user in User.objects.all():
+        for user in UserDetails.objects.all():
             ic(user, "borttagen")
-            user.delete()
+            # user.delete()
 
     if kontrollera("härbärgen"):
         for host in Host.objects.all():
             ic(host, "borttagen")
-            host.delete()
+            # host.delete()
 
     # count()
+
+
+def run(*args):
+    docs = """
+    delete_all_data - remove all data in all tables
+    
+    python manage.py runscript delete_all_data 
+    
+    Args: [--script-args all]
+    
+    
+    """
+    print(docs + "Current content:")
+    count()
+    print("")
+
+    global flag_all
+
+    flag_all = "all" in args
+
+    reset_all_data(flag_all)
