@@ -11,7 +11,7 @@ from . import models
 
 
 class IndexForm(forms.Form):
-    idag = datetime.now() + timedelta(days=1)
+    idag = datetime.now() + timedelta(days=0)
     datum = forms.DateField(initial=idag)
 
     class Meta:
@@ -26,15 +26,30 @@ class SearchForm(forms.Form):
 
 
 class BookRoomForm(forms.Form):
-    namn = forms.CharField()
+    brukare = forms.CharField()
 
+    class Meta:
+        fields = ["host", "user"]
+
+
+class BookRoomConfirmForm(forms.Form):
+    userid = forms.IntegerField
+    class Meta:
+        fields = ["userid"]
+
+
+class BookForm(forms.Form):
+    start_date = forms.DateField()
+    user_id = forms.IntegerField()
+    product_id = forms.IntegerField()
+    
     class Meta:
         fields = ["host", "user"]
 
 
 class UserForm(forms.ModelForm):
     class Meta:
-        model = models.User
+        model = models.UserDetails
         fields = ["first_name", "last_name", "phone"]
 
 

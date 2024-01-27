@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     "crispy_forms",
     "corsheaders",
     "crispy_bootstrap4",
+    "django_tables2",
+     
 ]
 
 MIDDLEWARE = [
@@ -145,3 +147,9 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
+
+# For https://django-extensions.readthedocs.io/en/latest/graph_models.html
+GRAPH_MODELS = {
+  'all_applications': True,
+  'group_models': True,
+}

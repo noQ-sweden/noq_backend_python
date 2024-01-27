@@ -16,5 +16,5 @@ urlpatterns = [
         "available/", views.available_list, name="available_list"
     ),  # Listan som svar på sök
     path("book/", views.reservation_view, name="reservation_view"),
-    path("book/<int:host_id>/", views.book_room_view, name="book_room_view"),
+    path("book/<int:available_id>/", views.book_room_view, name="book_room_view"),
 ]

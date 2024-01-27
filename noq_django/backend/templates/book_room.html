@@ -1,12 +1,13 @@
 {% extends "base.html" %}
-
+<h2>Boka</h2>
 {% block content %}
-<h2>{{product}}</h2>
+<h2>{{available}}</h2>
+<p>{{message}}</p>
 <form method="post" >
     {% csrf_token %}
     {{ form.as_p }}
-    
-    <input type="submit" value="Sök">
+    <input type="hidden" name="userid" value="">
+    <input type="submit" value="Sök namn">
 </form>
 
 {% endblock %}

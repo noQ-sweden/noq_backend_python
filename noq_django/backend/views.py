@@ -17,17 +17,14 @@ def example(request):
 
 def available_list(request):
     datum = request.POST["datum"]
-    queryset = (
-        models.Booking.objects.filter(start_date=datum).select_related("product").all()
-    )
+    queryset = models.Available.objects.filter(available_date=datum).all()
 
     # queryset = models.Product.objects.all()  # Customize the query as needed
     available = tables.AvailableProducts(queryset)
     # ic(available)
-    date_format = "%Y-%m-%d"
-    for a in queryset:
-        ic(a)
-    idag: datetime = datetime.strptime(datum, date_format)
+    # for a in queryset:
+    #     ic(a)
+    idag: datetime = datetime.strptime(datum, "%Y-%m-%d")
     imorgon = idag + timedelta(days=1)
     form = forms.IndexForm(initial={"datum": imorgon})
     return render(
@@ -69,17 +66,55 @@ def reservation_view(request):
     return render(request, "book_room.html", {"form": form, "hosts": myhosts})
 
 
-def book_room_view(request, host_id):
-    product = get_object_or_404(models.Product, host_id=host_id)
-    return render(request, "book_room.html", {"obj": product})
+def book_room_view(request, available_id):
+    message = ""
+    available = models.Available.objects.filter(id=available_id).first()
+    if not available:
+        return redirect("")  # Main
+    if request.method == "POST":
+        # form = forms.BookRoomConfirmForm(request.POST)
+        user_id = request.POST["userid"]
+        if user_id:
+            product = available.product
+            user = models.UserDetails.objects.filter(pk=user_id).first()
+            booking = models.Booking(
+                    start_date=available.available_date,
+                    product=product,
+                    user=user,
+                )
+
+            booking.save()
+            return redirect("index_view")  # Main
+
+            
+        form = forms.BookRoomForm(request.POST)
+        if form.is_valid():
+            namn = form["brukare"].data
+            user = models.UserDetails.objects.filter(first_name=namn).first()
+            if user:
+                form = forms.BookRoomConfirmForm(initial={"user": user})
+                return render(
+                    request,
+                    "book_room_confirm.html",
+                    {"form": form, "available": available, "user": user},
+                )
+            else:
+                message = "Kan inte hitta någon med det förnamnet: " + namn  
+
+    form = forms.BookRoomForm()
+    return render(
+        request,
+        "book_room.html",
+        {"form": form, "available": available, "message": message},
+    )
 
     form = forms.BookRoomForm()
     myhosts = models.Host.objects.all()
     return render(request, "book_room.html", {"form": form})
-    return host_id
+    return available_id
     rooms = {}
-    host = models.Host.objects.get(host_id)
-    name = host.host_name
+    host = models.Host.objects.get(available_id)
+    name = host.name
     if request.method == "POST":
         form = forms.BookRoomForm(request.POST)
         if form.is_valid():

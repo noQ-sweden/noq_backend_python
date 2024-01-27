@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Bekräfta bokning</h1>
+<h2>{{user}}</h2>
+<h2>{{available}}</h2>
+<form method="post" >
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="hidden" name="userid" value="{{ user.pk }}">
+    <div style="margin-bottom: 30px;"></div>
+    <input type="submit" value="Bekräfta">
+</form>
+
+{% endblock %}

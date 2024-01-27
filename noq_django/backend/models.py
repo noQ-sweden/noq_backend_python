@@ -1,36 +1,37 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+
+from django.contrib.auth.models import User
 from datetime import datetime
 
 
 class Region(models.Model):
-    region_name = models.CharField(max_length=80)
+    name = models.CharField(max_length=80)
 
     class Meta:
         db_table = "regions"
 
     def __str__(self) -> str:
-        return self.region_name
+        return self.name
 
 
 class Host(models.Model):
-    host_name = models.CharField(max_length=80)
+    name = models.CharField(max_length=80)
     street = models.CharField(max_length=80)
     postcode = models.CharField(max_length=5, default="")
     city = models.CharField(max_length=80, default="")
     region = models.ForeignKey(
         Region, on_delete=models.CASCADE, null=False, blank=False
     )
-    total_available_places = models.IntegerField()
 
     class Meta:
         db_table = "hosts"
 
     def __str__(self) -> str:
-        return f"{self.host_name}, {self.city}: {self.total_available_places} platser"
+        return f"{self.name}, {self.city}"
 
 
-class User(models.Model):
+class UserDetails(models.Model):
     first_name = models.CharField(max_length=32)
     last_name = models.CharField(max_length=32)
     gender = models.CharField(
@@ -55,9 +56,11 @@ class User(models.Model):
 
     class Meta:
         db_table = "users"
+    
+        verbose_name_plural = "Users"
 
     def name(self) -> str:
-        return f"{self.first_name}, {self.last_name}"
+        return f"{self.first_name} {self.last_name}"
 
     def __str__(self) -> str:
         # rsrv = ProductBooking.objects.filter(user=self).order_by("-start_date").first()
@@ -89,12 +92,12 @@ class Product(models.Model):
 
         # if available:
         #     left = available.places_left
-        #     return f"{self.description} på {self.host.host_name}, {self.host.city} {left} platser kvar"
+        #     return f"{self.description} på {self.host.name}, {self.host.city} {left} platser kvar"
 
-        return f"{self.description} på {self.host.host_name}, {self.host.city}"
+        return f"{self.description} på {self.host.name}, {self.host.city}"
         # booking_count = ProductBooking.objects.filter(product=self).count()
 
-        # return f"{self.description} ({self.total_places} platser på {self.host.host_name}, {self.host.city} ({booking_count} bokade)"
+        # return f"{self.description} ({self.total_places} platser på {self.host.name}, {self.host.city} ({booking_count} bokade)"
 
 
 class Booking(models.Model):
@@ -108,11 +111,33 @@ class Booking(models.Model):
         Product, on_delete=models.CASCADE, blank=False, verbose_name="Plats"
     )
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, blank=False, verbose_name="Brukare"
+        UserDetails, on_delete=models.CASCADE, blank=False, verbose_name="Brukare"
     )
 
     class Meta:
         db_table = "product_booking"
+
+    def calc_available(self):
+        bookings = Booking.objects.filter(
+            product=self.product, start_date=self.start_date
+        ).count()
+
+        places_left = self.product.total_places - bookings
+
+        existing_availability = Available.objects.filter(
+            product=self.product, available_date=self.start_date
+        ).first()
+
+        if existing_availability:
+            existing_availability.places_left = places_left
+            existing_availability.save()
+        else:
+            product_available = Available(
+                available_date=self.start_date,
+                product=Product.objects.get(id=self.product.id),
+                places_left=places_left,
+            )
+            product_available.save()
 
     def save(self, *args, **kwargs):
         self.start_date = self.start_date
@@ -149,35 +174,16 @@ class Booking(models.Model):
             )
 
         # Check for special rules
-        if product_type == "woman-only":
-            print("Rum för kvinnor bokades av", self.user.first_name)
+        # if product_type == "woman-only":
+        #     print("\nRum för kvinnor OK:", self.user.name())
 
         super().save(*args, **kwargs)
 
         # Uppdatera Available
-        bookings = Booking.objects.filter(
-            product=self.product, start_date=self.start_date
-        ).count()
-
-        places_left = self.product.total_places - bookings
-
-        existing_availability = Available.objects.filter(
-            product=self.product, available_date=self.start_date
-        ).first()
-
-        if existing_availability:
-            existing_availability.places_left = places_left
-            existing_availability.save()
-        else:
-            product_available = Available(
-                available_date=self.start_date,
-                product=Product.objects.get(id=self.product.id),
-                places_left=places_left,
-            )
-            product_available.save()
+        self.calc_available()
 
     def __str__(self) -> str:
-        return f"{self.start_date}: {self.user.first_name} {self.user.last_name} har bokat {self.product.description} på {self.product.host.host_name}, {self.product.host.city}"
+        return f"{self.start_date}: {self.user.first_name} {self.user.last_name} har bokat {self.product.description} på {self.product.host.name}, {self.product.host.city}"
 
 
 class Available(models.Model):
@@ -191,4 +197,4 @@ class Available(models.Model):
         db_table = "product_available"
 
     def __str__(self) -> str:
-        return f"{self.available_date}: {self.product.description} på {self.product.host.host_name}, {self.product.host.city} har {self.places_left} platser kvar"
+        return f"{self.product.description} på {self.product.host.name}, {self.product.host.city} har {self.places_left} platser kvar"
