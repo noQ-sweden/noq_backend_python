@@ -1,7 +1,7 @@
 from ninja import NinjaAPI, Schema, ModelSchema
-
+from typing import Optional
 from backend.models import (
-    User,
+    UserDetails,
     Host,
     Region,
     Product,
@@ -40,7 +40,7 @@ class UserSchema(ModelSchema):
     region: RegionSchema
 
     class Meta:
-        model = User
+        model = UserDetails
         fields = "__all__"
 
 
@@ -83,6 +83,12 @@ class HostPostSchema(ModelSchema):
 
     """
 
+    name: Optional[str] = None
+    street: Optional[str] = None
+    postcode: Optional[str] = None
+    city: Optional[str] = None
+    region: Optional[RegionSchema] = None
+
     region: int
 
     class Meta:
@@ -91,9 +97,11 @@ class HostPostSchema(ModelSchema):
         fields = "__all__"
 
 
-class HostPatchSchema(ModelSchema):
+class HostPatchSchema(Schema):
     """
     Host eller Härbärge för PATCH (update)
+
+    Watch to learn: https://www.youtube.com/watch?v=OGUqBay7BP0&t=919s
 
     """
 
@@ -135,10 +143,10 @@ class BookingPostSchema(Schema):
     Booking för att boka en Product
 
     """
+
     start_date: date
     product_id: int
     user_id: int
-
 
 
 class AvailableSchema(Schema):
