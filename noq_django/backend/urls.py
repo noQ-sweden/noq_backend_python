@@ -3,17 +3,17 @@ from . import views
 
 # from views import book_room_view
 
-# Django documentation 
+# Django documentation
 
 #   1. urlpatterns  nedan
 #   2. views.py     view
-#      
+#
 #   3. tables.py
 #   4. html-template
 
 urlpatterns = [
     path("", views.main_view, name="main_view"),
-    path("search", views.search_view, name="index_view"),
+    path("search", views.search_view, name="search_view"),
     path(
         "available/", views.available_list, name="available_list"
     ),  # Listan som svar på sök

@@ -10,7 +10,7 @@ from crispy_forms.layout import Submit, Fieldset, Field, MultiField, Div, Layout
 from . import models
 
 
-class IndexForm(forms.Form):
+class AvailableForm(forms.Form):
     idag = datetime.now() + timedelta(days=0)
     datum = forms.DateField(initial=idag)
 
@@ -28,10 +28,10 @@ class SearchForm(forms.Form):
 class BookRoomForm(forms.Form):
     brukare = forms.CharField()
 
-    labels = {'brukare': 'Förnamn'}
+    labels = {"brukare": "Förnamn"}
 
     widgets = {
-        'brukare': forms.TextInput(attrs={'class': 'form-control'}),
+        "brukare": forms.TextInput(attrs={"class": "form-control"}),
     }
 
     class Meta:
@@ -50,16 +50,16 @@ class BookRoomForm2(forms.Form):
     efternamn = forms.CharField(required=False)
 
     class Meta:
-        fields = ['förnamn', 'efternamn', 'user']
+        fields = ["förnamn", "efternamn", "user"]
 
         labels = {
-            'förnamn': '',
-            'efternamn': '',
+            "förnamn": "",
+            "efternamn": "",
         }
 
         widgets = {
-            'förnamn': forms.TextInput(attrs={'class': 'form-control'}),
-            'efternamn': forms.TextInput(attrs={'class': 'form-control'}),
+            "förnamn": forms.TextInput(attrs={"class": "form-control"}),
+            "efternamn": forms.TextInput(attrs={"class": "form-control"}),
         }
 
 
