@@ -1,19 +1,21 @@
-{% extends 'base.html' %}
+{% extends 'basen.html' %}
 {% load crispy_forms_tags %}
 
 {% load render_table from django_tables2 %}
 
 {% block content %}
-<p><b>Sök boende:</b></p>
-  <form method="post" action="{% url 'available_list' %}">
-    {% csrf_token %} {{ form.datum}}
-    <input type="submit" value="Sök" />
-  </form>
     
     <div style="margin-bottom: 20px;"></div>
-    <p>Tillgängliga platser {{ bokningsdag }}:</p>
+    <h1>Tillgängliga platser {{ bokningsdag }}:</h1>
     {% render_table table %}
 
+    <div style="margin-bottom: 20px;"></div>
+
+    <form method="post" action="{% url 'available_list' %}">
+      {% csrf_token %} {{ form.datum}}
+      <input type="submit" value="Sök" />
+    </form>
+  
                 
 
 

@@ -1,3 +1,4 @@
+import os
 """
 Django settings for noq_django project.
 
@@ -152,4 +153,25 @@ CRISPY_TEMPLATE_PACK = "bootstrap4"
 GRAPH_MODELS = {
   'all_applications': True,
   'group_models': True,
+}
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+    },
 }

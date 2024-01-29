@@ -83,17 +83,9 @@ class HostPostSchema(ModelSchema):
 
     """
 
-    name: Optional[str] = None
-    street: Optional[str] = None
-    postcode: Optional[str] = None
-    city: Optional[str] = None
-    region: Optional[RegionSchema] = None
-
-    region: int
-
     class Meta:
         model = Host
-        exclude = ["id"]
+        exclude = ["id", "region"]
         fields = "__all__"
 
 
@@ -101,9 +93,15 @@ class HostPatchSchema(Schema):
     """
     Host eller Härbärge för PATCH (update)
 
-    Watch to learn: https://www.youtube.com/watch?v=OGUqBay7BP0&t=919s
+    Video to learn: https://www.youtube.com/watch?v=OGUqBay7BP0&t=919s
 
     """
+
+    name: Optional[str] = None
+    street: Optional[str] = None
+    postcode: Optional[str] = None
+    city: Optional[str] = None
+    region: Optional[RegionSchema] = None
 
     class Meta:
         model = Host

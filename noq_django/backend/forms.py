@@ -28,21 +28,46 @@ class SearchForm(forms.Form):
 class BookRoomForm(forms.Form):
     brukare = forms.CharField()
 
+    labels = {'brukare': 'Förnamn'}
+
+    widgets = {
+        'brukare': forms.TextInput(attrs={'class': 'form-control'}),
+    }
+
     class Meta:
         fields = ["host", "user"]
 
 
 class BookRoomConfirmForm(forms.Form):
     userid = forms.IntegerField
+
     class Meta:
         fields = ["userid"]
+
+
+class BookRoomForm2(forms.Form):
+    förnamn = forms.CharField(required=False)
+    efternamn = forms.CharField(required=False)
+
+    class Meta:
+        fields = ['förnamn', 'efternamn', 'user']
+
+        labels = {
+            'förnamn': '',
+            'efternamn': '',
+        }
+
+        widgets = {
+            'förnamn': forms.TextInput(attrs={'class': 'form-control'}),
+            'efternamn': forms.TextInput(attrs={'class': 'form-control'}),
+        }
 
 
 class BookForm(forms.Form):
     start_date = forms.DateField()
     user_id = forms.IntegerField()
     product_id = forms.IntegerField()
-    
+
     class Meta:
         fields = ["host", "user"]
 

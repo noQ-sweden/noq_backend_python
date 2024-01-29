@@ -111,7 +111,7 @@ class Booking(models.Model):
         Product, on_delete=models.CASCADE, blank=False, verbose_name="Plats"
     )
     user = models.ForeignKey(
-        UserDetails, on_delete=models.CASCADE, blank=False, verbose_name="Brukare"
+        UserDetails, on_delete=models.CASCADE, blank=False, verbose_name="Namn"
     )
 
     class Meta:
@@ -181,6 +181,11 @@ class Booking(models.Model):
 
         # Uppdatera Available
         self.calc_available()
+        
+    # Your custom code to be executed before the object is deleted
+    def pre_delete_booking(self, instance, **kwargs):
+        self.calc_available()
+        print(f"Booking {instance} is about to be deleted.")
 
     def __str__(self) -> str:
         return f"{self.start_date}: {self.user.first_name} {self.user.last_name} har bokat {self.product.description} på {self.product.host.name}, {self.product.host.city}"

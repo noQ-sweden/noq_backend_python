@@ -1,10 +1,10 @@
-{% extends "base.html" %} 
+{% extends "basen.html" %} 
 {% load crispy_forms_tags %}
 
 {% block sidebar %}
 
   {% endblock %} {% block content %}
-  <p><b>Sök boende:</b></p>
+  <h1>Sök boende:</h1>
   <form method="post" action="{% url 'available_list' %}">
     {% csrf_token %} {{ form.datum}}
     <input type="submit" value="Sök" />

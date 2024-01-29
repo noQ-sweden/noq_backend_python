@@ -39,3 +39,6 @@ content-type: application/json
     "user_id": 111
 }
 
+### Available rooms
+GET http://127.0.0.1:8000/api/hosts/ids
+Content-Type: application/application/json
