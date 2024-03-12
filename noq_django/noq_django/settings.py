@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "crispy_bootstrap4",
     "django_tables2",
-     
+    "django_q",
 ]
 
 MIDDLEWARE = [
@@ -62,6 +62,11 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+Q_CLUSTER = {
+    "name": "noq_django",
+    "orm": "default",
+}
 
 ROOT_URLCONF = "noq_django.urls"
 
