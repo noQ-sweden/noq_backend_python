@@ -66,6 +66,7 @@ MIDDLEWARE = [
 Q_CLUSTER = {
     "name": "noq_django",
     "orm": "default",
+    "max_attempts": 2,
 }
 
 ROOT_URLCONF = "noq_django.urls"
