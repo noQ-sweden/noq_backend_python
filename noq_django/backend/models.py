@@ -54,6 +54,9 @@ class UserDetails(models.Model):
         Region, on_delete=models.CASCADE, null=False, blank=False
     )
 
+    #Datum för senaste uppdateringen av användarodellen, för att avgöra om användaren är aktiv
+    last_edit = models.DateField(verbose_name="Senaste Aktivitet")
+
     class Meta:
         db_table = "users"
     
@@ -61,6 +64,14 @@ class UserDetails(models.Model):
 
     def name(self) -> str:
         return f"{self.first_name} {self.last_name}"
+
+    def save(self, *args, **kwargs):
+        if 'fake_data' in kwargs:  #Om data är genererat av script använd istället för time.now
+            self.last_edit = kwargs.pop('fake_data')
+            super(UserDetails, self).save(*args, **kwargs)
+        else:   
+            self.last_edit = datetime.now()
+            super(UserDetails, self).save(*args, **kwargs)
 
     def __str__(self) -> str:
         # rsrv = ProductBooking.objects.filter(user=self).order_by("-start_date").first()

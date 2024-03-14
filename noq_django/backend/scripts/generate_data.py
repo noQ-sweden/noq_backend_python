@@ -119,6 +119,9 @@ def add_users(nbr: int):
         ).values():
             continue
 
+        last_edit = datetime.now() - timedelta(days=random.randint(0, 31))
+
+
         user = UserDetails(
             first_name=first_name,
             last_name=last_name,
@@ -130,7 +133,7 @@ def add_users(nbr: int):
             street=faker.street_address(),
             city=stad,
         )
-        user.save()
+        user.save(fake_data=last_edit)
 
 
 def add_product_bookings(nbr: int, days_ahead: int = 3, verbose: bool = False):
