@@ -1,31 +1,4 @@
-from ninja import NinjaAPI, Schema, ModelSchema
-from backend.models import (
-    UserDetails,
-    Host,
-    Region,
-    Product,
-    Booking,
-    Available,
-)
-
-from .api_schemas import (
-    RegionSchema,
-    UserSchema,
-    UserPostSchema,
-    HostSchema,
-    HostPostSchema,
-    HostPatchSchema,
-    ProductSchema,
-    BookingSchema,
-    BookingPostSchema,
-    AvailableSchema,
-    AuthBearer,
-)
-
-from typing import List
-from django.shortcuts import get_object_or_404
-from ninja.security import django_auth, django_auth_superuser, HttpBearer
-from datetime import date, timedelta
+from ninja import NinjaAPI
 
 api = NinjaAPI(
     csrf=False,
