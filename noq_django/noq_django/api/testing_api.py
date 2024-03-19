@@ -19,7 +19,6 @@ from .api_schemas import (
     BookingSchema,
     BookingPostSchema,
     AvailableSchema,
-    AuthBearer,
 )
 
 from typing import List
@@ -187,9 +186,3 @@ def list_available(request, delta_days: int):
 def available_detail(request, id: int):
     avail = get_object_or_404(Booking, id=id)
     return avail
-
-
-# Only for testing router token functionality
-@router.get("/bearer", auth=AuthBearer(), tags=["x Authorization"])
-def bearer(request):
-    return {"token": request.auth}

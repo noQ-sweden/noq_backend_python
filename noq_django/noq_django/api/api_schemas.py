@@ -159,12 +159,6 @@ class AvailableSchema(Schema):
     places_left: int
 
 
-# Only for testing api token functionality
-class AuthBearer(HttpBearer):
-    """
-    AuthBearer för Authorization
-    """
-
-    def authenticate(self, request, token):
-        if token == "supersecret":
-            return token
+class LoginSchema(Schema):
+    username: str
+    password: str

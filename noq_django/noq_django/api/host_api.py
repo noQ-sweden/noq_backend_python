@@ -19,17 +19,12 @@ from .api_schemas import (
     BookingSchema,
     BookingPostSchema,
     AvailableSchema,
-    AuthBearer,
 )
+
+from backend.auth import group_auth
 
 from typing import List
 from django.shortcuts import get_object_or_404
-from ninja.security import django_auth, django_auth_superuser, HttpBearer
 from datetime import date, timedelta
 
-router = Router()
-
-@router.get("/hosts", response=List[HostSchema], tags=["Hosts"])
-def host_list(request):
-    list = Host.objects
-    return list
+router = Router(auth=lambda request: group_auth(request, "host")) #request defineras vid call, gruppnamnet är statiskt
