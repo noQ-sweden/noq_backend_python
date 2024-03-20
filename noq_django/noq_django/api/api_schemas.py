@@ -160,5 +160,5 @@ class AvailableSchema(Schema):
 
 
 class LoginSchema(Schema):
-    username: str
+    email: str
     password: str

@@ -32,9 +32,9 @@ documentation = """
 
 @api.post("/login/", tags=["Login"])
 def login_user(request, payload: LoginSchema):
-    username = payload.username
+    email = payload.email
     password = payload.password
-    user = authenticate(request, username=username, password=password)
+    user = authenticate(request, username=email, password=password)
     if user is not None:
         login(request, user)
         return {"message": "Login Successful"}
