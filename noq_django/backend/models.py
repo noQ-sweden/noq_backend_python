@@ -16,6 +16,7 @@ class Region(models.Model):
 
 
 class Host(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=80)
     street = models.CharField(max_length=80)
     postcode = models.CharField(max_length=5, default="")
@@ -32,6 +33,7 @@ class Host(models.Model):
 
 
 class UserDetails(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=32)
     last_name = models.CharField(max_length=32)
     gender = models.CharField(

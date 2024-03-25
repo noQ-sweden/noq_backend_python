@@ -2,6 +2,7 @@ import random
 from datetime import datetime, timedelta
 from icecream import ic
 from faker import Faker
+from django.contrib.auth.models import User, Group
 
 from .delete_all_data import reset_all_data
 
@@ -27,6 +28,21 @@ def get_cities(index: int):
     list = get_regioner()
     return list[index][1]
 
+
+def make_user(group: str) -> User: #användargrupp, användarnamn
+    faker = Faker("sv_SE")
+    password = faker.password()
+    email = faker.email()
+
+    user = User.objects.create_user(username=email, password=password)
+    group_obj, created = Group.objects.get_or_create(name=group)
+    user.groups.add(group_obj)
+
+    credentials_file = 'backend/scripts/fake_credentials.txt' #spara inloggningar till fil i testsyfte.
+    with open(credentials_file, 'a') as file:
+        file.write(f"Email: {email}, Password: {password}, Group: {group}\n")
+
+    return user
 
 def add_region(nbr: int) -> int:
     print("\n---- REGION ----")
@@ -74,7 +90,7 @@ def add_hosts(nbr: int) -> int:
             continue
 
         host = Host(
-            name=host_name, street=faker.street_address(), city=stad, region=region_obj
+            name=host_name, street=faker.street_address(), city=stad, region=region_obj, user=make_user(group="host")
         )
 
         host.save()
@@ -123,6 +139,7 @@ def add_users(nbr: int):
 
 
         user = UserDetails(
+            user=make_user(group="user"),
             first_name=first_name,
             last_name=last_name,
             region=region_obj,

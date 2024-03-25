@@ -75,6 +75,9 @@ def reset_all_data(all: bool = False):
             ic(host, "borttagen")
             # host.delete()
 
+    with open("backend/scripts/fake_credentials.txt", 'w') as file: #rensa innehållet i fake_credentials.txt
+        file.truncate(0)
+
     # count()
 
 
