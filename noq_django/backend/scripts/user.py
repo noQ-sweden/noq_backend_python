@@ -3,11 +3,11 @@ from datetime import datetime, timedelta
 from icecream import ic
 from faker import Faker
 
-from backend.models import Host, UserDetails, Product, Region, Booking, Available
+from backend.models import Host, Client, Product, Region, Booking, Available
 
 
 def user_list():
-    users = UserDetails.objects.order_by("region").all()
+    users = Client.objects.order_by("region").all()
     for user in users:
         bookings = Booking.objects.filter(user=user).order_by("start_date").all()
         print(f"{user.first_name} {user.last_name} in {user.region}")

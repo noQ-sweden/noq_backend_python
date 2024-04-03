@@ -74,7 +74,7 @@ class BookForm(forms.Form):
 
 class UserForm(forms.ModelForm):
     class Meta:
-        model = models.UserDetails
+        model = models.Client
         fields = ["first_name", "last_name", "phone"]
 
 
