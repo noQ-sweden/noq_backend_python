@@ -32,7 +32,7 @@ class Host(models.Model):
         return f"{self.name}, {self.city}"
 
 
-class UserDetails(models.Model):
+class Client(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=32)
     last_name = models.CharField(max_length=32)
@@ -70,10 +70,10 @@ class UserDetails(models.Model):
     def save(self, *args, **kwargs):
         if 'fake_data' in kwargs:  #Om data är genererat av script använd istället för time.now
             self.last_edit = kwargs.pop('fake_data')
-            super(UserDetails, self).save(*args, **kwargs)
+            super(Client, self).save(*args, **kwargs)
         else:   
             self.last_edit = datetime.now()
-            super(UserDetails, self).save(*args, **kwargs)
+            super(Client, self).save(*args, **kwargs)
 
     def __str__(self) -> str:
         # rsrv = ProductBooking.objects.filter(user=self).order_by("-start_date").first()
@@ -124,7 +124,7 @@ class Booking(models.Model):
         Product, on_delete=models.CASCADE, blank=False, verbose_name="Plats"
     )
     user = models.ForeignKey(
-        UserDetails, on_delete=models.CASCADE, blank=False, verbose_name="Namn"
+        Client, on_delete=models.CASCADE, blank=False, verbose_name="Namn"
     )
 
     class Meta:

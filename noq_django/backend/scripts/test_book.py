@@ -3,10 +3,10 @@ from datetime import datetime, timedelta
 from icecream import ic
 from faker import Faker
 
-from backend.models import Host, UserDetails, Product, Region, Booking, Available
+from backend.models import Host, Client, Product, Region, Booking, Available
 
 
-def add_product_bookings(product_id: int, user: UserDetails, days_ahead: int = 10):
+def add_product_bookings(product_id: int, user: Client, days_ahead: int = 10):
     print("\n---- PRODUCT BOOKINGS ----")
 
     print(f"Bokning av {user.first_name} {user.last_name}")
@@ -55,9 +55,9 @@ def book_product(product_id: int = 0, days_ahead: int = 10):
     print(product)
     # print(f'{product.description} [{product.id}]')
 
-    users = UserDetails.objects.all()
+    users = Client.objects.all()
     for user in users:
-        if not UserDetails.objects.filter(start_date=datum):
+        if not Client.objects.filter(start_date=datum):
             continue
         if not Booking.objects.filter(
             product_id=product_id, user_id=user.id, start_date=datum

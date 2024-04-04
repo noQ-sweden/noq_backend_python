@@ -2,7 +2,7 @@ import unittest
 from icecream import ic
 from django.test import TestCase
 
-from .models import UserDetails, UserType, Product, Region, Booking
+from .models import Client, UserType, Product, Region, Booking
 
 
 def test_first():
@@ -25,7 +25,7 @@ class test_ProductBooking(TestCase):
         woman = UserType(name="woman")
         woman.save()
 
-        user = UserDetails(
+        user = Client(
             name="Tom Sawyer",
             user_type=man,
             phone="123",

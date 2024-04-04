@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Host, UserDetails, Product, Region, Booking, Available
+from .models import Host, Client, Product, Region, Booking, Available
 
 # admin.site.register(Host)
 # admin.site.register(Available)
@@ -10,7 +10,7 @@ admin.site.register(Region)
 # admin.site.register(Booking)
 
 
-@admin.register(UserDetails)
+@admin.register(Client)
 class UserAdmin(admin.ModelAdmin):
     fields = (("first_name", "last_name"), "gender", "street", ("postcode", "city"), "region")
     list_display = ("first_name", "last_name", "gender", "street", "city", "region")

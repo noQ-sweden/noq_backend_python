@@ -3,7 +3,7 @@
 from icecream import ic
 import sys
 
-from backend.models import Host, UserDetails, Product, Region, Booking, Available
+from backend.models import Host, Client, Product, Region, Booking, Available
 
 flag_all = False
 
@@ -31,7 +31,7 @@ def count():
     ic(Region.objects.all().count())
 
     ic(Host.objects.all().count())
-    ic(UserDetails.objects.all().count())
+    ic(Client.objects.all().count())
 
 
 def reset_all_data(all: bool = False):
@@ -66,7 +66,7 @@ def reset_all_data(all: bool = False):
             # print(prd, "borttagen")
 
     if kontrollera("användare"):
-        for user in UserDetails.objects.all():
+        for user in Client.objects.all():
             ic(user, "borttagen")
             # user.delete()
 

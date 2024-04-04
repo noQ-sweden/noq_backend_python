@@ -1,6 +1,6 @@
 from ninja import NinjaAPI, Schema, ModelSchema, Router
 from backend.models import (
-    UserDetails,
+    Client,
     Host,
     Region,
     Product,
@@ -31,14 +31,14 @@ router = Router()
 # User List view, demands django user logged on
 @router.get("/users", response=List[UserSchema], tags=["Users"])
 def users_list(request):
-    qs = UserDetails.objects.all()
+    qs = Client.objects.all()
     return qs
 
 
 # User Detail view
 @router.get("/user/{user_id}", response=UserSchema, tags=["User Detail"])
 def get_user(request, user_id: int):
-    user = get_object_or_404(UserDetails, id=user_id)
+    user = get_object_or_404(Client, id=user_id)
     return user
 
 
@@ -47,7 +47,7 @@ def get_user(request, user_id: int):
     "/user", auth=django_auth, response=List[UserSchema], tags=["User Authenticated"]
 )
 def user_list(request):
-    list = UserDetails.objects
+    list = Client.objects
     return list
 
 
@@ -61,14 +61,14 @@ def region_list(request):
 # User Detail view
 @router.get("/users/{user_id}", response=UserSchema, tags=["Users"])
 def user_detail(request, user_id: int):
-    obj = get_object_or_404(UserDetails, id=user_id)
+    obj = get_object_or_404(Client, id=user_id)
     return obj
 
 
 # Mall för POST-anrop
 @router.post("/users", response=UserSchema, tags=["Users"])
 def create_user(request, payload: UserPostSchema):
-    obj = UserDetails.objects.create(**payload.dict())
+    obj = Client.objects.create(**payload.dict())
     return obj
 
 
@@ -168,7 +168,7 @@ def booking_detail(request, product_id: int):
 @router.post("/bookings", response=BookingSchema, tags=["Bookings"])
 def booking_add(request, data: BookingPostSchema):
     product = get_object_or_404(Product, id=data.product_id)
-    user = get_object_or_404(UserDetails, id=data.user_id)
+    user = get_object_or_404(Client, id=data.user_id)
     booking = Booking.objects.create(
         start_date=data.start_date, product=product, user=user
     )

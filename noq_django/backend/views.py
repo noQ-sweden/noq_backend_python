@@ -108,7 +108,7 @@ def book_room_view(request, available_id):
             form = forms.BookRoomForm(request.POST)
             if form.is_valid():
                 namn = form["brukare"].data
-                user = models.UserDetails.objects.filter(first_name=namn).first()
+                user = models.Client.objects.filter(first_name=namn).first()
                 if user:
                     form = forms.BookRoomConfirmForm(initial={"user": user})
                     booking = models.Booking.objects.filter(
@@ -153,7 +153,7 @@ def book_room_view(request, available_id):
         """
         if user_id:
             product = available.product
-            user = models.UserDetails.objects.filter(pk=user_id).first()
+            user = models.Client.objects.filter(pk=user_id).first()
             booking = models.Booking(
                 start_date=available.available_date,
                 product=product,

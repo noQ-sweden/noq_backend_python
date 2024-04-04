@@ -1,7 +1,7 @@
 from ninja import NinjaAPI, Schema, ModelSchema
 from typing import Optional
 from backend.models import (
-    UserDetails,
+    Client,
     Host,
     Region,
     Product,
@@ -40,7 +40,7 @@ class UserSchema(ModelSchema):
     region: RegionSchema
 
     class Meta:
-        model = UserDetails
+        model = Client
         fields = "__all__"
 
 

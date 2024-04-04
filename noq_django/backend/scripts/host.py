@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from icecream import ic
 from faker import Faker
 
-from backend.models import Host, UserDetails, Product, Region, Booking, Available
+from backend.models import Host, Client, Product, Region, Booking, Available
 
 
 def host_list():

@@ -6,7 +6,7 @@ from django.contrib.auth.models import User, Group
 
 from .delete_all_data import reset_all_data
 
-from backend.models import Host, UserDetails, Product, Region, Booking
+from backend.models import Host, Client, Product, Region, Booking
 
 
 def get_regioner():
@@ -104,10 +104,10 @@ def add_users(nbr: int):
     faker = Faker("sv_SE")
 
     print("\n---- USERS ----")
-    if len(UserDetails.objects.all()) >= nbr:
+    if len(Client.objects.all()) >= nbr:
         return
 
-    while len(UserDetails.objects.all()) < nbr:
+    while len(Client.objects.all()) < nbr:
         regioner = Region.objects.all()
         id = random.randint(0, len(regioner) - 1)
 
@@ -130,7 +130,7 @@ def add_users(nbr: int):
 
         last_name: str = faker.last_name()
 
-        if UserDetails.objects.filter(
+        if Client.objects.filter(
             first_name=first_name, last_name=last_name
         ).values():
             continue
@@ -138,7 +138,7 @@ def add_users(nbr: int):
         last_edit = datetime.now() - timedelta(days=random.randint(0, 31))
 
 
-        user = UserDetails(
+        user = Client(
             user=make_user(group="user"),
             first_name=first_name,
             last_name=last_name,
@@ -162,18 +162,18 @@ def add_product_bookings(nbr: int, days_ahead: int = 3, verbose: bool = False):
     print("\n---- PRODUCT BOOKINGS ----")
 
     product_min_id = Product.objects.order_by("id").first()
-    user_min_id = UserDetails.objects.order_by("id").first()
+    user_min_id = Client.objects.order_by("id").first()
 
     while len(Booking.objects.all()) < nbr and exceptions < max_exceptions:
         product_id = product_min_id.id + random.randint(
             0, Product.objects.all().count() - 1
         )
         user_id = user_min_id.id + random.randint(
-            0, UserDetails.objects.all().count() - 5
+            0, Client.objects.all().count() - 5
         )
 
         try:
-            brukare = UserDetails.objects.get(id=user_id)
+            brukare = Client.objects.get(id=user_id)
             datum = datetime.now() + timedelta(days=random.randint(0, days_ahead))
             if verbose:
                 print(f'{brukare} {datum.strftime("%Y-%m-%d")}:')

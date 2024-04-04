@@ -1,6 +1,6 @@
 from ninja import NinjaAPI, Schema, ModelSchema, Router
 from backend.models import (
-    UserDetails,
+    Client,
     Host,
     Region,
     Product,

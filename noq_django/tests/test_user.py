@@ -1,5 +1,5 @@
 from django.test import TestCase
-from backend.models import UserDetails, Reservation
+from backend.models import Client, Reservation
 
 
 def test_first():
@@ -8,10 +8,10 @@ def test_first():
 
 class test_UserTestClass(TestCase):
     def setUp(self):
-        UserDetails.objects.create(name="Tom")
+        Client.objects.create(name="Tom")
         # Reservation.objects.create(name="lion", sound="roar")
 
     def test_animals_can_speak(self):
-        tom = UserDetails.objects.get(name="Tom")
+        tom = Client.objects.get(name="Tom")
 
         self.assertIsNotNone(tom)
