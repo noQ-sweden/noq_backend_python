@@ -19,8 +19,8 @@ python manage.py createsuperuser
 
 ## Test site
 
-http//:localhost:8000
+http://localhost:8000
 
 ## API endpoints
 
-http//:localhost:8000/api/docs
+http://localhost:8000/api/docs
