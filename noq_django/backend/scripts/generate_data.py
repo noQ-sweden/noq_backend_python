@@ -156,7 +156,8 @@ def add_booking_statuses():
     statuses = [
         {'id': 1, 'description': 'pending'},
         {'id': 2, 'description': 'declined'},
-        {'id': 3, 'description': 'accepted'}
+        {'id': 3, 'description': 'accepted'},
+        {'id': 4, 'description': 'checked_in'}
     ]
     
     for status in statuses:

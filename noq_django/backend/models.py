@@ -186,7 +186,7 @@ class Booking(models.Model):
 
         # Is room fully booked?
         booked = Booking.objects.filter(
-            product=self.product, start_date=self.start_date
+            product=self.product, start_date=self.start_date, id=self.id,
         ).count()
 
         if booked + 1 > nbr_available:
@@ -197,7 +197,7 @@ class Booking(models.Model):
             user=self.user, start_date=self.start_date
         ).first()
 
-        if existing_booking:
+        if existing_booking and self.id != existing_booking.id:
             raise ValidationError(
                 ("Har redan en bokning samma dag!"),
                 code="already_booked",
