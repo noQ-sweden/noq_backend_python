@@ -17,10 +17,17 @@ pip install -r requirements.txt
 
 python manage.py createsuperuser
 
-## Test site
-
-http://localhost:8000
-
 ## API endpoints
 
 http://localhost:8000/api/docs
+
+## Generate random data for tests
+```
+python manage.py runscript delete_all_data
+
+python manage.py runscript generate_data
+```
+
+## Test site
+
+http://localhost:8000

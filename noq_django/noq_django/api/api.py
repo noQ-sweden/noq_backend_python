@@ -16,7 +16,7 @@ api.add_router("/host/", "noq_django.api.host_api.router")
 api.add_router("/so_admin/", "noq_django.api.admin_api.router")
 
 #temporör testsektion
-api.add_router("/test/", "noq_django.api.testing_api.router")
+api.add_router("/old/", "noq_django.api.old_api.router")
 
 documentation = """
 
