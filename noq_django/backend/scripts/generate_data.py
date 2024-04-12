@@ -2,11 +2,11 @@ import random
 from datetime import datetime, timedelta
 from icecream import ic
 from faker import Faker
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group 
 
 from .delete_all_data import reset_all_data
 
-from backend.models import Host, Client, Product, Region, Booking
+from backend.models import Host, Client, Product, Region, Booking, BookingStatus
 
 
 def get_regioner():
@@ -152,6 +152,22 @@ def add_users(nbr: int):
         )
         user.save(fake_data=last_edit)
 
+def add_booking_statuses():
+    statuses = [
+        {'id': 1, 'description': 'pending'},
+        {'id': 2, 'description': 'declined'},
+        {'id': 3, 'description': 'accepted'},
+        {'id': 4, 'description': 'checked_in'}
+    ]
+    
+    for status in statuses:
+        if not BookingStatus.objects.filter(id=status['id']).exists():
+            booking_status = BookingStatus.objects.create(id=status['id'], Description=status['description'])
+            booking_status.save()
+            print(f"BookingStatus '{status['description']}' created, ID {status['id']}.")
+        else:
+            print(f"BookingStatus with ID {status['id']} already exists.")
+
 
 def add_product_bookings(nbr: int, days_ahead: int = 3, verbose: bool = False):
     faker = Faker("sv_SE")
@@ -183,6 +199,7 @@ def add_product_bookings(nbr: int, days_ahead: int = 3, verbose: bool = False):
                     start_date=datum,
                     product=Product.objects.get(id=product_id),
                     user=brukare,
+                    status=BookingStatus.objects.get(Description='pending')
                 )
 
             booking.save()
@@ -243,4 +260,5 @@ def run(*args):
     add_products(6)
     add_users(16)
 
+    add_booking_statuses()
     add_product_bookings(40, 7, v2_arg)

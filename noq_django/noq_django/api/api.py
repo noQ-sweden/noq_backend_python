@@ -39,4 +39,4 @@ def login_user(request, payload: LoginSchema):
         login(request, user)
         return {"message": "Login Successful"}
     else:
-        return {"message": "Login Failed"}, 401
+        pass

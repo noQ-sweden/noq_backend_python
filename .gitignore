@@ -50,6 +50,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+noq_django/backend/scripts/fake_credentials.txt
 
 # Translations
 *.mo
