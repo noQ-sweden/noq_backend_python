@@ -4,41 +4,49 @@ Content-Type: application/application/json
 Authorization: Bearer supersecret
 
 ### Users
-GET http://127.0.0.1:8000/api/users
+GET http://127.0.0.1:8000/api/old/users
 Content-Type: application/application/json
 Cookie: sessionid=supersecret
 
 ### Hosts
-GET http://127.0.0.1:8000/api/hosts
+GET http://127.0.0.1:8000/api/old/hosts
 Content-Type: application/application/json
 
 ### Hosts
-GET http://127.0.0.1:8000/api/hosts/78
+GET http://127.0.0.1:8000/api/old/hosts/11
 Content-Type: application/application/json
 
 ### Products
-GET http://127.0.0.1:8000/api/products/769
+GET http://127.0.0.1:8000/api/old/products
+Content-Type: application/application/json
+
+### Products
+GET http://127.0.0.1:8000/api/old/products/41
 Content-Type: application/application/json
 
 ### Bookings
-GET http://127.0.0.1:8000/api/bookings/8
+GET http://127.0.0.1:8000/api/old/bookings
+Content-Type: application/application/json
+
+### Bookings
+GET http://127.0.0.1:8000/api/old/bookings/8
 Content-Type: application/application/json
 
 ### Available rooms
-GET http://127.0.0.1:8000/api/available/2
+GET http://127.0.0.1:8000/api/old/available/2
 Content-Type: application/application/json
 
 ### Book a room
-POST http://127.0.0.1:8000/api/bookings
+POST http://127.0.0.1:8000/api/old/bookings
 accept: application/json
 content-type: application/json
 
 {
     "start_date": "2024-02-02",
-    "product_id": 769,
-    "user_id": 111
+    "product_id": 41,
+    "user_id": 17
 }
 
 ### Available rooms
-GET http://127.0.0.1:8000/api/hosts/ids
+GET http://127.0.0.1:8000/api/old/hosts/ids
 Content-Type: application/application/json
