@@ -190,7 +190,7 @@ def add_product_bookings(nbr: int, days_ahead: int = 3, verbose: bool = False):
 
         try:
             brukare = Client.objects.get(id=user_id)
-            datum = datetime.now() + timedelta(days=random.randint(0, days_ahead))
+            datum = datetime.now() + timedelta(days=random.randint(-1, days_ahead))
             if verbose:
                 print(f'{brukare} {datum.strftime("%Y-%m-%d")}:')
 
@@ -199,10 +199,15 @@ def add_product_bookings(nbr: int, days_ahead: int = 3, verbose: bool = False):
                     start_date=datum,
                     product=Product.objects.get(id=product_id),
                     user=brukare,
-                    status=BookingStatus.objects.get(Description='pending')
                 )
 
-            booking.save()
+                if booking.start_date.date() == (datetime.now() - timedelta(days=1)).date(): #this makes sure there are departures being generaated
+                    booking.status=BookingStatus.objects.get(id=4)
+                else:
+                    booking.status=BookingStatus.objects.get(id=random.randint(1,4))
+
+                booking.save()
+
             exceptions = 0
         except Exception as ex:
             exceptions += 1
@@ -210,7 +215,7 @@ def add_product_bookings(nbr: int, days_ahead: int = 3, verbose: bool = False):
                 print("Exception:", ex)
         else:
             print(
-                f'Bokning tillagd {datum.strftime("%Y-%m-%d")} {booking.product} för {booking.user.name()} {booking.product.host.region}'
+                f'Bokning tillagd {datum.strftime("%Y-%m-%d")} {booking.product} för {booking.user.name()} {booking.product.host.region}, med Status {booking.status.Description}'
             )
 
 
