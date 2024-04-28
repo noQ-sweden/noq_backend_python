@@ -159,6 +159,10 @@ class AvailableSchema(Schema):
     places_left: int
 
 
-class LoginSchema(Schema):
+class LoginPostSchema(Schema):
     email: str
     password: str
+    
+class LoginSchema(Schema):
+    login_status: bool
+    message: str
