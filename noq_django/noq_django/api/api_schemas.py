@@ -130,7 +130,7 @@ class BookingSchema(Schema):
     Booking för att bokningar av en Product
 
     """
-
+    id: int
     start_date: date
     product: ProductSchema
     user: UserSchema
@@ -157,6 +157,10 @@ class AvailableSchema(Schema):
     available_date: date
     product: ProductSchema
     places_left: int
+
+class AvailableCount(Schema):
+    type: str
+    count: int
 
 
 class LoginSchema(Schema):
