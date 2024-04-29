@@ -78,7 +78,7 @@ class Client(models.Model):
         return f"{self.first_name} {self.last_name}"
 
 class Host(models.Model):                                        
-    user = models.ForeignKey(User, on_delete=models.CASCADE)     
+    users = models.ManyToManyField(User)     
     name = models.CharField(max_length=80)                       
     street = models.CharField(max_length=80)                     
     postcode = models.CharField(max_length=5, default="")        

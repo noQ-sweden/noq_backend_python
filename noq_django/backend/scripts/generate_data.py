@@ -90,10 +90,13 @@ def add_hosts(nbr: int) -> int:
             continue
 
         host = Host(
-            name=host_name, street=faker.street_address(), city=stad, region=region_obj, user=make_user(group="host")
+            name=host_name, street=faker.street_address(), city=stad, region=region_obj
         )
-
+        
         host.save()
+
+        new_user = make_user(group="host")
+        host.users.add(new_user)
 
         print(f"{host} i region {region} tillagd")
 
