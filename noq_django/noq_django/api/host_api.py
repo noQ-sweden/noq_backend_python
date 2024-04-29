@@ -19,6 +19,7 @@ from .api_schemas import (
     ProductSchema,
     BookingSchema,
     BookingPostSchema,
+    BookingCounterSchema,
     AvailableSchema,
 )
 
@@ -30,51 +31,29 @@ from datetime import date, timedelta
 
 router = Router(auth=lambda request: group_auth(request, "host")) #request defineras vid call, gruppnamnet är statiskt
 
-@router.get("/pending_count", tags=["host-frontpage"]) 
-def count_pending_bookings(request):
+@router.get("/count_bookings", response=BookingCounterSchema, tags=["host-frontpage"]) 
+def count_bookings(request):
     host = Host.objects.get(users=request.user)
-    pending_bookings_count = Booking.objects.filter(product__host=host, status__Description='pending')
-
-    return pending_bookings_count.count()
-
-@router.get("/arrivals_count", tags=["host-frontpage"]) 
-def count_arrivals(request):
-    host = Host.objects.get(users=request.user)
-    arrivals = Booking.objects.filter(product__host=host, status__Description='accepted', start_date=date.today())
-
-    return arrivals.count()
-
-@router.get("/departures_count", tags=["host-frontpage"]) 
-def count_departures(request):
-    host = Host.objects.get(users=request.user)
-    departures = Booking.objects.filter(product__host=host, status__Description='checked_in', start_date=date.today() - timedelta(days=1))
-
-    return departures.count()
-
-@router.get("/current_guests_count", tags=["host-frontpage"]) 
-def count_current_guests(request):
-    host = Host.objects.get(users=request.user)
-    guests = Booking.objects.filter(product__host=host, status__Description='checked_in')
-
-    return guests.count()
-
-@router.get("/available_products", response=Dict[str, int], tags=["host-frontpage"]) 
-def count_available_products(request):
-    host = Host.objects.get(users=request.user)
-    spots = Product.objects.filter(host=host, total_places__gt = 0)
-    resp_obj = {}
-
+    
+    pending_count = Booking.objects.filter(product__host=host, status__Description='pending').count()
+    arrivals_count = Booking.objects.filter(product__host=host, status__Description='accepted', start_date=date.today()).count()
+    departures_count = Booking.objects.filter(product__host=host, status__Description='checked_in', start_date=date.today() - timedelta(days=1)).count()
+    current_guests_count = Booking.objects.filter(product__host=host, status__Description='checked_in').count()
+    
+    spots = Product.objects.filter(host=host, total_places__gt=0)
+    available_products = {}
     for i in spots:
         available = Available.objects.filter(product=i).first()
-
-        if available is None or available.places_left <= 0:
-            continue
-        if i.type not in resp_obj:
-            resp_obj[i.type] = 1
-        else:
-            resp_obj[i.type] += 1
-
-    return resp_obj
+        if available is not None and available.places_left > 0:
+            available_products[i.type] = available_products.get(i.type, 0) + 1
+    
+    return BookingCounterSchema(
+        pending_count=pending_count,
+        arrivals_count=arrivals_count,
+        departures_count=departures_count,
+        current_guests_count=current_guests_count,
+        available_products=available_products
+    )
 
 @router.get("/pending", response=List[BookingSchema], tags=["host-manage-requests"])
 def get_pending_bookings(request):
