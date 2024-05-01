@@ -58,14 +58,14 @@ def count_bookings(request):
 @router.get("/pending", response=List[BookingSchema], tags=["host-manage-requests"])
 def get_pending_bookings(request):
     host = Host.objects.get(users=request.user)
-    bookings = Booking.objects.filter(product__host=host)
+    bookings = Booking.objects.filter(product__host=host, status__Description='pending')
     
     return bookings 
 
 @router.get("/pending/{booking_id}", response=BookingSchema, tags=["host-manage-requests"])
 def detailed_pending_booking(request, booking_id: int):
     host = Host.objects.get(users=request.user)
-    booking = get_object_or_404(Booking, id=booking_id, product__host=host)
+    booking = get_object_or_404(Booking, id=booking_id, product__host=host, status__Description='pending')
 
     return booking 
 
