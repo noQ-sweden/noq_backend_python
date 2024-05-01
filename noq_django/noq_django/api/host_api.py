@@ -7,6 +7,7 @@ from backend.models import (
     Booking,
     Available,
     Product,
+    BookingStatus,
 )
 
 from .api_schemas import (
@@ -35,10 +36,10 @@ router = Router(auth=lambda request: group_auth(request, "host")) #request defin
 def count_bookings(request):
     host = Host.objects.get(users=request.user)
     
-    pending_count = Booking.objects.filter(product__host=host, status__Description='pending').count()
-    arrivals_count = Booking.objects.filter(product__host=host, status__Description='accepted', start_date=date.today()).count()
-    departures_count = Booking.objects.filter(product__host=host, status__Description='checked_in', start_date=date.today() - timedelta(days=1)).count()
-    current_guests_count = Booking.objects.filter(product__host=host, status__Description='checked_in').count()
+    pending_count = Booking.objects.filter(product__host=host, status__description='pending').count()
+    arrivals_count = Booking.objects.filter(product__host=host, status__description='accepted', start_date=date.today()).count()
+    departures_count = Booking.objects.filter(product__host=host, status__description='checked_in', start_date=date.today() - timedelta(days=1)).count()
+    current_guests_count = Booking.objects.filter(product__host=host, status__description='checked_in').count()
     
     spots = Product.objects.filter(host=host, total_places__gt=0)
     available_products = {}
@@ -58,16 +59,28 @@ def count_bookings(request):
 @router.get("/pending", response=List[BookingSchema], tags=["host-manage-requests"])
 def get_pending_bookings(request):
     host = Host.objects.get(users=request.user)
-    bookings = Booking.objects.filter(product__host=host, status__Description='pending')
+    bookings = Booking.objects.filter(product__host=host, status__description='pending')
     
     return bookings 
 
 @router.get("/pending/{booking_id}", response=BookingSchema, tags=["host-manage-requests"])
 def detailed_pending_booking(request, booking_id: int):
     host = Host.objects.get(users=request.user)
-    booking = get_object_or_404(Booking, id=booking_id, product__host=host, status__Description='pending')
+    booking = get_object_or_404(Booking, id=booking_id, product__host=host, status__description='pending')
 
-    return booking 
+    return booking
+
+@router.patch("/pending/{booking_id}/appoint", response=BookingSchema, tags=["host-manage-requests"])
+def appoint_pending_booking(request, booking_id: int):
+    host = Host.objects.get(users=request.user)
+    booking = get_object_or_404(Booking, id=booking_id, product__host=host, status__description='pending')
+
+    try:
+        booking.status = BookingStatus.objects.get(id=3)
+        booking.save()
+        return booking
+    except BookingStatus.DoesNotExist:
+        raise HTTPException(status_code=404, detail="Booking status does not exist.")
 
 # Mall för List
 @router.get("/hosts", response=List[HostSchema], tags=["Hosts"])

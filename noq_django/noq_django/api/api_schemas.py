@@ -125,12 +125,16 @@ class ProductSchema(Schema):
     type: str
 
 
+class StatusSchema(Schema):
+    description: str
+
 class BookingSchema(Schema):
     """
     Booking för att bokningar av en Product
 
     """
     id: int
+    status: StatusSchema
     start_date: date
     product: ProductSchema
     user: UserSchema
