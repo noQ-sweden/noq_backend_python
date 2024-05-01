@@ -1,8 +1,11 @@
 from ninja import NinjaAPI
 from ninja.security import HttpBearer
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User, Group
+
 
 from .api_schemas import (
+    LoginPostSchema,
     LoginSchema,
 )
 
@@ -15,7 +18,7 @@ api.add_router("/user/", "noq_django.api.user_api.router")
 api.add_router("/host/", "noq_django.api.host_api.router")
 api.add_router("/so_admin/", "noq_django.api.admin_api.router")
 
-#temporör testsektion
+# temporör testsektion
 api.add_router("/old/", "noq_django.api.old_api.router")
 
 documentation = """
@@ -30,13 +33,16 @@ documentation = """
 
 """
 
-@api.post("/login/", tags=["Login"])
-def login_user(request, payload: LoginSchema):
+
+@api.post("/login/", response=LoginSchema, tags=["Login"])
+def login_user(request, payload: LoginPostSchema):
+        
     email = payload.email
     password = payload.password
+    
     user = authenticate(request, username=email, password=password)
     if user is not None:
         login(request, user)
-        return {"message": "Login Successful"}
+        return LoginSchema(login_status = True, message = "Login Successful")
     else:
-        pass
+        return LoginSchema(login_status = False, message = "Login Failed")

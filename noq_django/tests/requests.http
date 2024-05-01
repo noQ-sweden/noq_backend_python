@@ -1,7 +1,12 @@
 ### Bearer token 
-GET http://127.0.0.1:8000/api/bearer
+POST http://127.0.0.1:8000/api/login/
 Content-Type: application/application/json
-Authorization: Bearer supersecret
+
+{
+    "email": "foskarsson@example.org",
+    "password": "$m6%&TpS1g"
+}
+
 
 ### Users
 GET http://127.0.0.1:8000/api/old/users
@@ -9,7 +14,7 @@ Content-Type: application/application/json
 Cookie: sessionid=supersecret
 
 ### Hosts
-GET http://127.0.0.1:8000/api/old/hosts
+GET http://127.0.0.1:8000/api/host/hosts
 Content-Type: application/application/json
 
 ### Hosts

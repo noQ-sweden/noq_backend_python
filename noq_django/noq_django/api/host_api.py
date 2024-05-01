@@ -68,3 +68,9 @@ def detailed_pending_booking(request, booking_id: int):
     booking = get_object_or_404(Booking, id=booking_id, product__host=host)
 
     return booking 
+
+# Mall för List
+@router.get("/hosts", response=List[HostSchema], tags=["Hosts"])
+def host_list(request):
+    list = Host.objects
+    return list

@@ -165,6 +165,10 @@ class BookingCounterSchema(Schema):
     current_guests_count: int
     available_products: Dict[str, int]
 
-class LoginSchema(Schema):
+class LoginPostSchema(Schema):
     email: str
     password: str
+    
+class LoginSchema(Schema):
+    login_status: bool
+    message: str
