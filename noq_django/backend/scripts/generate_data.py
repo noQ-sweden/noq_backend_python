@@ -165,7 +165,7 @@ def add_booking_statuses():
     
     for status in statuses:
         if not BookingStatus.objects.filter(id=status['id']).exists():
-            booking_status = BookingStatus.objects.create(id=status['id'], Description=status['description'])
+            booking_status = BookingStatus.objects.create(id=status['id'], description=status['description'])
             booking_status.save()
             print(f"BookingStatus '{status['description']}' created, ID {status['id']}.")
         else:

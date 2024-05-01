@@ -125,7 +125,7 @@ class Product(models.Model):
         # return f"{self.description} ({self.total_places} platser på {self.host.name}, {self.host.city} ({booking_count} bokade)"
 
 class BookingStatus(models.Model):                   
-    Description = models.CharField(max_length=32)    
+    description = models.CharField(max_length=32)
 
 class Booking(models.Model):
     """
