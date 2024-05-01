@@ -9,7 +9,7 @@ from backend.models import (
     Available,
 )
 
-from typing import List
+from typing import List, Dict
 from django.shortcuts import get_object_or_404
 from ninja.security import django_auth, django_auth_superuser, HttpBearer
 from datetime import date, timedelta
@@ -130,7 +130,7 @@ class BookingSchema(Schema):
     Booking för att bokningar av en Product
 
     """
-
+    id: int
     start_date: date
     product: ProductSchema
     user: UserSchema
@@ -158,6 +158,12 @@ class AvailableSchema(Schema):
     product: ProductSchema
     places_left: int
 
+class BookingCounterSchema(Schema):
+    pending_count: int
+    arrivals_count: int
+    departures_count: int
+    current_guests_count: int
+    available_products: Dict[str, int]
 
 class LoginPostSchema(Schema):
     email: str
