@@ -26,7 +26,7 @@ from .api_schemas import (
 
 from backend.auth import group_auth
 
-from typing import List, Dict
+from typing import List, Dict, Optional
 from django.shortcuts import get_object_or_404
 from datetime import date, timedelta
 
@@ -57,11 +57,14 @@ def count_bookings(request):
     )
 
 @router.get("/pending", response=List[BookingSchema], tags=["host-manage-requests"])
-def get_pending_bookings(request):
+def get_pending_bookings(request, limiter: Optional[int] = None): #Limiter example /pending?limiter=10 for 10 results, empty returns all
     host = Host.objects.get(users=request.user)
     bookings = Booking.objects.filter(product__host=host, status__description='pending')
     
-    return bookings 
+    if limiter is not None and limiter > 0:
+        return bookings[:limiter]
+    
+    return bookings
 
 @router.get("/pending/{booking_id}", response=BookingSchema, tags=["host-manage-requests"])
 def detailed_pending_booking(request, booking_id: int):
