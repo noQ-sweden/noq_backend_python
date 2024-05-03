@@ -34,6 +34,7 @@ Navigate to the directory containing manage.py and perform database migrations:
     python manage.py qcluster
 
 These commands set up the database schema based on the Django models defined in the project.
+Qcluster is optional when testing and is used for automating periodic tasks
 
 #### Create Local Superuser
 
