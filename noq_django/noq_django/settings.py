@@ -77,6 +77,8 @@ MIDDLEWARE = [
 Q_CLUSTER = {
     "name": "noq_django",
     "orm": "default",
+    "retry": 5,
+    "timeout": 3,
     "max_attempts": 2,
 }
 
