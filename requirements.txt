@@ -9,6 +9,7 @@ django-crispy-forms==2.1
 django-extensions==3.2.3
 django-ninja==1.1.0
 django-tables2==2.7.0
+django-utils
 executing==2.0.1
 Faker==23.2.1
 icecream==2.1.3
