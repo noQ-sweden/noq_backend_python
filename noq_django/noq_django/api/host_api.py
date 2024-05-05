@@ -1,4 +1,6 @@
 from ninja import NinjaAPI, Schema, ModelSchema, Router
+from ninja.errors import HttpError
+
 from backend.models import (
     Client,
     Host,
@@ -83,7 +85,7 @@ def appoint_pending_booking(request, booking_id: int):
         booking.save()
         return booking
     except BookingStatus.DoesNotExist:
-        raise HTTPException(status_code=404, detail="Booking status does not exist.")
+        raise HttpError(404, detail="Booking status does not exist.")
 
 # Mall för List
 @router.get("/hosts", response=List[HostSchema], tags=["Hosts"])
