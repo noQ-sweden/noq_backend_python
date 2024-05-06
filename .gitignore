@@ -165,13 +165,8 @@ cython_debug/
 noq_django/.vscode/*
 *.sqlite*
 app/
-
-
-
-
-
-
-
-
 noq_django/my_project_visualized.png
 .vscode/settings.json
+.vscode/*
+.pytest_cache/*
+
