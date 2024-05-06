@@ -14,14 +14,18 @@ class Region(models.Model):
     def __str__(self) -> str:
         return self.name
 
-class Requirement(models.Model):                         
-    description = models.CharField(max_length=32)        
 
-class ClientRequirement(models.Model):                   
+class Requirement(models.Model):
+    description = models.CharField(max_length=32)
+
+
+class ClientRequirement(models.Model):
     requirements = models.ManyToManyField(Requirement)
 
-class ProductRequirement(models.Model):                  
+
+class ProductRequirement(models.Model):
     requirements = models.ManyToManyField(Requirement)
+
 
 class Client(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -47,25 +51,29 @@ class Client(models.Model):
         Region, on_delete=models.CASCADE, null=False, blank=False
     )
 
-    requirements = models.ForeignKey(ClientRequirement, on_delete=models.CASCADE, null=True, blank=True)
+    requirements = models.ForeignKey(
+        ClientRequirement, on_delete=models.CASCADE, null=True, blank=True
+    )
 
-    #Datum för senaste uppdateringen av användarodellen, för att avgöra om användaren är aktiv
+    # Datum för senaste uppdateringen av användarodellen, för att avgöra om användaren är aktiv
     last_edit = models.DateField(verbose_name="Senaste Aktivitet")
 
     class Meta:
-        db_table = "users"
-    
-        verbose_name_plural = "Users"
+        db_table = "client"
+
+        verbose_name_plural = "client"
 
     def name(self) -> str:
         return f"{self.first_name} {self.last_name}"
 
     def save(self, *args, **kwargs):
-        if 'fake_data' in kwargs:  #Om data är genererat av script använd istället för time.now
-            self.last_edit = kwargs.pop('fake_data')
+        if (
+            "fake_data" in kwargs
+        ):  # Om data är genererat av script använd istället för time.now
+            self.last_edit = kwargs.pop("fake_data")
             super(Client, self).save(*args, **kwargs)
-        else:   
-            self.last_edit = datetime.now()
+        else:
+            self.last_edit = datetime.today()
             super(Client, self).save(*args, **kwargs)
 
     def __str__(self) -> str:
@@ -77,24 +85,24 @@ class Client(models.Model):
 
         return f"{self.first_name} {self.last_name}"
 
-class Host(models.Model):                                        
-    users = models.ManyToManyField(User)     
-    name = models.CharField(max_length=80)                       
-    street = models.CharField(max_length=80)                     
-    postcode = models.CharField(max_length=5, default="")        
-    city = models.CharField(max_length=80, default="")           
-    region = models.ForeignKey(                                  
+
+class Host(models.Model):
+    users = models.ManyToManyField(User)
+    name = models.CharField(max_length=80)
+    street = models.CharField(max_length=80)
+    postcode = models.CharField(max_length=5, default="")
+    city = models.CharField(max_length=80, default="")
+    region = models.ForeignKey(
         Region, on_delete=models.CASCADE, null=False, blank=False
-    )                                                            
-    blocked_clients = models.ManyToManyField(Client)                  
-                                                                 
-    class Meta:                                                  
-        db_table = "hosts"                                       
-                                                                 
-    def __str__(self) -> str:                                    
-        return f"{self.name}, {self.city}"                       
-                                                                 
-                                                                 
+    )
+    blocked_clients = models.ManyToManyField(Client)
+
+    class Meta:
+        db_table = "hosts"
+
+    def __str__(self) -> str:
+        return f"{self.name}, {self.city}"
+
 
 class Product(models.Model):
     """
@@ -107,7 +115,9 @@ class Product(models.Model):
     total_places = models.IntegerField()
     host = models.ForeignKey(Host, on_delete=models.CASCADE, blank=True)
     type = models.CharField(max_length=12, default="")  # ex "endast kvinnor"
-    requirements = models.ForeignKey(ProductRequirement, on_delete=models.CASCADE, null=True, blank=True) 
+    requirements = models.ForeignKey(
+        ProductRequirement, on_delete=models.CASCADE, null=True, blank=True
+    )
 
     class Meta:
         db_table = "product"
@@ -124,8 +134,10 @@ class Product(models.Model):
 
         # return f"{self.description} ({self.total_places} platser på {self.host.name}, {self.host.city} ({booking_count} bokade)"
 
-class BookingStatus(models.Model):                   
+
+class BookingStatus(models.Model):
     description = models.CharField(max_length=32)
+
 
 class Booking(models.Model):
     """
@@ -170,7 +182,12 @@ class Booking(models.Model):
             product_available.save()
 
     def save(self, *args, **kwargs):
-        self.start_date = self.start_date
+
+        if str(self.start_date) < str(datetime.today().date()):
+            raise ValidationError(
+                ("Fel: Bokningen börjar före dagens datum!"),
+                code="Date error",
+            )
         nbr_available = self.product.total_places
 
         # Check gender for room type = "woman-only"
@@ -185,11 +202,13 @@ class Booking(models.Model):
                 )
 
         # Is room fully booked?
-        booked = Booking.objects.filter(
-            product=self.product, start_date=self.start_date, id=self.id,
+        booked_count = Booking.objects.filter(
+            product=self.product,
+            start_date=self.start_date,
+            id=self.id,
         ).count()
 
-        if booked + 1 > nbr_available:
+        if booked_count + 1 > nbr_available:
             raise ValidationError(("Fullbokat rum"), code="full")
 
         # Check if there is another booking for the same user and date
@@ -211,7 +230,7 @@ class Booking(models.Model):
 
         # Uppdatera Available
         self.calc_available()
-        
+
     # Your custom code to be executed before the object is deleted
     def pre_delete_booking(self, instance, **kwargs):
         self.calc_available()
@@ -219,6 +238,7 @@ class Booking(models.Model):
 
     def __str__(self) -> str:
         return f"{self.start_date}: {self.user.first_name} {self.user.last_name} har bokat {self.product.description} på {self.product.host.name}, {self.product.host.city}"
+
 
 class Available(models.Model):
     available_date = models.DateField(verbose_name="Datum")
@@ -232,4 +252,3 @@ class Available(models.Model):
 
     def __str__(self) -> str:
         return f"{self.product.description} på {self.product.host.name}, {self.product.host.city} har {self.places_left} platser kvar"
-

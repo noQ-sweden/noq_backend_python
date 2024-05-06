@@ -2,7 +2,7 @@ import random
 from datetime import datetime, timedelta
 from icecream import ic
 from faker import Faker
-from django.contrib.auth.models import User, Group 
+from django.contrib.auth.models import User, Group
 
 from .delete_all_data import reset_all_data
 
@@ -29,7 +29,7 @@ def get_cities(index: int):
     return list[index][1]
 
 
-def make_user(group: str) -> User: #användargrupp, användarnamn
+def make_user(group: str) -> User:  # användargrupp, användarnamn
     faker = Faker("sv_SE")
     password = faker.password()
     email = faker.email()
@@ -38,11 +38,12 @@ def make_user(group: str) -> User: #användargrupp, användarnamn
     group_obj, created = Group.objects.get_or_create(name=group)
     user.groups.add(group_obj)
 
-    credentials_file = 'backend/scripts/fake_credentials.txt' #spara inloggningar till fil i testsyfte.
-    with open(credentials_file, 'a') as file:
+    credentials_file = "backend/scripts/fake_credentials.txt"  # spara inloggningar till fil i testsyfte.
+    with open(credentials_file, "a") as file:
         file.write(f"Email: {email}, Password: {password}, Group: {group}\n")
 
     return user
+
 
 def add_region(nbr: int) -> int:
     print("\n---- REGION ----")
@@ -92,7 +93,7 @@ def add_hosts(nbr: int) -> int:
         host = Host(
             name=host_name, street=faker.street_address(), city=stad, region=region_obj
         )
-        
+
         host.save()
 
         new_user = make_user(group="host")
@@ -133,13 +134,10 @@ def add_users(nbr: int):
 
         last_name: str = faker.last_name()
 
-        if Client.objects.filter(
-            first_name=first_name, last_name=last_name
-        ).values():
+        if Client.objects.filter(first_name=first_name, last_name=last_name).values():
             continue
 
         last_edit = datetime.now() - timedelta(days=random.randint(0, 31))
-
 
         user = Client(
             user=make_user(group="user"),
@@ -155,19 +153,24 @@ def add_users(nbr: int):
         )
         user.save(fake_data=last_edit)
 
+
 def add_booking_statuses():
     statuses = [
-        {'id': 1, 'description': 'pending'},
-        {'id': 2, 'description': 'declined'},
-        {'id': 3, 'description': 'accepted'},
-        {'id': 4, 'description': 'checked_in'}
+        {"id": 1, "description": "pending"},
+        {"id": 2, "description": "declined"},
+        {"id": 3, "description": "accepted"},
+        {"id": 4, "description": "checked_in"},
     ]
-    
+
     for status in statuses:
-        if not BookingStatus.objects.filter(id=status['id']).exists():
-            booking_status = BookingStatus.objects.create(id=status['id'], description=status['description'])
+        if not BookingStatus.objects.filter(id=status["id"]).exists():
+            booking_status = BookingStatus.objects.create(
+                id=status["id"], description=status["description"]
+            )
             booking_status.save()
-            print(f"BookingStatus '{status['description']}' created, ID {status['id']}.")
+            print(
+                f"BookingStatus '{status['description']}' created, ID {status['id']}."
+            )
         else:
             print(f"BookingStatus with ID {status['id']} already exists.")
 
@@ -187,9 +190,7 @@ def add_product_bookings(nbr: int, days_ahead: int = 3, verbose: bool = False):
         product_id = product_min_id.id + random.randint(
             0, Product.objects.all().count() - 1
         )
-        user_id = user_min_id.id + random.randint(
-            0, Client.objects.all().count() - 5
-        )
+        user_id = user_min_id.id + random.randint(0, Client.objects.all().count() - 5)
 
         try:
             brukare = Client.objects.get(id=user_id)
@@ -204,10 +205,13 @@ def add_product_bookings(nbr: int, days_ahead: int = 3, verbose: bool = False):
                     user=brukare,
                 )
 
-                if booking.start_date.date() == (datetime.now() - timedelta(days=1)).date(): #this makes sure there are departures being generaated
-                    booking.status=BookingStatus.objects.get(id=4)
+                if (
+                    booking.start_date.date()
+                    == (datetime.now() - timedelta(days=1)).date()
+                ):  # this makes sure there are departures being generaated
+                    booking.status = BookingStatus.objects.get(id=4)
                 else:
-                    booking.status=BookingStatus.objects.get(id=random.randint(1,4))
+                    booking.status = BookingStatus.objects.get(id=random.randint(1, 4))
 
                 booking.save()
 
@@ -218,7 +222,7 @@ def add_product_bookings(nbr: int, days_ahead: int = 3, verbose: bool = False):
                 print("Exception:", ex)
         else:
             print(
-                f'Bokning tillagd {datum.strftime("%Y-%m-%d")} {booking.product} för {booking.user.name()} {booking.product.host.region}, med Status {booking.status.Description}'
+                f'Bokning tillagd {datum.strftime("%Y-%m-%d")} {booking.product} för {booking.user.name()} {booking.product.host.region}, med Status {booking.status.description}'
             )
 
 

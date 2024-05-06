@@ -60,7 +60,6 @@ INSTALLED_APPS = [
     "corsheaders",
     "crispy_bootstrap4",
     "django_tables2",
-    "django_q",
 ]
 
 MIDDLEWARE = [
