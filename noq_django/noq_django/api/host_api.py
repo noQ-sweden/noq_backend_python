@@ -81,7 +81,7 @@ def appoint_pending_booking(request, booking_id: int):
     booking = get_object_or_404(Booking, id=booking_id, product__host=host, status__description='pending')
 
     try:
-        booking.status = BookingStatus.objects.get(id=3)
+        booking.status = BookingStatus.objects.get(description='accepted')
         booking.save()
         return booking
     except BookingStatus.DoesNotExist:
