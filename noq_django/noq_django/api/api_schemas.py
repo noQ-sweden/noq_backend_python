@@ -176,3 +176,4 @@ class LoginPostSchema(Schema):
 class LoginSchema(Schema):
     login_status: bool
     message: str
+    group: Optional[List[str]] = None

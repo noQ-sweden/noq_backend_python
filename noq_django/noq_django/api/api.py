@@ -43,6 +43,7 @@ def login_user(request, payload: LoginPostSchema):
     user = authenticate(request, username=email, password=password)
     if user is not None:
         login(request, user)
-        return LoginSchema(login_status = True, message = "Login Successful")
+        user_groups = [g.name for g in request.user.groups.all()]
+        return LoginSchema(login_status = True, message = "Login Successful", group = user_groups)
     else:
         return LoginSchema(login_status = False, message = "Login Failed")
