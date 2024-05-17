@@ -43,6 +43,14 @@ Qcluster is optional when testing and is used for automating periodic tasks
 #### API Endpoints
 Access API documentation at http://localhost:8000/api/docs.
 
+#### General naming for all APIs
+    
+    /objects GET lists an object, with method name objects_list, can also have filter parameters
+    /objects/id GET retrieves a unique instance of object(/objects/id), with method name object_detail(id)
+    /objects/id POST creates an object, with method name object_add
+    /objects/id PATCH updates an object, with method name object_update(id)
+    /objects/id DELETE deletes an object, with method name object_delete(id)
+
 #### Generate Random Data for Tests
     python manage.py runscript delete_all_data
     python manage.py runscript generate_data
