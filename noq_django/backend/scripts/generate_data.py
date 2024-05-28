@@ -29,9 +29,9 @@ def get_cities(index: int):
     return list[index][1]
 
 
-def make_user(group: str, test_user: bool) -> User:  # användargrupp, användarnamn
+def make_user(group: str, is_test_user: bool) -> User:  # användargrupp, användarnamn
     faker = Faker("sv_SE")
-    if test_user:
+    if is_test_user:
         password = "P4ssw0rd_for_Te5t+User"
         email = "user." + group + "@test.nu"
     else:
@@ -75,7 +75,7 @@ def add_hosts(nbr: int) -> int:
     ]
 
     print("\n---- HOSTS ----")
-    test_user: bool = True
+    is_test_user: bool = True
     while len(Host.objects.all()) < nbr:
         ix = random.randint(0, len(härbärge) - 1)
         host_name = härbärge[ix]
@@ -101,10 +101,10 @@ def add_hosts(nbr: int) -> int:
 
         host.save()
 
-        new_user = make_user(group="host", test_user=test_user)
+        new_user = make_user(group="host", is_test_user=is_test_user)
         host.users.add(new_user)
 
-        if test_user: test_user = False
+        if is_test_user: is_test_user = False
 
         print(f"{host} i region {region} tillagd")
 
@@ -115,7 +115,7 @@ def add_users(nbr: int):
     faker = Faker("sv_SE")
 
     print("\n---- USERS ----")
-    test_user: bool = True
+    is_test_user: bool = True
     if len(Client.objects.all()) >= nbr:
         return
 
@@ -148,7 +148,7 @@ def add_users(nbr: int):
         last_edit = datetime.now() - timedelta(days=random.randint(0, 31))
 
         user = Client(
-            user=make_user(group="user", test_user=test_user),
+            user=make_user(group="user", is_test_user=is_test_user),
             first_name=first_name,
             last_name=last_name,
             region=region_obj,
@@ -161,7 +161,7 @@ def add_users(nbr: int):
         )
         user.save(fake_data=last_edit)
 
-        if test_user: test_user=False
+        if is_test_user: is_test_user=False
 
 def add_booking_statuses():
     statuses = [
