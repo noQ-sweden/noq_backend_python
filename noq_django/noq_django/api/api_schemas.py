@@ -73,7 +73,7 @@ class HostSchema(ModelSchema):
 
     class Meta:
         model = Host
-        fields = "__all__"
+        exclude = ("blocked_clients","users",)
 
 
 # Mall för Add dvs POST
@@ -124,6 +124,9 @@ class ProductSchema(Schema):
     host: HostSchema = None
     type: str
 
+class ProductSchemaWithPlacesLeft(ProductSchema):
+    places_left: int
+
 
 class StatusSchema(Schema):
     description: str
@@ -148,7 +151,7 @@ class BookingPostSchema(Schema):
 
     start_date: date
     product_id: int
-    user_id: int
+
 
 
 class AvailableSchema(Schema):
@@ -161,6 +164,10 @@ class AvailableSchema(Schema):
     available_date: date
     product: ProductSchema
     places_left: int
+
+class AvailableProductsSchema(Schema):
+    host: HostSchema
+    products: List[ProductSchemaWithPlacesLeft]
 
 class BookingCounterSchema(Schema):
     pending_count: int
