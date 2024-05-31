@@ -30,7 +30,7 @@ from backend.auth import group_auth
 from typing import List
 from django.shortcuts import get_object_or_404
 from ninja.security import django_auth, django_auth_superuser, HttpBearer
-from datetime import date, timedelta
+from datetime import date
 
 router = Router(auth=lambda request: group_auth(request, "user")) #request defineras vid call, gruppnamnet är statiskt
 
@@ -38,7 +38,7 @@ router = Router(auth=lambda request: group_auth(request, "user")) #request defin
 def list_available(request, selected_date: str):
     try:
         selected_date = models.DateField().to_python(selected_date)
-    except:
+    except ValueError:
         raise HttpError(404, "Invalid date, dates need to be in the YYYY-MM-DD format")
 
     available_list = Available.objects.filter(available_date=selected_date) #get all available products
