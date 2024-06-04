@@ -76,6 +76,10 @@ def add_hosts(nbr: int) -> int:
 
     print("\n---- HOSTS ----")
     is_test_user: bool = True
+    if User.objects.filter(username="user.host@test.nu").exists():
+        is_test_user = False
+        print("Test user exists already.")
+
     while len(Host.objects.all()) < nbr:
         ix = random.randint(0, len(härbärge) - 1)
         host_name = härbärge[ix]
@@ -116,6 +120,10 @@ def add_users(nbr: int):
 
     print("\n---- USERS ----")
     is_test_user: bool = True
+    if User.objects.filter(username="user.user@test.nu").exists():
+        is_test_user = False
+        print("Test user exists already.")
+
     if len(Client.objects.all()) >= nbr:
         return
 
