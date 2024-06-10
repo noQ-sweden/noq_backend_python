@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 
+
 # from views import book_room_view
 
 # Django documentation
@@ -19,4 +20,5 @@ urlpatterns = [
     ),  # Listan som svar på sök
     # path("book/", views.reservation_view, name="reservation_view"),
     path("book/<int:available_id>/", views.book_room_view, name="book_room_view"),
+    path('host/<int:host_id>/bookings/', views.host_bookings_view, name='host_bookings'),
 ]
