@@ -87,6 +87,31 @@ def appoint_pending_booking(request, booking_id: int):
     except BookingStatus.DoesNotExist:
         raise HttpError(404, detail="Booking status does not exist.")
 
+@router.patch("/pending/{booking_id}/decline", response=BookingSchema, tags=["host-manage-requests"])
+def decline_pending_booking(request, booking_id: int):
+    host = Host.objects.get(users=request.user)
+    booking = get_object_or_404(Booking, id=booking_id, product__host=host, status__description='pending')
+
+    try:
+        booking.status = BookingStatus.objects.get(description='rejected')
+        booking.save()
+        return booking
+    except BookingStatus.DoesNotExist:
+        raise HttpError(404, detail="Booking status does not exist.")
+
+
+@router.patch("/pending/{booking_id}/setpending", response=BookingSchema, tags=["host-manage-requests"])
+def set_booking_pending(request, booking_id: int):
+    host = Host.objects.get(users=request.user)
+    booking = get_object_or_404(Booking, id=booking_id, product__host=host).exclude(status__description='checked_in')
+
+    try:
+        booking.status = BookingStatus.objects.get(description='accepted')
+        booking.save()
+        return booking
+    except BookingStatus.DoesNotExist:
+        raise HttpError(404, detail="Booking status does not exist.")
+
 # Mall för List
 @router.get("/hosts", response=List[HostSchema], tags=["Hosts"])
 def host_list(request):
