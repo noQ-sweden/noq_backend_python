@@ -99,14 +99,23 @@ def decline_pending_booking(request, booking_id: int):
     except BookingStatus.DoesNotExist:
         raise HttpError(404, detail="Booking status does not exist.")
 
+@router.get("/bookings", response=BookingSchema, tags=["host-manage-bookings"])
+def get_all_bookings(request, limiter: Optional[int] = None):  # Limiter example /pending?limiter=10 for 10 results, empty returns all
+    host = Host.objects.get(users=request.user)
+    bookings = Booking.objects.filter(product__host=host)
 
-@router.patch("/pending/{booking_id}/setpending", response=BookingSchema, tags=["host-manage-requests"])
+    if limiter is not None and limiter > 0:
+        return bookings[:limiter]
+
+    return bookings
+
+@router.patch("/bookings/{booking_id}/setpending", response=BookingSchema, tags=["host-manage-bookings"])
 def set_booking_pending(request, booking_id: int):
     host = Host.objects.get(users=request.user)
     booking = get_object_or_404(Booking, id=booking_id, product__host=host).exclude(status__description='checked_in')
 
     try:
-        booking.status = BookingStatus.objects.get(description='accepted')
+        booking.status = BookingStatus.objects.get(description='pending')
         booking.save()
         return booking
     except BookingStatus.DoesNotExist:
