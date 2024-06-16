@@ -114,7 +114,7 @@ def get_all_bookings(request, limiter: Optional[int] = None):  # Limiter example
 @router.patch("/bookings/{booking_id}/setpending", response=BookingSchema, tags=["host-manage-bookings"])
 def set_booking_pending(request, booking_id: int):
     host = Host.objects.get(users=request.user)
-    booking = get_object_or_404(Booking, id=booking_id, product__host=host).exclude(status__description='checked_in')
+    booking = get_object_or_404(Booking, id=booking_id, product__host=host)
 
     try:
         booking.status = BookingStatus.objects.get(description='pending')
