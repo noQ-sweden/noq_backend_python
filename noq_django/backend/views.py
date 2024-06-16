@@ -173,4 +173,13 @@ def book_room_view(request, available_id):
                 },
             )
         
+def host_bookings_view(request, host_id):
+    debug(request, "host_bookings")
+    #Not sure if we have a host login get so I just added the admin login instead
+    if not request.user.is_superuser:
+            message = "You do not have permission to view this page."
+            return render(request, 'host_bookings.html', {'bookings': [], 'host': None, 'message': message})
+    host = get_object_or_404(models.Host, id=host_id)
+    bookings = models.Booking.objects.filter(product__host=host)
+    return render(request, 'host_bookings.html', {'bookings': bookings, 'host': host})
 
