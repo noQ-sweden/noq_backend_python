@@ -109,8 +109,8 @@ def get_all_bookings(request, limiter: Optional[int] = None):  # Limiter example
 
     return bookings
 
-# This API can be used to undo previous decision for accept or reject
-# Bookings that have status checked-in can't be changed.
+# This API can be used to undo previous decision for accept or decline
+# Bookings that have status checked_in can't be changed.
 @router.patch("/bookings/{booking_id}/setpending", response=BookingSchema, tags=["host-manage-bookings"])
 def set_booking_pending(request, booking_id: int):
     host = Host.objects.get(users=request.user)
