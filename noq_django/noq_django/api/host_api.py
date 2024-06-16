@@ -93,7 +93,7 @@ def decline_pending_booking(request, booking_id: int):
     booking = get_object_or_404(Booking, id=booking_id, product__host=host, status__description='pending')
 
     try:
-        booking.status = BookingStatus.objects.get(description='rejected')
+        booking.status = BookingStatus.objects.get(description='declined')
         booking.save()
         return booking
     except BookingStatus.DoesNotExist:
