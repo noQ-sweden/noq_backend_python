@@ -87,3 +87,9 @@ class AvailableProducts(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.layout = Layout("product", "user")
+
+
+class ProductForm(forms.ModelForm):
+    class Meta:
+        model = models.Product
+        fields = ['name', 'description', 'total_places', 'host', 'type', 'requirements']
