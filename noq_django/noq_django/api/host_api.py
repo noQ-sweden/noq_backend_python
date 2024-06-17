@@ -87,6 +87,42 @@ def appoint_pending_booking(request, booking_id: int):
     except BookingStatus.DoesNotExist:
         raise HttpError(404, detail="Booking status does not exist.")
 
+@router.patch("/pending/{booking_id}/decline", response=BookingSchema, tags=["host-manage-requests"])
+def decline_pending_booking(request, booking_id: int):
+    host = Host.objects.get(users=request.user)
+    booking = get_object_or_404(Booking, id=booking_id, product__host=host, status__description='pending')
+
+    try:
+        booking.status = BookingStatus.objects.get(description='declined')
+        booking.save()
+        return booking
+    except BookingStatus.DoesNotExist:
+        raise HttpError(404, detail="Booking status does not exist.")
+
+@router.get("/bookings", response=BookingSchema, tags=["host-manage-bookings"])
+def get_all_bookings(request, limiter: Optional[int] = None):  # Limiter example /pending?limiter=10 for 10 results, empty returns all
+    host = Host.objects.get(users=request.user)
+    bookings = Booking.objects.filter(product__host=host)
+
+    if limiter is not None and limiter > 0:
+        return bookings[:limiter]
+
+    return bookings
+
+# This API can be used to undo previous decision for accept or decline
+# Bookings that have status checked_in can't be changed.
+@router.patch("/bookings/{booking_id}/setpending", response=BookingSchema, tags=["host-manage-bookings"])
+def set_booking_pending(request, booking_id: int):
+    host = Host.objects.get(users=request.user)
+    booking = get_object_or_404(Booking, id=booking_id, product__host=host)
+
+    try:
+        booking.status = BookingStatus.objects.get(description='pending')
+        booking.save()
+        return booking
+    except BookingStatus.DoesNotExist:
+        raise HttpError(404, detail="Booking status does not exist.")
+
 # Mall för List
 @router.get("/hosts", response=List[HostSchema], tags=["Hosts"])
 def host_list(request):
