@@ -71,6 +71,16 @@ class test_Booking(TestCase):
             requirements=None,
         )
 
+        # Create product with 1 total places
+        product_one_place = Product.objects.create(
+            name="Product",
+            description="Description",
+            total_places=1,
+            host=Host.objects.get(city="City"),
+            type="room",
+            requirements=None,
+        )
+
         status = BookingStatus.objects.create(id=1, description="pending")
 
     # Booking a product with valid data saves the booking and updates availability
@@ -146,10 +156,10 @@ class test_Booking(TestCase):
 
     # Booking a product with the same user and date as the current booking does not raise ValidationError
     def test_booking_with_same_user_and_date(self):
-        # Create a booking with valid data
+        # Create two bookings with valid data
         booking = Booking()
         booking.start_date = datetime.now()
-        booking.product = Product.objects.get(id=1)
+        booking.product = Product.objects.get(id=2)
         booking.user = Client.objects.get(gender="K")
         booking.status = BookingStatus.objects.get(id=1)
         booking.save()
@@ -174,3 +184,43 @@ class test_Booking(TestCase):
         ).first()
         assert availability is not None
         assert availability.places_left == booking.product.total_places - 1
+
+    # Accepting a booking when out of places should raise error
+    def test_booking_out_of_places(self):
+        # Create two bookings with valid data
+        booking = Booking()
+        booking.start_date = datetime.now()
+        booking.product = Product.objects.get(total_places=1)
+        booking.user = Client.objects.get(id=1)
+        booking.status = BookingStatus.objects.create(id=10, description="pending")
+        booking.save()
+
+        booking_2 = Booking()
+        booking_2.start_date = datetime.now()
+        booking_2.product = Product.objects.get(total_places=1)
+        booking_2.user = Client.objects.get(id=2)
+        booking_2.status = BookingStatus.objects.create(id=11, description="pending")
+        booking_2.save()
+
+        availability = Available.objects.filter(
+            product=booking.product, available_date=booking.start_date
+        ).first()
+        assert availability is not None
+        self.assertEqual(availability.places_left, 1)
+
+        # Set the attributes of the Booking object with an invalid date
+        booking.status.description = "accepted"
+        booking.save()
+        # Assert that available places is 0
+        availability = Available.objects.filter(
+            product=booking.product, available_date=booking.start_date
+        ).first()
+        assert availability is not None
+        self.assertEqual(availability.places_left, 0)
+
+
+        booking_2.status.description = "accepted"
+        # Assert that a ValidationError is raised when trying to
+        # accept booking when places are zero
+        with self.assertRaises(ValidationError):
+            booking_2.save()
