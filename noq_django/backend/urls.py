@@ -19,4 +19,9 @@ urlpatterns = [
     ),  # Listan som svar på sök
     # path("book/", views.reservation_view, name="reservation_view"),
     path("book/<int:available_id>/", views.book_room_view, name="book_room_view"),
+    path('products/', views.product_list, name='product_list'),
+    path('products/<int:pk>/', views.product_detail, name='product_detail'),
+    path('products/new/', views.product_create, name='product_create'),
+    path('products/<int:pk>/edit/', views.product_update, name='product_update'),
+    path('products/<int:pk>/delete/', views.product_delete, name='product_delete'),
 ]
