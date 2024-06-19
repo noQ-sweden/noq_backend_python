@@ -2,6 +2,7 @@
 
 from django import forms
 from django.urls import reverse, reverse_lazy
+from django.core.exceptions import ValidationError
 
 from datetime import datetime, timedelta
 from crispy_forms.helper import FormHelper
@@ -93,3 +94,15 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = models.Product
         fields = ['name', 'description', 'total_places', 'host', 'type', 'requirements']
+
+    def clean_host(self):
+        host = self.cleaned_data.get('host')
+        if not models.Host.objects.filter(id=host.id).exists():
+            raise ValidationError("Den angivna värden finns inte")
+        return host
+
+    def clean_type(self):
+        product_type = self.cleaned_data.get('type')
+        if product_type not in ['room', 'woman-only']:
+            raise ValidationError("Typ kan endast vara 'room' eller 'woman-only'.")
+        return product_type

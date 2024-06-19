@@ -109,12 +109,16 @@ class Product(models.Model):
     Product är en generalisering som möjliggör att ett härbärge
     kan ha flera olika rumstyper och även annat som Lunch i gemenskap
     """
+    TYPE_CHOICES = [
+        ('room', 'Room'),
+        ('woman-only', 'Woman Only'),
+    ]
 
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=100)
     total_places = models.IntegerField()
     host = models.ForeignKey(Host, on_delete=models.CASCADE, blank=True)
-    type = models.CharField(max_length=12, default="")  # ex "endast kvinnor"
+    type = models.CharField(max_length=12, choices=TYPE_CHOICES)
     requirements = models.ForeignKey(
         ProductRequirement, on_delete=models.CASCADE, null=True, blank=True
     )
