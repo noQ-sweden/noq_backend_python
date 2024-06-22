@@ -12,7 +12,7 @@ from backend.models import (
 from typing import List, Dict
 from django.shortcuts import get_object_or_404
 from ninja.security import django_auth, django_auth_superuser, HttpBearer
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
 
 class RegionSchema(ModelSchema):
@@ -134,6 +134,7 @@ class StatusSchema(Schema):
 class BookingSchema(Schema):
     """
     Booking för att bokningar av en Product
+
     """
     id: int
     status: StatusSchema
