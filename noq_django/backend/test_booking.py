@@ -82,13 +82,13 @@ class test_Booking(TestCase):
         )
 
         status = BookingStatus.objects.bulk_create([
-            BookingStatus(id=1, description="pending"),
-            BookingStatus(id=2, description="declined"),
-            BookingStatus(id=3, description="accepted"),
-            BookingStatus(id=4, description="check_in"),
-            BookingStatus(id=5, description="in_queue"),
-            BookingStatus(id=6, description="reserved"),
-            BookingStatus(id=7, description="confirmed"),
+            BookingStatus(id=State.PENDING, description="pending"),
+            BookingStatus(id=State.DECLINED, description="declined"),
+            BookingStatus(id=State.ACCEPTED, description="accepted"),
+            BookingStatus(id=State.CHECKED_IN, description="checked_in"),
+            BookingStatus(id=State.IN_QUEUE, description="in_queue"),
+            BookingStatus(id=State.RESERVED, description="reserved"),
+            BookingStatus(id=State.CONFIRMED, description="confirmed"),
         ])
 
     # Booking a product with valid data saves the booking and updates availability
