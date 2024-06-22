@@ -8,7 +8,7 @@ from backend.models import Product
 from backend.models import BookingStatus
 from backend.models import Available
 from datetime import timedelta
-from backend.models import Region, Client, User, Host
+from backend.models import Region, Client, User, Host, State
 
 
 class test_Booking(TestCase):
@@ -81,7 +81,15 @@ class test_Booking(TestCase):
             requirements=None,
         )
 
-        status = BookingStatus.objects.create(id=1, description="pending")
+        status = BookingStatus.objects.bulk_create([
+            BookingStatus(id=1, description="pending"),
+            BookingStatus(id=2, description="declined"),
+            BookingStatus(id=3, description="accepted"),
+            BookingStatus(id=4, description="check_in"),
+            BookingStatus(id=5, description="in_queue"),
+            BookingStatus(id=6, description="reserved"),
+            BookingStatus(id=7, description="confirmed"),
+        ])
 
     # Booking a product with valid data saves the booking and updates availability
     def test_booking_with_valid_data(self):
@@ -93,7 +101,7 @@ class test_Booking(TestCase):
         booking.start_date = datetime.now() + timedelta(days=1)
         booking.product = Product.objects.first()
         booking.user = Client.objects.get(gender="K")
-        booking.status = BookingStatus.objects.get(id=1)
+        booking.status = BookingStatus.objects.get(id=State.PENDING)
 
         # Save the Booking object
         booking.save()
@@ -161,7 +169,7 @@ class test_Booking(TestCase):
         booking.start_date = datetime.now()
         booking.product = Product.objects.get(id=2)
         booking.user = Client.objects.get(gender="K")
-        booking.status = BookingStatus.objects.get(id=1)
+        booking.status = BookingStatus.objects.get(id=State.PENDING)
         booking.save()
 
         # Try to create another booking with the same user and date
@@ -187,40 +195,58 @@ class test_Booking(TestCase):
 
     # Accepting a booking when out of places should raise error
     def test_booking_out_of_places(self):
-        # Create two bookings with valid data
+        # Create two bookings with valid data, first one is accepted,
+        # second is not accepted as there is no places left
         booking = Booking()
         booking.start_date = datetime.now()
         booking.product = Product.objects.get(total_places=1)
         booking.user = Client.objects.get(id=1)
-        booking.status = BookingStatus.objects.create(id=10, description="pending")
+        booking.status = BookingStatus.objects.get(id=State.PENDING)
         booking.save()
-
-        booking_2 = Booking()
-        booking_2.start_date = datetime.now()
-        booking_2.product = Product.objects.get(total_places=1)
-        booking_2.user = Client.objects.get(id=2)
-        booking_2.status = BookingStatus.objects.create(id=11, description="pending")
-        booking_2.save()
-
-        availability = Available.objects.filter(
-            product=booking.product, available_date=booking.start_date
-        ).first()
-        assert availability is not None
-        self.assertEqual(availability.places_left, 1)
-
-        # Set the attributes of the Booking object with an invalid date
-        booking.status.description = "accepted"
-        booking.save()
-        # Assert that available places is 0
         availability = Available.objects.filter(
             product=booking.product, available_date=booking.start_date
         ).first()
         assert availability is not None
         self.assertEqual(availability.places_left, 0)
 
-
-        booking_2.status.description = "accepted"
-        # Assert that a ValidationError is raised when trying to
-        # accept booking when places are zero
+        booking_2 = Booking()
+        booking_2.start_date = datetime.now()
+        booking_2.product = Product.objects.get(total_places=1)
+        booking_2.user = Client.objects.get(id=2)
+        # It should not be possible to add second pending booking
+        booking_2.status = BookingStatus.objects.get(id=State.PENDING)
         with self.assertRaises(ValidationError):
             booking_2.save()
+
+        # Set second booking in queue, this should not change number of
+        # available places
+        booking_2.status = BookingStatus.objects.get(id=State.IN_QUEUE)
+        booking_2.save()
+
+        availability = Available.objects.filter(
+            product=booking.product, available_date=booking.start_date
+        ).first()
+        assert availability is not None
+        self.assertEqual(availability.places_left, 0)
+
+        # Decline the first pending booking
+        booking.status = BookingStatus.objects.get(id=State.DECLINED)
+        booking.save()
+
+        # After declining pending booking there should be available
+        # places for booking
+        availability = Available.objects.filter(
+            product=booking.product, available_date=booking.start_date
+        ).first()
+        assert availability is not None
+        self.assertEqual(availability.places_left, 1)
+
+        booking_2.status = BookingStatus.objects.get(id=State.ACCEPTED)
+        booking_2.save()
+        # After booking is moved from queue to accepted there should
+        # not be any places left for booking
+        availability = Available.objects.filter(
+            product=booking.product, available_date=booking.start_date
+        ).first()
+        assert availability is not None
+        self.assertEqual(availability.places_left, 0)

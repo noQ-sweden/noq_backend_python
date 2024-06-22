@@ -62,7 +62,7 @@ Access the test site at http://localhost:8000.
 
 #### Running test cases
 To run the test case for backend applications you can run following commands.
-##### bankend
+##### backend
     python manage.py test backend
 ##### noq_django
     python manage.py test noq_django
