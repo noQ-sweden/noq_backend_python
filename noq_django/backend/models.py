@@ -157,7 +157,6 @@ class Booking(models.Model):
     Booking är en bokning av en produkt av en User
     Se också regelverk vid Save()
     """
-    booking_time = models.DateTimeField(auto_now_add=True, verbose_name="Bokningsdatum")
     start_date = models.DateField(verbose_name="Datum")
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, blank=False, verbose_name="Plats"
@@ -259,17 +258,6 @@ class Booking(models.Model):
     def __str__(self) -> str:
         return f"{self.start_date}: {self.user.first_name} {self.user.last_name} har bokat {self.product.description} på {self.product.host.name}, {self.product.host.city}"
 
-class BookingUpdate(models.Model):
-    # This is a log to keep track of all changes done to bookings
-    # Refences to other models are not used so we have audit log even if
-    # user or status is deleted or changed later on.
-    booking = models.ForeignKey(
-        Booking, on_delete=models.CASCADE, verbose_name="Plats"
-    )
-    update_time = models.DateTimeField(auto_now_add=True, verbose_name="Ändringstid")
-    old_status = models.CharField(max_length=32)
-    new_status = models.CharField(max_length=32)
-    username = models.CharField(max_length=32)
 
 class Available(models.Model):
     available_date = models.DateField(verbose_name="Datum")

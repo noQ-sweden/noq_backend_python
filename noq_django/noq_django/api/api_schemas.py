@@ -140,7 +140,6 @@ class BookingSchema(Schema):
     start_date: date
     product: ProductSchema
     user: UserSchema
-    booking_time: datetime
 
 
 class BookingPostSchema(Schema):
