@@ -1,9 +1,20 @@
 from django.db import models
+from django.db.models import Q
 from django.core.exceptions import ValidationError
 
 from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from datetime import datetime
+from enum import IntEnum
 
+class State(IntEnum):
+    PENDING = 1
+    DECLINED = 2
+    ACCEPTED = 3
+    CHECKED_IN = 4
+    IN_QUEUE = 5
+    RESERVED = 6
+    CONFIRMED = 7
 
 class Region(models.Model):
     name = models.CharField(max_length=80)
@@ -138,17 +149,14 @@ class Product(models.Model):
 
         # return f"{self.description} ({self.total_places} platser på {self.host.name}, {self.host.city} ({booking_count} bokade)"
 
-
 class BookingStatus(models.Model):
     description = models.CharField(max_length=32)
-
 
 class Booking(models.Model):
     """
     Booking är en bokning av en produkt av en User
     Se också regelverk vid Save()
     """
-
     start_date = models.DateField(verbose_name="Datum")
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, blank=False, verbose_name="Plats"
@@ -163,12 +171,9 @@ class Booking(models.Model):
     class Meta:
         db_table = "product_booking"
 
+    # return count of accepted, pending and checked_in bookings
     def calc_available(self):
-        bookings = Booking.objects.filter(
-            product=self.product, start_date=self.start_date
-        ).count()
-
-        places_left = self.product.total_places - bookings
+        places_left = self.product.total_places - self.bookings_count()
 
         existing_availability = Available.objects.filter(
             product=self.product, available_date=self.start_date
@@ -187,13 +192,12 @@ class Booking(models.Model):
 
     def save(self, *args, **kwargs):
 
+        # Check that the booked date is not in the past
         if str(self.start_date) < str(datetime.today().date()):
             raise ValidationError(
                 ("Fel: Bokningen börjar före dagens datum!"),
                 code="Date error",
             )
-        nbr_available = self.product.total_places
-
         # Check gender for room type = "woman-only"
         product_type = self.product.type
 
@@ -204,16 +208,6 @@ class Booking(models.Model):
                     f"Rum för kvinnor kan inte bokas av män",
                     code="woman-only",
                 )
-
-        # Is room fully booked?
-        booked_count = Booking.objects.filter(
-            product=self.product,
-            start_date=self.start_date,
-            id=self.id,
-        ).count()
-
-        if booked_count + 1 > nbr_available:
-            raise ValidationError(("Fullbokat rum"), code="full")
 
         # Check if there is another booking for the same user and date
         existing_booking = Booking.objects.filter(
@@ -230,10 +224,31 @@ class Booking(models.Model):
         # if product_type == "woman-only":
         #     print("\nRum för kvinnor OK:", self.user.name())
 
+        # Check if there is free places available for booking
+        # booking count is only valid if booking has status pending
+        # in_queue or declined will not book a place
+        # accepted, reserved, confirmed or checked_in already have
+        # a booked place
+        if self.status.id == State.PENDING:
+            bookings_count = self.bookings_count()
+            if bookings_count >= self.product.total_places:
+                raise ValidationError(("Fullbokat rum"), code="full")
+
         super().save(*args, **kwargs)
 
         # Uppdatera Available
         self.calc_available()
+
+    def bookings_count(self):
+        # Exclude bookings with status declined and in_queue
+        count = Booking.objects.filter(
+            Q(product=self.product)
+            & Q(start_date=self.start_date)
+            & ~Q(status=State.DECLINED)
+            & ~Q(status=State.IN_QUEUE)
+        ).count()
+
+        return count
 
     # Your custom code to be executed before the object is deleted
     def pre_delete_booking(self, instance, **kwargs):

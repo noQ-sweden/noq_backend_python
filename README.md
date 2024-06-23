@@ -60,6 +60,12 @@ All login credentials for generated users are stored in the fake_credentials.txt
 #### Test Site
 Access the test site at http://localhost:8000.
 
+#### Running test cases
+To run the test case for backend applications you can run following commands.
+##### backend
+    python manage.py test backend
+##### noq_django
+    python manage.py test noq_django
 
 ### Troubleshooting
 #### pkg_resources Module Error

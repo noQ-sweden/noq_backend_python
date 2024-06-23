@@ -6,7 +6,7 @@ from django.contrib.auth.models import User, Group
 
 from .delete_all_data import reset_all_data
 
-from backend.models import Host, Client, Product, Region, Booking, BookingStatus
+from backend.models import Host, Client, Product, Region, Booking, BookingStatus, State
 
 
 def get_regioner():
@@ -173,10 +173,13 @@ def add_users(nbr: int):
 
 def add_booking_statuses():
     statuses = [
-        {"id": 1, "description": "pending"},
-        {"id": 2, "description": "declined"},
-        {"id": 3, "description": "accepted"},
-        {"id": 4, "description": "checked_in"},
+        {"id": State.PENDING, "description": "pending"},
+        {"id": State.DECLINED, "description": "declined"},
+        {"id": State.ACCEPTED, "description": "accepted"},
+        {"id": State.CHECKED_IN, "description": "checked_in"},
+        {"id": State.IN_QUEUE, "description": "in_queue"},
+        {"id": State.RESERVED, "description": "reserved"},
+        {"id": State.CONFIRMED, "description": "confirmed"},
     ]
 
     for status in statuses:

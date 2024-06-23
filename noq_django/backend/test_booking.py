@@ -8,7 +8,7 @@ from backend.models import Product
 from backend.models import BookingStatus
 from backend.models import Available
 from datetime import timedelta
-from backend.models import Region, Client, User, Host
+from backend.models import Region, Client, User, Host, State
 
 
 class test_Booking(TestCase):
@@ -71,7 +71,25 @@ class test_Booking(TestCase):
             requirements=None,
         )
 
-        status = BookingStatus.objects.create(id=1, description="pending")
+        # Create product with 1 total places
+        product_one_place = Product.objects.create(
+            name="Product",
+            description="Description",
+            total_places=1,
+            host=Host.objects.get(city="City"),
+            type="room",
+            requirements=None,
+        )
+
+        status = BookingStatus.objects.bulk_create([
+            BookingStatus(id=State.PENDING, description="pending"),
+            BookingStatus(id=State.DECLINED, description="declined"),
+            BookingStatus(id=State.ACCEPTED, description="accepted"),
+            BookingStatus(id=State.CHECKED_IN, description="checked_in"),
+            BookingStatus(id=State.IN_QUEUE, description="in_queue"),
+            BookingStatus(id=State.RESERVED, description="reserved"),
+            BookingStatus(id=State.CONFIRMED, description="confirmed"),
+        ])
 
     # Booking a product with valid data saves the booking and updates availability
     def test_booking_with_valid_data(self):
@@ -83,7 +101,7 @@ class test_Booking(TestCase):
         booking.start_date = datetime.now() + timedelta(days=1)
         booking.product = Product.objects.first()
         booking.user = Client.objects.get(gender="K")
-        booking.status = BookingStatus.objects.get(id=1)
+        booking.status = BookingStatus.objects.get(id=State.PENDING)
 
         # Save the Booking object
         booking.save()
@@ -146,12 +164,12 @@ class test_Booking(TestCase):
 
     # Booking a product with the same user and date as the current booking does not raise ValidationError
     def test_booking_with_same_user_and_date(self):
-        # Create a booking with valid data
+        # Create two bookings with valid data
         booking = Booking()
         booking.start_date = datetime.now()
-        booking.product = Product.objects.get(id=1)
+        booking.product = Product.objects.get(id=2)
         booking.user = Client.objects.get(gender="K")
-        booking.status = BookingStatus.objects.get(id=1)
+        booking.status = BookingStatus.objects.get(id=State.PENDING)
         booking.save()
 
         # Try to create another booking with the same user and date
@@ -174,3 +192,61 @@ class test_Booking(TestCase):
         ).first()
         assert availability is not None
         assert availability.places_left == booking.product.total_places - 1
+
+    # Accepting a booking when out of places should raise error
+    def test_booking_out_of_places(self):
+        # Create two bookings with valid data, first one is accepted,
+        # second is not accepted as there is no places left
+        booking = Booking()
+        booking.start_date = datetime.now()
+        booking.product = Product.objects.get(total_places=1)
+        booking.user = Client.objects.get(id=1)
+        booking.status = BookingStatus.objects.get(id=State.PENDING)
+        booking.save()
+        availability = Available.objects.filter(
+            product=booking.product, available_date=booking.start_date
+        ).first()
+        assert availability is not None
+        self.assertEqual(availability.places_left, 0)
+
+        booking_2 = Booking()
+        booking_2.start_date = datetime.now()
+        booking_2.product = Product.objects.get(total_places=1)
+        booking_2.user = Client.objects.get(id=2)
+        # It should not be possible to add second pending booking
+        booking_2.status = BookingStatus.objects.get(id=State.PENDING)
+        with self.assertRaises(ValidationError):
+            booking_2.save()
+
+        # Set second booking in queue, this should not change number of
+        # available places
+        booking_2.status = BookingStatus.objects.get(id=State.IN_QUEUE)
+        booking_2.save()
+
+        availability = Available.objects.filter(
+            product=booking.product, available_date=booking.start_date
+        ).first()
+        assert availability is not None
+        self.assertEqual(availability.places_left, 0)
+
+        # Decline the first pending booking
+        booking.status = BookingStatus.objects.get(id=State.DECLINED)
+        booking.save()
+
+        # After declining pending booking there should be available
+        # places for booking
+        availability = Available.objects.filter(
+            product=booking.product, available_date=booking.start_date
+        ).first()
+        assert availability is not None
+        self.assertEqual(availability.places_left, 1)
+
+        booking_2.status = BookingStatus.objects.get(id=State.ACCEPTED)
+        booking_2.save()
+        # After booking is moved from queue to accepted there should
+        # not be any places left for booking
+        availability = Available.objects.filter(
+            product=booking.product, available_date=booking.start_date
+        ).first()
+        assert availability is not None
+        self.assertEqual(availability.places_left, 0)
