@@ -172,6 +172,24 @@ class Booking(models.Model):
         db_table = "product_booking"
 
     # return count of accepted, pending and checked_in bookings
+    def calc_available(self):
+        places_left = self.product.total_places - self.bookings_count()
+
+        existing_availability = Available.objects.filter(
+            product=self.product, available_date=self.start_date
+        ).first()
+
+        if existing_availability:
+            existing_availability.places_left = places_left
+            existing_availability.save()
+        else:
+            product_available = Available(
+                available_date=self.start_date,
+                product=Product.objects.get(id=self.product.id),
+                places_left=places_left,
+            )
+            product_available.save()
+
     def save(self, *args, **kwargs):
 
         # Check that the booked date is not in the past
@@ -231,24 +249,6 @@ class Booking(models.Model):
         ).count()
 
         return count
-
-    def calc_available(self):
-        places_left = self.product.total_places - self.bookings_count()
-
-        existing_availability = Available.objects.filter(
-            product=self.product, available_date=self.start_date
-        ).first()
-
-        if existing_availability:
-            existing_availability.places_left = places_left
-            existing_availability.save()
-        else:
-            product_available = Available(
-                available_date=self.start_date,
-                product=Product.objects.get(id=self.product.id),
-                places_left=places_left,
-            )
-            product_available.save()
 
     # Your custom code to be executed before the object is deleted
     def pre_delete_booking(self, instance, **kwargs):
