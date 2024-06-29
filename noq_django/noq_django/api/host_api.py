@@ -179,11 +179,15 @@ def product_create(request, payload: ProductSchema):
 @router.put("/products/{product_id}", response=ProductSchema, tags=["Products"])
 def product_update(request, product_id: int, payload: ProductSchema):
     product = get_object_or_404(Product, id=product_id)
-    print("req " , request)
-    print("pro " , product)
+
     for attr, value in payload.dict().items():
-        setattr(product, attr, value)
+        if attr == "host":
+            host = get_object_or_404(Host, id=value["id"])
+            setattr(product, attr, host)
+        else:
+            setattr(product, attr, value)
     product.save()
+
     return product
 
 
