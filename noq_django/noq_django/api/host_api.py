@@ -154,7 +154,7 @@ def host_products(request, host_id: int):
     return list
 
 
-# List all produts
+# List all products
 @router.get("/products", response=List[ProductSchema], tags=["Products"])
 def product_list(request):
     product_list = Product.objects
@@ -169,14 +169,21 @@ def product_detail(request, product_id: int):
 
 
 # Create a new product
-@router.post("/products", response=ProductSchema, tags=["Products"])
+@router.post("/products/create", response=ProductSchema, tags=["Products"])
 def product_create(request, payload: ProductSchema):
-    product = Product(**payload.dict())
+    host = get_object_or_404(Host, id=payload.host.id)
+    product = Product(
+        name=payload.name,
+        description=payload.description,
+        total_places=payload.total_places,
+        host=host,
+        type=payload.type
+    )
     product.save()
     return product
 
 
-@router.put("/products/{product_id}", response=ProductSchema, tags=["Products"])
+@router.put("/products/{product_id}/update", response=ProductSchema, tags=["Products"])
 def product_update(request, product_id: int, payload: ProductSchema):
     product = get_object_or_404(Product, id=product_id)
 
