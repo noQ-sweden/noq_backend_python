@@ -6,10 +6,8 @@ from django.contrib.auth.models import User, Group
 from backend.models import Host, Client, Product, Region
 from django.test import Client
 from ..host_api import router
-from django.test.client import MULTIPART_CONTENT, encode_multipart, BOUNDARY
-from urllib.parse import urlencode
 
-class TestUpdateProduct(TestCase):
+class TestProductsApi(TestCase):
     user = None
     client = None
     username = "host"
