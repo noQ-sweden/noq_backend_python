@@ -3,9 +3,11 @@ sys.path.append("....backend") # Adds folder where backend is to python modules 
 import json
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
-from backend.models import Host, Client, Product, Region, Booking, BookingStatus, State
+from backend.models import Host, Client, Product, Region
 from django.test import Client
 from ..host_api import router
+from django.test.client import MULTIPART_CONTENT, encode_multipart, BOUNDARY
+from urllib.parse import urlencode
 
 class TestUpdateProduct(TestCase):
     user = None
@@ -84,15 +86,15 @@ class TestUpdateProduct(TestCase):
         self.assertEqual(product.total_places, data['total_places'])
 
     '''
-    #TODO: 403 error when running post commands
+    # TODO: Fix Unprocessable Entity: /api/host/products issue with this test case
     def test_create_product(self):
         products_count = Product.objects.all().count()
         expected_count = products_count + 1
 
-        url = "/api/host/products/create"
+        url = "/api/host/products"
         data = {
-            'id': 0,
-            'name': "room",
+            "id": 0,
+            "name": "room",
             "description": "3-bäddrum",
             "total_places": 3,
             "host": {
@@ -102,29 +104,29 @@ class TestUpdateProduct(TestCase):
                 },
                 "id": 1,
                 "name": "Host 1",
-                "street": "",
-                "postcode": "",
+                "street": "Testaregatan 10",
+                "postcode": "313 13",
                 "city": "Malmö"
             },
             "type": "room"
         }
-        headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
-        response = self.client.post(url, json=data, headers=headers)
+        response = self.client.post(url, data, content_type='application/json')
 
         self.assertEqual(response.status_code, 201)
 
         self.assertEqual(Product.objects.all().count(), expected_count)
     '''
+
     def test_update_product(self):
         product = Product.objects.all().first()
 
         places = product.total_places
 
-        url = "/api/host/products/" + str(product.id) + "/update"
+        url = "/api/host/products/" + str(product.id) + "/edit"
         new_total_places = places * 2
         data = {
-            'id': product.id,
-            'name': "room",
+            "id": product.id,
+            "name": "room",
             "description": "3-bäddrum",
             "total_places": new_total_places,
             "host": {
@@ -140,7 +142,7 @@ class TestUpdateProduct(TestCase):
             },
             "type": "room"
         }
-        headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+        headers = {'Content-Type': 'application/json', 'accept': 'application/json'}
         response = self.client.put(url, json.dumps(data), headers=headers)
 
         self.assertEqual(response.status_code, 200)

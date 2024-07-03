@@ -169,7 +169,7 @@ def product_detail(request, product_id: int):
 
 
 # Create a new product
-@router.post("/products/create", response=ProductSchema, tags=["Products"])
+@router.post("/products", response={201: ProductSchema}, tags=["Products"])
 def product_create(request, payload: ProductSchema):
     host = get_object_or_404(Host, id=payload.host.id)
     product = Product(
@@ -183,7 +183,7 @@ def product_create(request, payload: ProductSchema):
     return product
 
 
-@router.put("/products/{product_id}/update", response=ProductSchema, tags=["Products"])
+@router.put("/products/{product_id}/edit", response=ProductSchema, tags=["Products"])
 def product_update(request, product_id: int, payload: ProductSchema):
     product = get_object_or_404(Product, id=product_id)
 
