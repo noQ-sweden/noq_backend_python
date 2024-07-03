@@ -83,6 +83,71 @@ class TestUpdateProduct(TestCase):
         self.assertEqual(product.description, data['description'])
         self.assertEqual(product.total_places, data['total_places'])
 
+    '''
+    #TODO: 403 error when running post commands
+    def test_create_product(self):
+        products_count = Product.objects.all().count()
+        expected_count = products_count + 1
+
+        url = "/api/host/products/create"
+        data = {
+            'id': 0,
+            'name': "room",
+            "description": "3-bäddrum",
+            "total_places": 3,
+            "host": {
+                "region": {
+                    "id": 1,
+                    "name": "Malmö"
+                },
+                "id": 1,
+                "name": "Host 1",
+                "street": "",
+                "postcode": "",
+                "city": "Malmö"
+            },
+            "type": "room"
+        }
+        headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+        response = self.client.post(url, json=data, headers=headers)
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertEqual(Product.objects.all().count(), expected_count)
+    '''
+    def test_update_product(self):
+        product = Product.objects.all().first()
+
+        places = product.total_places
+
+        url = "/api/host/products/" + str(product.id) + "/update"
+        new_total_places = places * 2
+        data = {
+            'id': product.id,
+            'name': "room",
+            "description": "3-bäddrum",
+            "total_places": new_total_places,
+            "host": {
+                "region": {
+                    "id": 1,
+                    "name": "Malmö"
+                },
+                "id": 1,
+                "name": "Host 1",
+                "street": "",
+                "postcode": "",
+                "city": "Malmö"
+            },
+            "type": "room"
+        }
+        headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+        response = self.client.put(url, json.dumps(data), headers=headers)
+
+        self.assertEqual(response.status_code, 200)
+
+        product = Product.objects.all().first()
+        self.assertEqual(product.total_places, new_total_places)
+
     def test_delete_product(self):
         product = Product.objects.all().first()
         id = product.id
