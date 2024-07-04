@@ -72,7 +72,7 @@ def count_bookings(request):
         available_products=available_products
     )
 
-@router.get("/available_places/today", response=List[AvailableSchema], tags=["host-frontpage"])
+@router.get("/available/today", response=List[AvailableSchema], tags=["host-frontpage"])
 def get_available_places(request):
     host = Host.objects.get(users=request.user)
     date_today = datetime.today().date()

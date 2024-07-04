@@ -147,7 +147,7 @@ class TestHostFrontpageApi(TestCase):
                 status=BookingStatus.objects.create(description="reserved"),
             )
         bookings = Booking.objects.all()
-        response = self.client.get("/api/host/available_places/today")
+        response = self.client.get("/api/host/available/today")
 
         self.assertEqual(response.status_code, 200)
 
