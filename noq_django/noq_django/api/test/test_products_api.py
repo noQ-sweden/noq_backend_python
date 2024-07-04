@@ -3,8 +3,8 @@ sys.path.append("....backend") # Adds folder where backend is to python modules 
 import json
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
-from backend.models import Host, Client, Product, Region
-from django.test import Client
+from backend.models import Host, Product, Region
+from django.test import Client as TestClient
 from ..host_api import router
 
 class TestProductsApi(TestCase):
@@ -21,7 +21,7 @@ class TestProductsApi(TestCase):
             self.user.groups.add(group_obj)
 
         # Login the host user
-        self.client = Client(router)
+        self.client = TestClient(router)
         self.client.login(username=self.username, password=self.password)
 
     def delete_user(self):
