@@ -138,8 +138,8 @@ def set_booking_pending(request, booking_id: int):
 # Mall för List
 @router.get("/hosts", response=List[HostSchema], tags=["Hosts"])
 def host_list(request):
-    list = Host.objects
-    return list
+    hosts_list = Host.objects
+    return hosts_list
 
 
 # List products for specific host
@@ -150,8 +150,8 @@ def host_list(request):
 )
 def host_products(request, host_id: int):
     host = get_object_or_404(Host, id=host_id)
-    list = Product.objects.filter(host=host)
-    return list
+    products_list = Product.objects.filter(host=host)
+    return products_list
 
 
 # List all products
