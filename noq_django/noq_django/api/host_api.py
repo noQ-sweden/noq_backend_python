@@ -72,32 +72,35 @@ def count_bookings(request):
         available_products=available_products
     )
 
-@router.get("/available/today", response=List[AvailableSchema], tags=["host-frontpage"])
-def get_available_places(request):
+@router.get("/available/{nr_of_days}", response=dict, tags=["host-frontpage"])
+def get_available_places(request, nr_of_days: int):
     host = Host.objects.get(users=request.user)
-    date_today = datetime.today().date()
+    current_date = datetime.today().date()
     # Dictionary with product name : available places
-    available_places = []
-    # Exclude bookings with status declined and in_queue
-    products = Product.objects.filter(host_id=host)
-    for product in products:
-        nr_of_bookings = Booking.objects.filter(
-            Q(product=product)
-            & Q(start_date=date_today)
-            & ~Q(status=State.DECLINED)
-            & ~Q(status=State.IN_QUEUE)
-        ).count()
+    available_places = {}
+    for day in range(nr_of_days):
+        booking_date = current_date + timedelta(days=day)
+        # Exclude bookings with status declined and in_queue
+        products = Product.objects.filter(host_id=host)
+        available_for_day = []
+        for product in products:
+            nr_of_bookings = Booking.objects.filter(
+                Q(product=product)
+                & Q(start_date=booking_date)
+                & ~Q(status=State.DECLINED)
+                & ~Q(status=State.IN_QUEUE)
+            ).count()
 
-        places_left = product.total_places - nr_of_bookings
-        available_places.append(
-            AvailableSchema(
-                id=product.id,
-                available_date=date_today,
-                product=product,
-                places_left=places_left
+            places_left = product.total_places - nr_of_bookings
+            available_for_day.append(
+                AvailableSchema(
+                    id=product.id,
+                    available_date=booking_date,
+                    product=product,
+                    places_left=places_left
+                )
             )
-        )
-
+        available_places[str(booking_date)] = available_for_day
     return available_places
 
 @router.get("/pending", response=List[BookingSchema], tags=["host-manage-requests"])

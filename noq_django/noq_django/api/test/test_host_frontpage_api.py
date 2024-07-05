@@ -134,6 +134,7 @@ class TestHostFrontpageApi(TestCase):
         products = Product.objects.filter(host_id=host).all()
         clients = Client.objects.all()
 
+        current_date = datetime.now().date()
         # Add bookings for the client_user (brukare)
         for i in range(6):
             # 5 bookings for today, 1 for tomorrow
@@ -141,21 +142,25 @@ class TestHostFrontpageApi(TestCase):
             # 3 bookings for product 1, 3 bookings for product 2, 2 for next day
             product_idx = 1 if i > 2 else 0
             Booking.objects.create(
-                start_date=datetime.now().date() + timedelta(days=extra_day),
+                start_date=current_date + timedelta(days=extra_day),
                 product=products[product_idx],
                 user=clients[i % 4],
                 status=BookingStatus.objects.create(description="reserved"),
             )
         bookings = Booking.objects.all()
-        response = self.client.get("/api/host/available/today")
+        # Get availability for two days
+        response = self.client.get("/api/host/available/2")
 
         self.assertEqual(response.status_code, 200)
 
+        tomorrows_date = current_date + timedelta(days=1)
         data = json.loads(response.content)
         # 3 places booked from 1st product
-        self.assertEqual(data[0]['places_left'], 2)
+        self.assertEqual(data[str(current_date)][0]['places_left'], 2)
+        self.assertEqual(data[str(current_date)][1]['places_left'], 2)
         # 1 place booked from 1st product
-        self.assertEqual(data[1]['places_left'], 2)
+        self.assertEqual(data[str(tomorrows_date)][0]['places_left'], 5)
+        self.assertEqual(data[str(tomorrows_date)][1]['places_left'], 1)
 
 
     def tearDown(self):
