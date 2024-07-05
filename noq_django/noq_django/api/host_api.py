@@ -27,6 +27,7 @@ from .api_schemas import (
     BookingPostSchema,
     BookingCounterSchema,
     AvailableSchema,
+    AvailablePerDateSchema,
 )
 
 from backend.auth import group_auth
@@ -72,7 +73,7 @@ def count_bookings(request):
         available_products=available_products
     )
 
-@router.get("/available/{nr_of_days}", response=dict, tags=["host-frontpage"])
+@router.get("/available/{nr_of_days}", response=AvailablePerDateSchema, tags=["host-frontpage"])
 def get_available_places(request, nr_of_days: int):
     host = Host.objects.get(users=request.user)
     current_date = datetime.today().date()
@@ -101,7 +102,7 @@ def get_available_places(request, nr_of_days: int):
                 )
             )
         available_places[str(booking_date)] = available_for_day
-    return available_places
+    return AvailablePerDateSchema(available_dates=available_places)
 
 @router.get("/pending", response=List[BookingSchema], tags=["host-manage-requests"])
 def get_pending_bookings(request, limiter: Optional[
