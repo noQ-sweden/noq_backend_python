@@ -156,11 +156,11 @@ class TestHostFrontpageApi(TestCase):
         tomorrows_date = current_date + timedelta(days=1)
         data = json.loads(response.content)
         # 3 places booked from 1st product
-        self.assertEqual(data[str(current_date)][0]['places_left'], 2)
-        self.assertEqual(data[str(current_date)][1]['places_left'], 2)
+        self.assertEqual(data['available_dates'][str(current_date)][0]['places_left'], 2)
+        self.assertEqual(data['available_dates'][str(current_date)][1]['places_left'], 2)
         # 1 place booked from 1st product
-        self.assertEqual(data[str(tomorrows_date)][0]['places_left'], 5)
-        self.assertEqual(data[str(tomorrows_date)][1]['places_left'], 1)
+        self.assertEqual(data['available_dates'][str(tomorrows_date)][0]['places_left'], 5)
+        self.assertEqual(data['available_dates'][str(tomorrows_date)][1]['places_left'], 1)
 
 
     def tearDown(self):

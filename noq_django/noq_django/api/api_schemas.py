@@ -14,6 +14,7 @@ from django.shortcuts import get_object_or_404
 from ninja.security import django_auth, django_auth_superuser, HttpBearer
 from datetime import date, timedelta
 
+date_string: str
 
 class RegionSchema(ModelSchema):
     """
@@ -152,8 +153,6 @@ class BookingPostSchema(Schema):
     start_date: date
     product_id: int
 
-
-
 class AvailableSchema(Schema):
     """
     Available för att kunna se om en Product har tillgängliga platser
@@ -164,6 +163,13 @@ class AvailableSchema(Schema):
     available_date: date
     product: ProductSchema
     places_left: int
+
+class AvailablePerDateSchema(Schema):
+    """
+    Available för att kunna se tillgängliga platser för product över
+    antal dagar
+    """
+    available_dates: Dict[str, List[AvailableSchema]]
 
 class AvailableProductsSchema(Schema):
     host: HostSchema
