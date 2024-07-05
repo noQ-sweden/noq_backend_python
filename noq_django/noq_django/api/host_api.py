@@ -78,11 +78,11 @@ def get_available_places(request, nr_of_days: int):
     current_date = datetime.today().date()
     # Dictionary with product name : available places
     available_places = {}
+    products = Product.objects.filter(host_id=host)
     for day in range(nr_of_days):
+        available_for_day = []
         booking_date = current_date + timedelta(days=day)
         # Exclude bookings with status declined and in_queue
-        products = Product.objects.filter(host_id=host)
-        available_for_day = []
         for product in products:
             nr_of_bookings = Booking.objects.filter(
                 Q(product=product)
