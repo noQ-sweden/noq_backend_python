@@ -281,11 +281,9 @@ class test_Booking(TestCase):
         assert availability is not None
         self.assertEqual(availability.places_left, 0)
 
-    def test_that_availability_is_correct(self):
+    def create_five_bookings(self, test_date, product):
         '''
-        Create product with 5 places and make 5 bookings in different
-        timespans. Test that the availability is counted correctly for
-        diffent days
+        Make 5 bookings in different timespans.
         day         012345678
         client1      |--|
         client2     |-----|
@@ -302,19 +300,33 @@ class test_Booking(TestCase):
             {'id': 4, 'start': 0, 'end': 7},
             {'id': 5, 'start': 2, 'end': 5},
         ]
-        expected_result = [3, 2, 1, 0, 1, 2, 3, 4, 5]
-        # Select product with 5 places
-        booked_product = Product.objects.get(total_places=5)
+        clients = []
         # Create 5 bookings
-        test_date = datetime.now()
         for i in range(5):
+            client = Client.objects.get(id=test_data[i]['id'])
+            clients.append(client)
             booking = Booking()
             booking.start_date = test_date + timedelta(days=test_data[i]['start'])
             booking.end_date = test_date + timedelta(days=test_data[i]['end'])
-            booking.product = booked_product
+            booking.product = product
             booking.user = Client.objects.get(id=test_data[i]['id'])
             booking.status = BookingStatus.objects.get(id=State.PENDING)
             booking.save()
+        return clients
+
+    def test_that_availability_is_correct(self):
+        '''
+        Make 5 bookings in different timespans. Test that the
+        availability is counted correctly for different days
+        '''
+        # Expected count for available places for each day
+        expected_result = [3, 2, 1, 0, 1, 2, 3, 4, 5]
+        # Select product with 5 places
+        booked_product = Product.objects.get(total_places=5)
+        # Set date
+        test_date = datetime.now()
+        # Create 5 bookings
+        clients = self.create_five_bookings(test_date, booked_product)
 
         # Test that the availability is correct for each day
         for i in range(8):
@@ -327,31 +339,13 @@ class test_Booking(TestCase):
 
     def test_that_availability_is_correct_after_deletion(self):
         '''
-        Create product with 5 places and make 5 bookings in different
-        timespans. Test that the availability is counted correctly
-        when bookings are deleted.
-        day         012345678
-        client1      |--|
-        client2     |-----|
-        client3        |----|
-        client4     |------|
-        client5       |--|
-        available   321012345
+        Make 5 bookings in different timespans. Test that the
+        availability is counted correctly when bookings are deleted.
 
-        Tests that when bookings are deleted the availability is
-        changed accordingly
         - Step one: delete booking for client 1
-        - Step one: delete booking for client 2
-        - Step one: delete bookings for all client
+        - Step two: delete booking for client 2
+        - Step three: delete bookings for rest of the clients
         '''
-        # Set data for bookings in a format that is easy to loop through
-        test_data = [
-            {'id': 1, 'start': 1, 'end': 4},
-            {'id': 2, 'start': 0, 'end': 6},
-            {'id': 3, 'start': 3, 'end': 8},
-            {'id': 4, 'start': 0, 'end': 7},
-            {'id': 5, 'start': 2, 'end': 5},
-        ]
         # Expected result for each day after deleting bookings
         expected_result = [
             [3, 3, 2, 1, 1, 2, 3, 4, 5], # Step 1
@@ -360,16 +354,10 @@ class test_Booking(TestCase):
         ]
         # Select product with 5 places
         booked_product = Product.objects.get(total_places=5)
-        # Create 5 bookings
+        # Set date
         test_date = datetime.now()
-        for i in range(5):
-            booking = Booking()
-            booking.start_date = test_date + timedelta(days=test_data[i]['start'])
-            booking.end_date = test_date + timedelta(days=test_data[i]['end'])
-            booking.product = booked_product
-            booking.user = Client.objects.get(id=test_data[i]['id'])
-            booking.status = BookingStatus.objects.get(id=State.PENDING)
-            booking.save()
+        # Create 5 bookings
+        clients = self.create_five_bookings(test_date, booked_product)
 
         # Test that the availability is correct for each day
         for i in range(3):
@@ -377,8 +365,8 @@ class test_Booking(TestCase):
                 # Step 3: Delete rest of the bookings
                 booking = Booking.objects.all().delete()
             else:
-                # Delete booking step 1 and 2
-                client = Client.objects.get(id=test_data[i]['id'])
+                # Delete booking step 1 and step 2
+                client = clients[i]
                 booking = Booking.objects.filter(user=client).delete()
 
             for day_nr in range(8):
