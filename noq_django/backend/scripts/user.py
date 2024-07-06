@@ -17,7 +17,7 @@ def user_list():
             print("\tHar bokat:")
             for booking in bookings:
                 print(
-                    f"\t\t{booking.start_date}: {booking.product.description} på {booking.product.host.name}, {booking.product.host.street}"
+                    f"\t\tfrån {booking.start_date} till {booking.end_date}: {booking.product.description} på {booking.product.host.name}, {booking.product.host.street}"
                 )
 
 
