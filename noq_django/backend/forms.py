@@ -82,7 +82,7 @@ class UserForm(forms.ModelForm):
 class AvailableProducts(forms.ModelForm):
     class Meta:
         model = models.Booking
-        fields = ("start_date", "product", "user")
+        fields = ("start_date", "end_date", "product", "user")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
