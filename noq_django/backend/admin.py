@@ -29,8 +29,8 @@ class HostAdmin(admin.ModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ("start_date", "user", "product")
-    list_filter = ("start_date","product")
+    list_display = ("start_date", "end_date", "user", "product")
+    list_filter = ("start_date", "end_date", "product")
     ordering = ("start_date",)
     search_fields = ("start_date",)
 
