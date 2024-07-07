@@ -139,6 +139,7 @@ class BookingSchema(Schema):
     id: int
     status: StatusSchema
     start_date: date
+    end_date: date
     product: ProductSchema
     user: UserSchema
 
@@ -150,6 +151,7 @@ class BookingPostSchema(Schema):
     """
 
     start_date: date
+    end_date: date
     product_id: int
 
 

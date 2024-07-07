@@ -250,13 +250,13 @@ class Booking(models.Model):
         # - accepted, reserved, confirmed or checked_in already have
         #   a booked place
         if self.status.id == State.PENDING:
-            available_counts = self.bookings_count_per_date()
-            not_available = all(
-                count >= self.product.total_places for count in available_counts.values())
-            if not_available:
+            bookings_per_date = self.bookings_count_per_date()
+            places_are_available = all(
+                count < self.product.total_places for count in bookings_per_date.values())
+            if not places_are_available:
                 raise ValidationError(
                     ("Fullbokat rum"),
-                    params={"booking_counts": available_counts, "max_bookings": self.product.total_places},
+                    params={"bookings_per_date": bookings_per_date, "nr_or_places": self.product.total_places},
                     code="full"
                 )
 
