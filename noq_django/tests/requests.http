@@ -48,6 +48,7 @@ content-type: application/json
 
 {
     "start_date": "2024-02-02",
+    "end_date": "2024-02-03",
     "product_id": 41,
     "user_id": 17
 }
