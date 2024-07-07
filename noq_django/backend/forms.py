@@ -66,6 +66,7 @@ class BookRoomForm2(forms.Form):
 
 class BookForm(forms.Form):
     start_date = forms.DateField()
+    end_date = forms.DateField()
     user_id = forms.IntegerField()
     product_id = forms.IntegerField()
 

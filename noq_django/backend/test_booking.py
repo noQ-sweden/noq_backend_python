@@ -112,8 +112,8 @@ class test_Booking(TestCase):
         booking = Booking()
 
         # Set the attributes of the Booking object
-        booking.start_date = datetime.now() + timedelta(days=1)
-        booking.end_date = datetime.now() + timedelta(days=3)
+        booking.start_date = datetime.now().date()
+        booking.end_date = (datetime.now() + timedelta(days=3)).date()
         booking.product = Product.objects.first()
         booking.user = Client.objects.get(gender="K")
         booking.status = BookingStatus.objects.get(id=State.PENDING)
@@ -142,8 +142,8 @@ class test_Booking(TestCase):
         booking = Booking()
 
         # Set the attributes of the Booking object with an invalid start_date
-        booking.start_date = datetime.now() - timedelta(days=1)
-        booking.end_date = datetime.now() + timedelta(days=1)
+        booking.start_date = (datetime.now() - timedelta(days=1)).date()
+        booking.end_date = (datetime.now() + timedelta(days=1)).date()
         booking.product = product
         booking.user = client
         booking.status = status
@@ -153,8 +153,8 @@ class test_Booking(TestCase):
             booking.save()
 
         # Set the attributes of the Booking object with an invalid end_date
-        booking.start_date = datetime.now()
-        booking.end_date = datetime.now() - timedelta(days=1)
+        booking.start_date = datetime.now().date()
+        booking.end_date = (datetime.now() - timedelta(days=1)).date()
 
         # Assert that a ValidationError is raised when trying to save the booking
         with self.assertRaises(ValidationError):
@@ -192,7 +192,7 @@ class test_Booking(TestCase):
     def test_booking_with_same_user_and_date(self):
         # Create two bookings with valid data
         booking = Booking()
-        booking.start_date = datetime.now()
+        booking.start_date = datetime.now().date()
         booking.end_date = (datetime.now() + timedelta(days=1)).date()
         booking.product = Product.objects.get(id=2)
         booking.user = Client.objects.get(gender="K")
@@ -226,7 +226,7 @@ class test_Booking(TestCase):
         # Create two bookings with valid data, first one is accepted,
         # second is not accepted as there is no places left
         booking = Booking()
-        booking.start_date = datetime.now()
+        booking.start_date = datetime.now().date()
         booking.end_date = (datetime.now() + timedelta(days=2)).date()
         booking.product = Product.objects.get(total_places=1)
         booking.user = Client.objects.get(id=1)
@@ -239,7 +239,7 @@ class test_Booking(TestCase):
         self.assertEqual(availability.places_left, 0)
 
         booking_2 = Booking()
-        booking_2.start_date = datetime.now()
+        booking_2.start_date = datetime.now().date()
         booking_2.end_date = (datetime.now() + timedelta(days=2)).date()
         booking_2.product = Product.objects.get(total_places=1)
         booking_2.user = Client.objects.get(id=2)
@@ -324,7 +324,7 @@ class test_Booking(TestCase):
         # Select product with 5 places
         booked_product = Product.objects.get(total_places=5)
         # Set date
-        test_date = datetime.now()
+        test_date = datetime.now().date()
         # Create 5 bookings
         clients = self.create_five_bookings(test_date, booked_product)
 
@@ -355,7 +355,7 @@ class test_Booking(TestCase):
         # Select product with 5 places
         booked_product = Product.objects.get(total_places=5)
         # Set date
-        test_date = datetime.now()
+        test_date = datetime.now().date()
         # Create 5 bookings
         clients = self.create_five_bookings(test_date, booked_product)
 
