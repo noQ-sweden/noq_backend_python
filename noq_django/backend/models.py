@@ -153,6 +153,9 @@ class Product(models.Model):
 class BookingStatus(models.Model):
     description = models.CharField(max_length=32)
 
+    def __str__(self):
+        return self.description
+
 class Booking(models.Model):
     """
     Booking är en bokning av en produkt av en User
@@ -162,7 +165,7 @@ class Booking(models.Model):
         default=timezone.now, verbose_name="Bokningstid"
     )
     start_date = models.DateField(verbose_name="Startdatum")
-    end_date = models.DateField(default=None, verbose_name="Slutdatum")
+    end_date = models.DateField(null=True, verbose_name="Slutdatum")
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE,
         blank=False, verbose_name="Plats"
@@ -173,7 +176,7 @@ class Booking(models.Model):
     )
     status = models.ForeignKey(
         BookingStatus, on_delete=models.CASCADE,
-        blank=False, verbose_name="Beskrivning"
+        blank=False, verbose_name="Bokningsstatus"
     )
 
     class Meta:
@@ -218,6 +221,7 @@ class Booking(models.Model):
                 ("Fel: Bokningen börjar före dagens datum!"),
                 code="Date error",
             )
+
         # Check gender for room type = "woman-only"
         product_type = self.product.type
 
@@ -263,10 +267,7 @@ class Booking(models.Model):
 
     def bookings_count_per_date(self):
         # Return count for bookings for each day of the booking
-        # TODO: investigate why end_date is datetime.date
-        end_date = datetime.combine(self.end_date, datetime.max.time())
-
-        date_delta = (end_date - self.start_date).days
+        date_delta = (self.end_date - self.start_date).days
         booking_counts = {}
 
         for i in range(date_delta):
