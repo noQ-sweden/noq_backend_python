@@ -165,7 +165,7 @@ class Booking(models.Model):
         default=timezone.now, verbose_name="Bokningstid"
     )
     start_date = models.DateField(verbose_name="Startdatum")
-    end_date = models.DateField(default=None, verbose_name="Slutdatum")
+    end_date = models.DateField(null=True, verbose_name="Slutdatum")
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE,
         blank=False, verbose_name="Plats"

@@ -187,7 +187,8 @@ class test_Booking(TestCase):
                 status=BookingStatus.objects.create(description="pending"),
             )
 
-    # Booking a product with the same user and date as the current booking does not raise ValidationError
+    # Booking a product with the same user and date as the current
+    # booking raises ValidationError
     def test_booking_with_same_user_and_date(self):
         # Create two bookings with valid data
         booking = Booking()
@@ -323,11 +324,7 @@ class test_Booking(TestCase):
         # Select product with 5 places
         booked_product = Product.objects.get(total_places=5)
         # Set date
-<<<<<<< HEAD
         test_date = datetime.now().date()
-=======
-        test_date = datetime.now()
->>>>>>> 19699e8 (Updates to forms, generate_data, user and tests)
         # Create 5 bookings
         clients = self.create_five_bookings(test_date, booked_product)
 
@@ -358,11 +355,7 @@ class test_Booking(TestCase):
         # Select product with 5 places
         booked_product = Product.objects.get(total_places=5)
         # Set date
-<<<<<<< HEAD
         test_date = datetime.now().date()
-=======
-        test_date = datetime.now()
->>>>>>> 19699e8 (Updates to forms, generate_data, user and tests)
         # Create 5 bookings
         clients = self.create_five_bookings(test_date, booked_product)
 
