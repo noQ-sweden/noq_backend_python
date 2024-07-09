@@ -271,3 +271,18 @@ class Available(models.Model):
 
     def __str__(self) -> str:
         return f"{self.product.description} på {self.product.host.name}, {self.product.host.city} har {self.places_left} platser kvar"
+
+
+class Invoice(models.Model):
+    host = models.ForeignKey(Host, on_delete=models.CASCADE, related_name='invoices')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    description = models.TextField()
+    paid = models.BooleanField(default=False)  # To track if the invoice has been paid
+    due_date = models.DateField(null=True, blank=True)
+    currency = models.CharField(max_length=3, default='SEK')
+    invoice_number = models.CharField(max_length=50, unique=True, blank=False)
+
+    def __str__(self) -> str:
+        return f"Invoice {self.id} for {self.host.name}"

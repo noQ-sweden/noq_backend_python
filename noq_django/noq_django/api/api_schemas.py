@@ -7,6 +7,7 @@ from backend.models import (
     Product,
     Booking,
     Available,
+    Invoice,
 )
 
 from typing import List, Dict
@@ -184,3 +185,24 @@ class LoginSchema(Schema):
     login_status: bool
     message: str
     groups: Optional[List[str]] = None
+
+
+class InvoiceCreateSchema(Schema):
+    """
+    Schema for creating an Invoice.
+    """
+    host: int
+    amount: float
+    description: str
+    paid: bool = False
+    due_date: Optional[date] = None
+    currency: str
+    invoice_number: str
+
+
+class InvoiceResponseSchema(ModelSchema):
+    host: HostSchema
+
+    class Config:
+        model = Invoice
+        model_fields = ['id', 'host', 'amount', 'description', 'paid', 'due_date', 'currency', 'invoice_number']

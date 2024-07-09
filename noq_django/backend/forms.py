@@ -76,7 +76,21 @@ class BookForm(forms.Form):
 class UserForm(forms.ModelForm):
     class Meta:
         model = models.Client
-        fields = ["first_name", "last_name", "phone"]
+        fields = [
+            "first_name", "last_name", "gender", "phone", "email",
+            "city", "street", "postcode", "unokod", "region"
+        ]
+        widgets = {
+            'gender': forms.Select(choices=[('M', 'Male'), ('F', 'Female'), ('O', 'Other')]),
+        }
+        
+    region = forms.ModelChoiceField(queryset=models.Region.objects.all(), required=True, label="Region")
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if models.Client.objects.filter(email=email).exists():
+            raise forms.ValidationError("This email is already in use.")
+        return email
 
 
 class AvailableProducts(forms.ModelForm):
@@ -106,3 +120,15 @@ class ProductForm(forms.ModelForm):
         if product_type not in ['room', 'woman-only']:
             raise ValidationError("Typ kan endast vara 'room' eller 'woman-only'.")
         return product_type
+    
+
+class InvoiceForm(forms.ModelForm):
+    
+    due_date = forms.DateField(
+    widget=forms.DateInput(attrs={'type': 'date'}),
+    required=False
+    )
+    
+    class Meta:
+        model = models.Invoice
+        fields = ['host', 'amount', 'description', 'paid', 'due_date', 'currency', 'invoice_number']
