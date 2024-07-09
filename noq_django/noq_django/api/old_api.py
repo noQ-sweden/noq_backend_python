@@ -6,6 +6,7 @@ from backend.models import (
     Product,
     Booking,
     Available,
+    Invoice,
 )
 
 from .api_schemas import (
@@ -19,6 +20,8 @@ from .api_schemas import (
     BookingSchema,
     BookingPostSchema,
     AvailableSchema,
+    InvoiceCreateSchema,
+    InvoiceResponseSchema,
 )
 
 from typing import List
@@ -186,3 +189,23 @@ def list_available(request, delta_days: int):
 def available_detail(request, id: int):
     avail = get_object_or_404(Booking, id=id)
     return avail
+
+@router.post("/create_invoice", response=InvoiceResponseSchema, tags=["host-create_invoice"])
+def create_invoice(request, payload: InvoiceCreateSchema):
+    host = get_object_or_404(Host, id=payload.host)
+    invoice = Invoice(
+        host=host,
+        amount=payload.amount,
+        description=payload.description,
+        paid=payload.paid,
+        due_date=payload.due_date,
+        currency=payload.currency,
+        invoice_number=payload.invoice_number
+    )
+    invoice.save()
+    return invoice
+
+@router.get("/get_invoice/{invoice_id}", response=InvoiceResponseSchema, tags=["host-create_invoice"])
+def get_invoice(request, invoice_id: int):
+    invoice = get_object_or_404(Invoice, id=invoice_id)
+    return invoice

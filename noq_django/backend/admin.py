@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Host, Client, Product, Region, Booking, Available
+from .models import Host, Client, Product, Region, Booking, Available, Invoice
 
 # admin.site.register(Host)
 # admin.site.register(Available)
@@ -49,3 +49,14 @@ class AvailableAdmin(admin.ModelAdmin):
     list_display = ("available_date", "places_left", "product")
     ordering = ("available_date",)
     search_fields = ("available_date",)
+
+
+@admin.register(Invoice)
+class InvoiceAdmin(admin.ModelAdmin):
+    list_display = ('id', 'host', 'amount', 'created_at', 'due_date', 'paid', 'currency')
+    list_filter = ('paid', 'created_at', 'host', 'currency')
+    search_fields = ('id', 'host__name', 'description', 'invoice_number')
+    ordering = ('-created_at',)
+    date_hierarchy = 'created_at'
+    fields = ('host', 'amount', 'description', 'paid', 'due_date', 'currency', 'invoice_number')
+    readonly_fields = ('created_at', 'updated_at')
