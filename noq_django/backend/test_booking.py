@@ -20,28 +20,32 @@ class test_Booking(TestCase):
 
         Host.objects.create(name="Host", city="City", region=region),
 
-        user = User()
+        # Create 4 male clients
+        for i in range(4):
+            user = User(username="mr_" + str(i))
+            user.save()
+
+            male_client = Client.objects.create(
+                first_name="John",
+                last_name="Doe",
+                gender="M",
+                street="123 Main St",
+                postcode="12345",
+                city="New York",
+                country="USA",
+                phone="123-456-7890",
+                email="john.doe@example.com",
+                unokod="ABC123",
+                day_of_birth=datetime.now().date(),
+                personnr_lastnr="1234",
+                region=Region.objects.get(name="City"),
+                requirements=None,
+                last_edit=datetime.now().date(),
+                user=user,
+            )
+
+        user = User(username="Mrs_1")
         user.save()
-
-        male_client = Client.objects.create(
-            first_name="John",
-            last_name="Doe",
-            gender="M",
-            street="123 Main St",
-            postcode="12345",
-            city="New York",
-            country="USA",
-            phone="123-456-7890",
-            email="john.doe@example.com",
-            unokod="ABC123",
-            day_of_birth=datetime.now().date(),
-            personnr_lastnr="1234",
-            region=Region.objects.get(name="City"),
-            requirements=None,
-            last_edit=datetime.now().date(),
-            user=user,
-        )
-
         female_client = Client.objects.create(
             first_name="Mary",
             last_name="Doe",
@@ -73,9 +77,19 @@ class test_Booking(TestCase):
 
         # Create product with 1 total places
         product_one_place = Product.objects.create(
-            name="Product",
-            description="Description",
+            name="ProductA",
+            description="DescriptionA",
             total_places=1,
+            host=Host.objects.get(city="City"),
+            type="room",
+            requirements=None,
+        )
+
+        # Create product with 5 total places
+        product_five_places = Product.objects.create(
+            name="ProductB",
+            description="DescriptionB",
+            total_places=5,
             host=Host.objects.get(city="City"),
             type="room",
             requirements=None,
@@ -98,7 +112,8 @@ class test_Booking(TestCase):
         booking = Booking()
 
         # Set the attributes of the Booking object
-        booking.start_date = datetime.now() + timedelta(days=1)
+        booking.start_date = datetime.now().date()
+        booking.end_date = (datetime.now() + timedelta(days=3)).date()
         booking.product = Product.objects.first()
         booking.user = Client.objects.get(gender="K")
         booking.status = BookingStatus.objects.get(id=State.PENDING)
@@ -126,11 +141,20 @@ class test_Booking(TestCase):
         # Initialize a Booking object
         booking = Booking()
 
-        # Set the attributes of the Booking object with an invalid date
-        booking.start_date = datetime.now() - timedelta(days=1)
+        # Set the attributes of the Booking object with an invalid start_date
+        booking.start_date = (datetime.now() - timedelta(days=1)).date()
+        booking.end_date = (datetime.now() + timedelta(days=1)).date()
         booking.product = product
         booking.user = client
         booking.status = status
+
+        # Assert that a ValidationError is raised when trying to save the booking
+        with self.assertRaises(ValidationError):
+            booking.save()
+
+        # Set the attributes of the Booking object with an invalid end_date
+        booking.start_date = datetime.now().date()
+        booking.end_date = (datetime.now() - timedelta(days=1)).date()
 
         # Assert that a ValidationError is raised when trying to save the booking
         with self.assertRaises(ValidationError):
@@ -141,7 +165,7 @@ class test_Booking(TestCase):
         self,
     ):
         # Create a male user
-        client = Client.objects.get(gender="M")
+        client = Client.objects.filter(gender="M").first()
 
         # Create a woman-only product
         product = Product.objects.create(
@@ -157,16 +181,19 @@ class test_Booking(TestCase):
         with self.assertRaises(ValidationError):
             Booking.objects.create(
                 start_date=datetime.now().date(),
+                end_date=(datetime.now() + timedelta(days=1)).date(),
                 product=product,
                 user=client,
                 status=BookingStatus.objects.create(description="pending"),
             )
 
-    # Booking a product with the same user and date as the current booking does not raise ValidationError
+    # Booking a product with the same user and date as the current
+    # booking raises ValidationError
     def test_booking_with_same_user_and_date(self):
         # Create two bookings with valid data
         booking = Booking()
-        booking.start_date = datetime.now()
+        booking.start_date = datetime.now().date()
+        booking.end_date = (datetime.now() + timedelta(days=1)).date()
         booking.product = Product.objects.get(id=2)
         booking.user = Client.objects.get(gender="K")
         booking.status = BookingStatus.objects.get(id=State.PENDING)
@@ -175,6 +202,7 @@ class test_Booking(TestCase):
         # Try to create another booking with the same user and date
         duplicate_booking = Booking()
         duplicate_booking.start_date = booking.start_date
+        duplicate_booking.end_date = (datetime.now() + timedelta(days=1)).date()
         duplicate_booking.product = booking.product
         duplicate_booking.user = Client.objects.get(gender="K")
         duplicate_booking.status = booking.status
@@ -198,7 +226,8 @@ class test_Booking(TestCase):
         # Create two bookings with valid data, first one is accepted,
         # second is not accepted as there is no places left
         booking = Booking()
-        booking.start_date = datetime.now()
+        booking.start_date = datetime.now().date()
+        booking.end_date = (datetime.now() + timedelta(days=2)).date()
         booking.product = Product.objects.get(total_places=1)
         booking.user = Client.objects.get(id=1)
         booking.status = BookingStatus.objects.get(id=State.PENDING)
@@ -210,7 +239,8 @@ class test_Booking(TestCase):
         self.assertEqual(availability.places_left, 0)
 
         booking_2 = Booking()
-        booking_2.start_date = datetime.now()
+        booking_2.start_date = datetime.now().date()
+        booking_2.end_date = (datetime.now() + timedelta(days=2)).date()
         booking_2.product = Product.objects.get(total_places=1)
         booking_2.user = Client.objects.get(id=2)
         # It should not be possible to add second pending booking
@@ -250,3 +280,99 @@ class test_Booking(TestCase):
         ).first()
         assert availability is not None
         self.assertEqual(availability.places_left, 0)
+
+    def create_five_bookings(self, test_date, product):
+        '''
+        Make 5 bookings in different timespans.
+        day         012345678
+        client1      |--|
+        client2     |-----|
+        client3        |----|
+        client4     |------|
+        client5       |--|
+        available   321012345
+        '''
+        # Set data for bookings in a format that is easy to loop through
+        test_data = [
+            {'id': 1, 'start': 1, 'end': 4},
+            {'id': 2, 'start': 0, 'end': 6},
+            {'id': 3, 'start': 3, 'end': 8},
+            {'id': 4, 'start': 0, 'end': 7},
+            {'id': 5, 'start': 2, 'end': 5},
+        ]
+        clients = []
+        # Create 5 bookings
+        for i in range(5):
+            client = Client.objects.get(id=test_data[i]['id'])
+            clients.append(client)
+            booking = Booking()
+            booking.start_date = test_date + timedelta(days=test_data[i]['start'])
+            booking.end_date = test_date + timedelta(days=test_data[i]['end'])
+            booking.product = product
+            booking.user = Client.objects.get(id=test_data[i]['id'])
+            booking.status = BookingStatus.objects.get(id=State.PENDING)
+            booking.save()
+        return clients
+
+    def test_that_availability_is_correct(self):
+        '''
+        Make 5 bookings in different timespans. Test that the
+        availability is counted correctly for different days
+        '''
+        # Expected count for available places for each day
+        expected_result = [3, 2, 1, 0, 1, 2, 3, 4, 5]
+        # Select product with 5 places
+        booked_product = Product.objects.get(total_places=5)
+        # Set date
+        test_date = datetime.now().date()
+        # Create 5 bookings
+        clients = self.create_five_bookings(test_date, booked_product)
+
+        # Test that the availability is correct for each day
+        for i in range(8):
+            availability = Available.objects.filter(
+                product=booked_product,
+                available_date=test_date + timedelta(days=i)
+            ).first()
+            assert availability is not None
+            self.assertEqual(availability.places_left, expected_result[i])
+
+    def test_that_availability_is_correct_after_deletion(self):
+        '''
+        Make 5 bookings in different timespans. Test that the
+        availability is counted correctly when bookings are deleted.
+
+        - Step one: delete booking for client 1
+        - Step two: delete booking for client 2
+        - Step three: delete bookings for rest of the clients
+        '''
+        # Expected result for each day after deleting bookings
+        expected_result = [
+            [3, 3, 2, 1, 1, 2, 3, 4, 5], # Step 1
+            [4, 4, 3, 2, 2, 3, 3, 4, 5], # Step 2
+            [5, 5, 5, 5, 5, 5, 5, 5, 5]  # Step 3
+        ]
+        # Select product with 5 places
+        booked_product = Product.objects.get(total_places=5)
+        # Set date
+        test_date = datetime.now().date()
+        # Create 5 bookings
+        clients = self.create_five_bookings(test_date, booked_product)
+
+        # Test that the availability is correct for each day
+        for i in range(3):
+            if i > 1:
+                # Step 3: Delete rest of the bookings
+                booking = Booking.objects.all().delete()
+            else:
+                # Delete booking step 1 and step 2
+                client = clients[i]
+                booking = Booking.objects.filter(user=client).delete()
+
+            for day_nr in range(8):
+                availability = Available.objects.filter(
+                    product=booked_product,
+                    available_date=test_date + timedelta(days=day_nr)
+                ).first()
+                assert availability is not None
+                self.assertEqual(availability.places_left, expected_result[i][day_nr])

@@ -215,12 +215,14 @@ def add_product_bookings(nbr: int, days_ahead: int = 3, verbose: bool = False):
         try:
             brukare = Client.objects.get(id=user_id)
             datum = datetime.now() + timedelta(days=random.randint(-1, days_ahead))
+            slutdatum = datum + timedelta(days=random.randint(1, 5))
             if verbose:
                 print(f'{brukare} {datum.strftime("%Y-%m-%d")}:')
 
             if brukare:
                 booking = Booking(
                     start_date=datum,
+                    end_date=slutdatum,
                     product=Product.objects.get(id=product_id),
                     user=brukare,
                 )
@@ -228,10 +230,12 @@ def add_product_bookings(nbr: int, days_ahead: int = 3, verbose: bool = False):
                 if (
                     booking.start_date.date()
                     == (datetime.now() - timedelta(days=1)).date()
-                ):  # this makes sure there are departures being generaated
-                    booking.status = BookingStatus.objects.get(id=4)
+                ):  # this makes sure there are departures being generated
+                    booking.status = BookingStatus.objects.get(id=State.CHECKED_IN)
                 else:
-                    booking.status = BookingStatus.objects.get(id=random.randint(1, 4))
+                    booking.status = BookingStatus.objects.get(
+                        id=random.randint(State.PENDING, State.CHECKED_IN)
+                    )
 
                 booking.save()
 
