@@ -10,14 +10,13 @@ from ..host_api import router
 
 class TestData():
     test_client = None
-    user = None
-    client = None
+    region = None
     usernames = ["user.one@test.nu", "user.two@test.nu"]
     password = "userpassword"
     users = []
     hosts = []
     products = []
-    region = None
+
 
     def __init__(self):
         # Create table for booking statuses
@@ -27,7 +26,6 @@ class TestData():
         # Count availability for a week
         for product in Product.objects.all():
             self.calc_available(product)
-
 
 
     def user_login(self, user_group, nr_of_users):
