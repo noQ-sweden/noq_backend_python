@@ -11,7 +11,13 @@ from ..host_api import router
 class TestData():
     test_client = None
     region = None
-    usernames = ["user.one@test.nu", "user.two@test.nu"]
+    usernames = [
+        "user.one@test.nu",
+        "user.two@test.nu",
+        "user.three@test.nu",
+        "user.four@test.nu",
+        "user.five@test.nu",
+    ]
     password = "userpassword"
     users = []
     hosts = []
@@ -23,7 +29,7 @@ class TestData():
         self.add_booking_statuses()
         # Add product data
         self.add_product_data()
-        # Count availability for a week
+        # Set availability for products
         for product in Product.objects.all():
             self.calc_available(product)
 
@@ -42,12 +48,18 @@ class TestData():
                     username=self.usernames[i], password=self.password)
                 group_obj, created = Group.objects.get_or_create(name=user_group)
                 user.groups.add(group_obj)
+                user.save()
                 self.users.append(user)
-                client = Client.objects.create(
-                    first_name=user.username,
-                    gender="K",
-                    user=user,
-                    region=self.region)
+                # If user group is host, only the first user is a host
+                # also host user will not be a client
+                if user_group == "host":
+                    user_group = "user"
+                else:
+                    client = Client.objects.create(
+                        first_name=user.username,
+                        gender="K",
+                        user=user,
+                        region=self.region)
 
         # Login the first user
         self.test_client = TestClient(router)
