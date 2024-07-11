@@ -8,20 +8,6 @@ from .test_data import TestData
 class TestProductsApi(TestCase):
     t_data = None
 
-        # Login the host user
-        self.client = Client(router)
-        self.client.login(username=self.username, password=self.password)
-
-    def delete_user(self):
-        # Delete the user created for the tests
-        user = User.objects.get(username=self.username)
-        user.delete()
-
-    def delete_products(self):
-        # Delete all products created for the tests
-        Product.objects.all().delete()
-        Host.objects.all().delete()
-        Region.objects.all().delete()
 
     def setUp(self):
         self.t_data = TestData()
