@@ -216,9 +216,9 @@ class Booking(models.Model):
             )
 
         # Check that the booked end_date is not before the start_date
-        if str(self.start_date) > str(self.end_date):
+        if str(self.start_date) >= str(self.end_date):
             raise ValidationError(
-                ("Fel: Bokningen börjar före dagens datum!"),
+                ("Fel: Bokningen slutar före start datum!"),
                 code="Date error",
             )
 

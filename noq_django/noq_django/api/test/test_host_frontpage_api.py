@@ -4,7 +4,9 @@ import json
 from datetime import datetime, timedelta
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
-from backend.models import Host, Client, Product, Region, Booking, State, BookingStatus
+from backend.models import (
+    Host, Client, Product, Region, Booking, State, BookingStatus, Available
+)
 from django.test import Client as TestClient
 from ..host_api import router
 
@@ -38,13 +40,13 @@ class TestHostFrontpageApi(TestCase):
 
     def delete_users(self):
         # Delete the host_user created for the tests
-        users = User.objects.all()
-        users.delete()
+        users = User.objects.all().delete()
 
 
     def delete_products(self):
         # Delete all products created for the tests
         Product.objects.all().delete()
+        Available.objects.all().delete()
         Host.objects.all().delete()
         Region.objects.all().delete()
 
@@ -141,8 +143,11 @@ class TestHostFrontpageApi(TestCase):
             extra_day = 1 if i > 3 else 0
             # 3 bookings for product 1, 3 bookings for product 2, 2 for next day
             product_idx = 1 if i > 2 else 0
+            start_date = current_date + timedelta(days=extra_day)
+            end_date = start_date + timedelta(days=extra_day+1)
             Booking.objects.create(
-                start_date=current_date + timedelta(days=extra_day),
+                start_date=start_date,
+                end_date=end_date,
                 product=products[product_idx],
                 user=clients[i % 4],
                 status=BookingStatus.objects.create(description="reserved"),
