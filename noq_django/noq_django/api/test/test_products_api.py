@@ -2,6 +2,7 @@ import sys
 sys.path.append("....backend") # Adds folder where backend is to python modules path.
 import json
 from django.test import TestCase
+from django.contrib.auth.models import User, Group
 from backend.models import Host, Client, Product, Region
 from .test_data import TestData
 
@@ -151,3 +152,4 @@ class TestProductsApi(TestCase):
         # After the tests delete all data generated for the tests
         self.t_data.delete_users()
         self.t_data.delete_products()
+
