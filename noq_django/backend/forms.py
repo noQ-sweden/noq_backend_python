@@ -66,6 +66,7 @@ class BookRoomForm2(forms.Form):
 
 class BookForm(forms.Form):
     start_date = forms.DateField()
+    end_date = forms.DateField()
     user_id = forms.IntegerField()
     product_id = forms.IntegerField()
 
@@ -82,7 +83,7 @@ class UserForm(forms.ModelForm):
 class AvailableProducts(forms.ModelForm):
     class Meta:
         model = models.Booking
-        fields = ("start_date", "product", "user")
+        fields = ("start_date", "end_date", "product", "user")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -4,7 +4,8 @@ from django.core.exceptions import ValidationError
 
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
-from datetime import datetime
+from datetime import datetime, timedelta
+from django.utils import timezone
 from enum import IntEnum
 
 class State(IntEnum):
@@ -152,43 +153,58 @@ class Product(models.Model):
 class BookingStatus(models.Model):
     description = models.CharField(max_length=32)
 
+    def __str__(self):
+        return self.description
+
 class Booking(models.Model):
     """
     Booking är en bokning av en produkt av en User
     Se också regelverk vid Save()
     """
-    start_date = models.DateField(verbose_name="Datum")
+    booking_time = models.DateTimeField(
+        default=timezone.now, verbose_name="Bokningstid"
+    )
+    start_date = models.DateField(verbose_name="Startdatum")
+    end_date = models.DateField(null=True, verbose_name="Slutdatum")
     product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, blank=False, verbose_name="Plats"
+        Product, on_delete=models.CASCADE,
+        blank=False, verbose_name="Plats"
     )
     user = models.ForeignKey(
-        Client, on_delete=models.CASCADE, blank=False, verbose_name="Namn"
+        Client, on_delete=models.CASCADE,
+        blank=False, verbose_name="Namn"
     )
     status = models.ForeignKey(
-        BookingStatus, on_delete=models.CASCADE, blank=False, verbose_name="Beskrivning"
+        BookingStatus, on_delete=models.CASCADE,
+        blank=False, verbose_name="Bokningsstatus"
     )
 
     class Meta:
         db_table = "product_booking"
 
+    def ready(self):
+        from . import signals
+
     # return count of accepted, pending and checked_in bookings
     def calc_available(self):
-        places_left = self.product.total_places - self.bookings_count()
+        bookings_per_day = self.bookings_count_per_date()
+        for date in bookings_per_day:
+            places_left = self.product.total_places - bookings_per_day[date]
 
-        existing_availability = Available.objects.filter(
-            product=self.product, available_date=self.start_date
-        ).first()
+            existing_availability = Available.objects.filter(
+                product=self.product, available_date=date
+            ).first()
 
-        if existing_availability:
-            existing_availability.places_left = places_left
-            existing_availability.save()
-        else:
-            product_available = Available(
-                available_date=self.start_date,
-                product=Product.objects.get(id=self.product.id),
-                places_left=places_left,
-            )
-            product_available.save()
+            if existing_availability:
+                existing_availability.places_left = places_left
+                existing_availability.save()
+            else:
+                product_available = Available(
+                    available_date=date,
+                    product=Product.objects.get(id=self.product.id),
+                    places_left=places_left,
+                )
+                product_available.save()
 
     def save(self, *args, **kwargs):
 
@@ -198,6 +214,14 @@ class Booking(models.Model):
                 ("Fel: Bokningen börjar före dagens datum!"),
                 code="Date error",
             )
+
+        # Check that the booked end_date is not before the start_date
+        if str(self.start_date) >= str(self.end_date):
+            raise ValidationError(
+                ("Fel: Bokningen slutar före start datum!"),
+                code="Date error",
+            )
+
         # Check gender for room type = "woman-only"
         product_type = self.product.type
 
@@ -220,40 +244,45 @@ class Booking(models.Model):
                 code="already_booked",
             )
 
-        # Check for special rules
-        # if product_type == "woman-only":
-        #     print("\nRum för kvinnor OK:", self.user.name())
-
-        # Check if there is free places available for booking
-        # booking count is only valid if booking has status pending
-        # in_queue or declined will not book a place
-        # accepted, reserved, confirmed or checked_in already have
-        # a booked place
+        # Check if there is free places available for the booking period
+        # - Booking count is only valid if booking has status pending
+        # - in_queue or declined will not book a place
+        # - accepted, reserved, confirmed or checked_in already have
+        #   a booked place
         if self.status.id == State.PENDING:
-            bookings_count = self.bookings_count()
-            if bookings_count >= self.product.total_places:
-                raise ValidationError(("Fullbokat rum"), code="full")
+            bookings_per_date = self.bookings_count_per_date()
+            places_are_available = all(
+                count < self.product.total_places for count in bookings_per_date.values())
+            if not places_are_available:
+                raise ValidationError(
+                    ("Fullbokat rum"),
+                    params={"bookings_per_date": bookings_per_date, "nr_or_places": self.product.total_places},
+                    code="full"
+                )
 
         super().save(*args, **kwargs)
 
         # Uppdatera Available
         self.calc_available()
 
-    def bookings_count(self):
-        # Exclude bookings with status declined and in_queue
-        count = Booking.objects.filter(
-            Q(product=self.product)
-            & Q(start_date=self.start_date)
-            & ~Q(status=State.DECLINED)
-            & ~Q(status=State.IN_QUEUE)
-        ).count()
+    def bookings_count_per_date(self):
+        # Return count for bookings for each day of the booking
+        date_delta = (self.end_date - self.start_date).days
+        booking_counts = {}
 
-        return count
+        for i in range(date_delta):
+            date_time = self.start_date + timedelta(days=i)
+            count = Booking.objects.filter(
+                Q(product=self.product)
+                & Q(start_date__lte=date_time)
+                & Q(end_date__gt=date_time)
+                & ~Q(status=State.DECLINED)
+                & ~Q(status=State.IN_QUEUE)
+            ).count()
+            date = f"{date_time:%Y-%m-%d}"
+            booking_counts[date] = count
 
-    # Your custom code to be executed before the object is deleted
-    def pre_delete_booking(self, instance, **kwargs):
-        self.calc_available()
-        print(f"Booking {instance} is about to be deleted.")
+        return booking_counts
 
     def __str__(self) -> str:
         return f"{self.start_date}: {self.user.first_name} {self.user.last_name} har bokat {self.product.description} på {self.product.host.name}, {self.product.host.city}"
