@@ -40,7 +40,8 @@ CORS_ALLOW_HEADERS = [
     'Accept-Encoding',
     'Authorization',
     'Content-Type',
-    'Cookie',  
+    'Cookie', 
+    'x-csrftoken',
 ]
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "noqbackend.pythonanywhere.com"]
