@@ -122,7 +122,7 @@ class ProductSchema(Schema):
     name: str
     description: str
     total_places: int
-    host: HostSchema = None
+    host_id: int  # Change from HostSchema to int for the host_id
     type: str
 
 class ProductSchemaWithPlacesLeft(ProductSchema):
