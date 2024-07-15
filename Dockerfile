@@ -8,6 +8,7 @@ COPY ./noq_django /backend
 COPY ./scripts /scripts
 
 WORKDIR /backend
+VOLUME /static-data
 
 RUN python -m venv /py && \
     /py/bin/pip install --upgrade pip && \
