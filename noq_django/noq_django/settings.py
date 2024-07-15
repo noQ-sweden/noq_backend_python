@@ -30,6 +30,13 @@ DEBUG = True
 CORS_ALLOWED_ORIGINS = [ 
     "http://localhost:8080",
     "http://localhost:5173",
+    "http://localhost:80",
+    "http://localhost:8000",
+]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    # match localhost with any port
+    r"^http:\/\/localhost:*([0-9]+)?$",
 ]
 
 #CORS_ALLOW_ALL_ORIGINS = True
