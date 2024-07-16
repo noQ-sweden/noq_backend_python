@@ -11,6 +11,8 @@ from . import forms
 from . import tables
 from .models import Product
 from .forms import ProductForm
+import json
+from urllib.parse import urlencode
 
         
 def main_view(request):
@@ -230,7 +232,7 @@ def product_update(request, pk):
         form = ProductForm(instance=product)
         return render(request, 'product_form.html', {'form': form})
     elif request.method == 'PUT':
-        form = ProductForm(request.PUT, instance=product)
+        form = ProductForm(request.POST) #, instance=product)
         if form.is_valid():
             form.save()
             return HttpResponse(status=200)
