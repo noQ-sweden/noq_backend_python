@@ -28,6 +28,7 @@ from .api_schemas import (
 from backend.auth import group_auth
 
 from typing import List
+import json
 from django.shortcuts import get_object_or_404
 from ninja.security import django_auth, django_auth_superuser, HttpBearer
 from datetime import date
@@ -72,10 +73,15 @@ def request_booking(request, booking_data: BookingPostSchema):
     user = Client.objects.get(user=request.user)
     booking = Booking()
     booking.start_date = booking_data.start_date
+    booking.end_date = booking_data.end_date
     booking.product = product
     booking.user = user
     booking.status = BookingStatus.objects.get(description="pending")
-    booking.save()
+    try:
+        booking.save()
+    except Exception as e:
+        if e.code == "full":
+            raise HttpError(200, json.dumps(e.params))
 
     return booking
     

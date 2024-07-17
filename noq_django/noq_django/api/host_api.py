@@ -1,5 +1,7 @@
+from django.db.models import Q
 from ninja import NinjaAPI, Schema, ModelSchema, Router
 from ninja.errors import HttpError
+from datetime import datetime, timedelta
 
 from backend.models import (
     Client,
@@ -10,6 +12,7 @@ from backend.models import (
     Available,
     Product,
     BookingStatus,
+    State,
 )
 
 from .api_schemas import (
@@ -24,6 +27,7 @@ from .api_schemas import (
     BookingPostSchema,
     BookingCounterSchema,
     AvailableSchema,
+    AvailablePerDateSchema,
 )
 
 from backend.auth import group_auth
@@ -34,6 +38,14 @@ from datetime import date, timedelta
 
 router = Router(auth=lambda request: group_auth(request, "host"))  # request defineras vid call, gruppnamnet är statiskt
 
+# api/host/ returns the host information
+@router.get("/", response=HostSchema, tags=["host-frontpage"])
+def get_host_data(request):
+    try:
+        host = Host.objects.get(users=request.user)
+        return host
+    except Host.DoesNotExist:
+        raise HttpError(200, "User is not admin to a host.")
 
 @router.get("/count_bookings", response=BookingCounterSchema, tags=["host-frontpage"])
 def count_bookings(request):
@@ -61,6 +73,36 @@ def count_bookings(request):
         available_products=available_products
     )
 
+@router.get("/available/{nr_of_days}", response=AvailablePerDateSchema, tags=["host-frontpage"])
+def get_available_places(request, nr_of_days: int):
+    host = Host.objects.get(users=request.user)
+    current_date = datetime.today().date()
+    # Dictionary with product name : available places
+    available_places = {}
+    products = Product.objects.filter(host_id=host)
+    for day in range(nr_of_days):
+        available_for_day = []
+        booking_date = current_date + timedelta(days=day)
+        # Exclude bookings with status declined and in_queue
+        for product in products:
+            nr_of_bookings = Booking.objects.filter(
+                Q(product=product)
+                & Q(start_date=booking_date)
+                & ~Q(status=State.DECLINED)
+                & ~Q(status=State.IN_QUEUE)
+            ).count()
+
+            places_left = product.total_places - nr_of_bookings
+            available_for_day.append(
+                AvailableSchema(
+                    id=product.id,
+                    available_date=booking_date,
+                    product=product,
+                    places_left=places_left
+                )
+            )
+        available_places[str(booking_date)] = available_for_day
+    return AvailablePerDateSchema(available_dates=available_places)
 
 @router.get("/pending", response=List[BookingSchema], tags=["host-manage-requests"])
 def get_pending_bookings(request, limiter: Optional[
