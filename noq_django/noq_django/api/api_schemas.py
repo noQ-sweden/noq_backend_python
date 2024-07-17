@@ -201,16 +201,22 @@ class InvoiceCreateSchema(Schema):
     """
     host: int
     amount: float
-    description: str
-    paid: bool = False
+    description: Optional[str] = None
     due_date: Optional[date] = None
     currency: str
     invoice_number: str
+    vat_rate: float
+    sale_date: Optional[date] = None
+    seller_vat_number: Optional[str] = None
+    buyer_vat_number: Optional[str] = None
+    buyer_name: Optional[str] = None
+    buyer_address: Optional[str] = None
+    status: str = 'open' 
 
 
 class InvoiceResponseSchema(ModelSchema):
     host: HostSchema
 
     class Config:
-        model = Invoice
-        model_fields = ['id', 'host', 'amount', 'description', 'paid', 'due_date', 'currency', 'invoice_number']
+            model = Invoice
+            model_fields = ['id', 'host', 'amount', 'description', 'status', 'due_date', 'currency', 'invoice_number', 'vat', 'vat_rate', 'sale_date', 'seller_vat_number', 'buyer_vat_number', 'buyer_name', 'buyer_address']
