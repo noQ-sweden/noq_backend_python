@@ -7,6 +7,7 @@ from backend.models import (
     Booking,
     Available,
     Invoice,
+    InvoiceStatus,
 )
 
 from .api_schemas import (
@@ -190,22 +191,38 @@ def available_detail(request, id: int):
     avail = get_object_or_404(Booking, id=id)
     return avail
 
-@router.post("/create_invoice", response=InvoiceResponseSchema, tags=["host-create_invoice"])
+# Get a list of all invoices
+@router.get("/invoices", response=List[InvoiceResponseSchema], tags=["Invoice"])
+def list_invoices(request):
+    invoices = Invoice.objects.all()
+    return invoices
+
+
+# Get a specific invoice
+@router.get("/invoices/{invoice_id}", response=InvoiceResponseSchema, tags=["Invoice"])
+def get_invoice(request, invoice_id: int):
+    invoice = get_object_or_404(Invoice, id=invoice_id)
+    return invoice
+
+
+# Create a new invoice
+@router.post("/invoices", response=InvoiceResponseSchema, tags=["Invoice"])
 def create_invoice(request, payload: InvoiceCreateSchema):
     host = get_object_or_404(Host, id=payload.host)
-    invoice = Invoice(
+    status = get_object_or_404(InvoiceStatus, name=payload.status)
+    invoice = Invoice.objects.create(
         host=host,
         amount=payload.amount,
         description=payload.description,
-        paid=payload.paid,
         due_date=payload.due_date,
         currency=payload.currency,
-        invoice_number=payload.invoice_number
+        invoice_number=payload.invoice_number,
+        vat_rate=payload.vat_rate,
+        sale_date=payload.sale_date,
+        seller_vat_number=payload.seller_vat_number,
+        buyer_vat_number=payload.buyer_vat_number,
+        buyer_name=payload.buyer_name,
+        buyer_address=payload.buyer_address,
+        status=status
     )
-    invoice.save()
-    return invoice
-
-@router.get("/get_invoice/{invoice_id}", response=InvoiceResponseSchema, tags=["host-create_invoice"])
-def get_invoice(request, invoice_id: int):
-    invoice = get_object_or_404(Invoice, id=invoice_id)
     return invoice

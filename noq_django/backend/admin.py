@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Host, Client, Product, Region, Booking, Available, Invoice
+from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus
 
 # admin.site.register(Host)
 # admin.site.register(Available)
@@ -53,10 +53,31 @@ class AvailableAdmin(admin.ModelAdmin):
 
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
-    list_display = ('id', 'host', 'amount', 'created_at', 'due_date', 'paid', 'currency')
-    list_filter = ('paid', 'created_at', 'host', 'currency')
-    search_fields = ('id', 'host__name', 'description', 'invoice_number')
+    list_display = ('id', 'host', 'amount', 'vat', 'vat_rate', 'created_at', 'due_date', 'status', 'currency', 'invoice_number')
+    list_filter = ('status', 'created_at', 'host', 'currency', 'vat_rate')
+    search_fields = ('id', 'host__name', 'description', 'invoice_number', 'buyer_name', 'buyer_vat_number', 'seller_vat_number')
     ordering = ('-created_at',)
     date_hierarchy = 'created_at'
-    fields = ('host', 'amount', 'description', 'paid', 'due_date', 'currency', 'invoice_number')
+    fields = ('host', 'amount', 'vat', 'vat_rate', 'description', 'status', 'due_date', 'currency', 'invoice_number', 'sale_date', 'seller_vat_number', 'buyer_vat_number', 'buyer_name', 'buyer_address')
     readonly_fields = ('created_at', 'updated_at')
+
+    actions = ['recalculate_vat']
+    def recalculate_vat(self, request, queryset):
+        for invoice in queryset:
+            invoice.calculate_vat()
+            invoice.save()
+        self.message_user(request, "VAT has been recalculated for selected invoices.")
+
+    recalculate_vat.short_description = "Recalculate VAT for selected invoices"
+
+    def calculate_vat(self, obj):
+        return (obj.amount * obj.vat_rate) / 100 if obj.vat_rate else 0
+    calculate_vat.short_description = 'Calculated VAT'
+
+
+
+@admin.register(InvoiceStatus)
+class InvoiceStatusAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    ordering = ('name',)
+    search_fields = ('name',)

@@ -124,12 +124,18 @@ class ProductForm(forms.ModelForm):
     
 
 class InvoiceForm(forms.ModelForm):
-    
     due_date = forms.DateField(
-    widget=forms.DateInput(attrs={'type': 'date'}),
-    required=False
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        required=False
     )
     
     class Meta:
         model = models.Invoice
-        fields = ['host', 'amount', 'description', 'paid', 'due_date', 'currency', 'invoice_number']
+        fields = ['host', 'amount', 'description', 'status', 'due_date', 'currency', 'invoice_number']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        try:
+            self.fields['status'].initial = models.InvoiceStatus.objects.get(name='open')
+        except models.InvoiceStatus.DoesNotExist:
+            self.fields['status'].initial = None
