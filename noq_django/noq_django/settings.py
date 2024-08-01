@@ -40,8 +40,7 @@ CORS_ALLOW_HEADERS = [
     'Accept-Encoding',
     'Authorization',
     'Content-Type',
-    'Cookie', 
-    'X-csrftoken',
+    'Cookie',
 ]
 
 CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"]
