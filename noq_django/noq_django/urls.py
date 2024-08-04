@@ -1,6 +1,7 @@
+from .api import api
 from django.contrib import admin
 from django.urls import path, include
-from .api import api
+
 
 urlpatterns = [
     path('', include("backend.urls")),
