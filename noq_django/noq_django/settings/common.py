@@ -16,19 +16,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-l3o_ieey@d#^e-#kkk9efo7okg^fm-_q4-iq0h-=lftjnf%cn^"
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-
 CORS_ALLOW_HEADERS = [
     'Accept',
     'Accept-Encoding',
@@ -36,9 +23,6 @@ CORS_ALLOW_HEADERS = [
     'Content-Type',
     'Cookie',  
 ]
-
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "noqbackend.pythonanywhere.com"]
-
 
 # Application definition
 
@@ -95,19 +79,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "noq_django.wsgi.application"
-
-CORS_ALLOWED_ORIGIN_REGEXES: True
-
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
-# Temporärt bytt till sqlite under utvecklingen
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "noq.sqlite3",
-    }
-}
 
 
 # Password validation
