@@ -192,3 +192,4 @@ class LoginSchema(Schema):
     login_status: bool
     message: str
     groups: Optional[List[str]] = None
+    host_id: int = None
