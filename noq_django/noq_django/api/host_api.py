@@ -213,7 +213,7 @@ def product_detail(request, product_id: int):
 # Create a new product
 @router.post("/products", response={201: ProductSchema}, tags=["Products"])
 def product_create(request, payload: ProductSchema):
-    host = get_object_or_404(Host, id=payload.host.id)
+    host = get_object_or_404(Host, id=payload.host_id)
     product = Product(
         name=payload.name,
         description=payload.description,
