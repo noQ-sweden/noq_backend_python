@@ -177,6 +177,91 @@ def book_room_view(request, available_id):
             )
 
 
+def manual_user_registration(request):
+    if request.method == 'POST':
+        form = forms.UserForm(request.POST)
+        if form.is_valid():
+            client = form.save(commit=False)
+            client.user = request.user
+            client.save()
+            request.session['message'] = "Client created successfully"
+            request.session['message_type'] = "success"
+            return redirect('manual_user_registration')
+        else:
+            request.session['message'] = "Form data is not valid."
+            request.session['message_type'] = "error"
+    else:
+        form = forms.UserForm()
+
+    message = request.session.pop('message', None)
+    message_type = request.session.pop('message_type', None)
+
+    return render(request, 'manual_user_registration.html', {
+        'message': message,
+        'message_type': message_type,
+        'form': form,
+    })
+
+def empty_resident_view(request):
+    availabilities = models.Available.objects.all()
+    data = []
+    for availability in availabilities:
+        data.append({
+            'available_date': availability.available_date,
+            'product': str(availability.product),
+            'places_left': availability.places_left
+        })
+    
+    context = {
+        'availabilities': data,
+    }
+    
+    return render(request, 'available_empty_recedency.html', context)
+
+
+def user_shelter_stay_count_view(request):
+    users = models.Client.objects.all()
+    selected_user = None
+    user_bookings = []
+
+    if request.method == 'GET':
+        user_id = request.GET.get('user_id', '')
+        if user_id:
+            selected_user = get_object_or_404(models.Client, id=user_id)
+            user_bookings = models.Booking.objects.filter(user=selected_user).select_related('product', 'product__host')
+            for booking in user_bookings:
+                booking.days_slept = (datetime.today().date() - booking.start_date).days
+
+    context = {
+        'users': users,
+        'selected_user': selected_user,
+        'user_bookings': user_bookings,
+    }
+
+    return render(request, 'user_shelter_stay_count.html', context)
+
+def invoice_create(request):
+    message = None
+    message_type = None
+
+    if request.method == 'POST':
+        form = forms.InvoiceForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('host_create_invoice') 
+        else:
+            message = "Please correct the errors below."
+            message_type = "error"
+    else:
+        form = forms.InvoiceForm()
+
+    return render(request, 'create_invoice.html', {
+        'form': form,
+        'message': message,
+        'message_type': message_type,
+    })
+
+
 def host_bookings_view(request, host_id):
     debug(request, "host_bookings")
     # Not sure if we have a host login get so I just added the admin login instead

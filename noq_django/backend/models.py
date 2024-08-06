@@ -300,3 +300,52 @@ class Available(models.Model):
 
     def __str__(self) -> str:
         return f"{self.product.description} på {self.product.host.name}, {self.product.host.city} har {self.places_left} platser kvar"
+
+
+class InvoiceStatus(models.Model):
+    OPEN = 'open'
+    PAID = 'paid'
+    VOID = 'void'
+    UNCOLLECTIBLE = 'uncollectible'
+    
+    STATUS_CHOICES = [
+        (OPEN, 'Open'),
+        (PAID, 'Paid'),
+        (VOID, 'Void'),
+        (UNCOLLECTIBLE, 'Uncollectible'),
+    ]
+    
+    name = models.CharField(max_length=20, choices=STATUS_CHOICES, default=OPEN, unique=True)
+    
+    def __str__(self):
+        return self.name
+
+class Invoice(models.Model):
+    host = models.ForeignKey(Host, on_delete=models.CASCADE, related_name='invoices')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    description = models.TextField(null=True, blank=True)
+    status = models.ForeignKey(InvoiceStatus, on_delete=models.PROTECT, default=1)  
+    due_date = models.DateField(null=True, blank=True)
+    currency = models.CharField(max_length=3, default='SEK')
+    invoice_number = models.CharField(max_length=50, unique=True, blank=False)
+    vat = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    vat_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
+    sale_date = models.DateField(null=True, blank=True)
+    seller_vat_number = models.CharField(max_length=50, null=True, blank=True)
+    buyer_vat_number = models.CharField(max_length=50, null=True, blank=True)
+    buyer_name = models.CharField(max_length=255, null=True, blank=True)
+    buyer_address = models.TextField(null=True, blank=True)
+
+    def __str__(self) -> str:
+        return f"Invoice {self.id} for {self.host.name}"
+    
+    def calculate_vat(self):
+        """Calculate the VAT amount based on the amount and vat_rate."""
+        self.vat = (self.amount * self.vat_rate) / 100
+        return self.vat
+    
+    def save(self, *args, **kwargs):
+        self.calculate_vat()
+        super().save(*args, **kwargs)
