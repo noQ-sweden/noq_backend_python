@@ -43,12 +43,11 @@ def login_user(request, payload: LoginPostSchema):
     if user is not None:
         login(request, user)
         user_groups = [g.name for g in request.user.groups.all()]
-        host_id = None
+        host = None
 
         if "host" in user_groups:
             try:
                 host = Host.objects.get(users=user)
-                host_id = host.id
             except Host.DoesNotExist:
                 pass
 
@@ -56,7 +55,7 @@ def login_user(request, payload: LoginPostSchema):
             login_status=True,
             message="Login Successful",
             groups=user_groups,
-            host_id=host_id
+            host=host
         )
     else:
         return LoginSchema(
