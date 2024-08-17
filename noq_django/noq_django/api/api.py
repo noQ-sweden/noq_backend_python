@@ -1,13 +1,12 @@
-from ninja import NinjaAPI
-from ninja.security import HttpBearer
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import User, Group
-
+from ninja import NinjaAPI
+from backend.models import (Host)
 
 from .api_schemas import (
     LoginPostSchema,
     LoginSchema,
 )
+
 
 api = NinjaAPI(
     csrf=False,
@@ -44,6 +43,22 @@ def login_user(request, payload: LoginPostSchema):
     if user is not None:
         login(request, user)
         user_groups = [g.name for g in request.user.groups.all()]
-        return LoginSchema(login_status = True, message = "Login Successful", groups = user_groups)
+        host = None
+
+        if "host" in user_groups:
+            try:
+                host = Host.objects.get(users=user)
+            except Host.DoesNotExist:
+                pass
+
+        return LoginSchema(
+            login_status=True,
+            message="Login Successful",
+            groups=user_groups,
+            host=host
+        )
     else:
-        return LoginSchema(login_status = False, message = "Login Failed")
+        return LoginSchema(
+            login_status=False,
+            message="Login Failed"
+        )

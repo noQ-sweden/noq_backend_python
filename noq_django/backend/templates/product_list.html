@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Rum:</h1>
+
+    <ul>
+        {% for product in products %}
+            <li>
+                <strong>{{ product.name }}</strong> - {{ product.description }} - {{ product.total_places }}
+                <form method="post" action="{% url 'edit_product' product.id %}">
+                    {% csrf_token %}
+                    <button type="submit">Redigera</button>
+                </form>
+                <form method="post" action="{% url 'delete_product' product.id %}">
+                    {% csrf_token %}
+                    <button type="submit">Ta bort</button>
+                </form>
+            </li>
+            {% empty %}
+            <li>Hittade inga rum </li>
+        {% endfor %}
+    </ul>
+
+    <div style="margin-top: 20px;">
+        <a href="{% url 'create_product' %}">Lägga till nytt rum</a>
+    </div>
+{% endblock %}

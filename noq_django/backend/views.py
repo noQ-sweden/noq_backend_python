@@ -4,13 +4,15 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 from .util import debug
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotAllowed
 
 from . import models
 from . import forms
 from . import tables
 from .models import Product
 from .forms import ProductForm
+import json
+from urllib.parse import urlencode
 
         
 def main_view(request):
@@ -292,16 +294,37 @@ def product_create(request):
     return render(request, 'product_form.html', {'form': form})
 
 
+# def product_update(request, pk):
+#     product = get_object_or_404(Product, pk=pk)
+#     if request.method == 'POST':
+#         form = ProductForm(request.POST, instance=product)
+#         if form.is_valid():
+#             form.save()
+#             return redirect('product_list')
+#     else:
+#         form = ProductForm(instance=product)
+#     return render(request, 'product_form.html', {'form': form})
+
 def product_update(request, pk):
     product = get_object_or_404(Product, pk=pk)
+
     if request.method == 'POST':
         form = ProductForm(request.POST, instance=product)
         if form.is_valid():
             form.save()
             return redirect('product_list')
-    else:
+    elif request.method == 'GET':
         form = ProductForm(instance=product)
-    return render(request, 'product_form.html', {'form': form})
+        return render(request, 'product_form.html', {'form': form})
+    elif request.method == 'PUT':
+        form = ProductForm(request.POST) #, instance=product)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(status=200)
+        else:
+            return HttpResponse(status=400)
+    else:
+        return HttpResponseNotAllowed(['POST', 'GET', 'PUT'])
 
 
 def product_delete(request, pk):
