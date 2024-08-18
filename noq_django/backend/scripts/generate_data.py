@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 from icecream import ic
 from faker import Faker
 from django.contrib.auth.models import User, Group
+import os
+from django.conf import settings
 
 from .delete_all_data import reset_all_data
 
@@ -42,7 +44,7 @@ def make_user(group: str, is_test_user: bool) -> User:  # användargrupp, använ
     group_obj, created = Group.objects.get_or_create(name=group)
     user.groups.add(group_obj)
 
-    credentials_file = "backend/scripts/fake_credentials.txt"  # spara inloggningar till fil i testsyfte.
+    credentials_file = os.path.join(settings.BASE_DIR, 'backend', 'scripts', 'fake_credentials.txt')  # spara inloggningar till fil i testsyfte.
     with open(credentials_file, "a") as file:
         file.write(f"Email: {email}, Password: {password}, Group: {group}\n")
 
@@ -213,28 +215,42 @@ def add_product_bookings(nbr: int, days_ahead: int = 3, verbose: bool = False):
         user_id = user_min_id.id + random.randint(0, Client.objects.all().count() - 5)
 
         try:
-            brukare = Client.objects.get(id=user_id)
-            datum = datetime.now() + timedelta(days=random.randint(-1, days_ahead))
-            slutdatum = datum + timedelta(days=random.randint(1, 5))
+            client = Client.objects.get(id=user_id)
+            date = datetime.now() + timedelta(days=random.randint(-1, days_ahead))
+            end_date = date + timedelta(days=random.randint(1, 5))
             if verbose:
-                print(f'{brukare} {datum.strftime("%Y-%m-%d")}:')
+                print(f'{client} {date.strftime("%Y-%m-%d")}:')
 
-            if brukare:
+            statuses_new = [State.PENDING, State.IN_QUEUE]
+
+            if client:
                 booking = Booking(
-                    start_date=datum,
-                    end_date=slutdatum,
+                    start_date=date,
+                    end_date=end_date,
                     product=Product.objects.get(id=product_id),
-                    user=brukare,
+                    user=client,
+                    status=BookingStatus.objects.get(
+                        id=statuses_new[random.randint(0, len(statuses_new) - 1)]
+                    )
                 )
+                # We need to save initial status, otherwise availability
+                # won't be correct
+                booking.save()
 
-                if (
-                    booking.start_date.date()
-                    == (datetime.now() - timedelta(days=1)).date()
-                ):  # this makes sure there are departures being generated
+                statuses_next = [
+                    State.ACCEPTED,
+                    State.RESERVED,
+                    State.CONFIRMED,
+                ]
+
+                checked_in = (booking.start_date.date() <= datetime.now().date()) \
+                    and (booking.end_date.date() >= datetime.now().date())
+
+                if checked_in:  # this makes sure there are departures being generated
                     booking.status = BookingStatus.objects.get(id=State.CHECKED_IN)
                 else:
                     booking.status = BookingStatus.objects.get(
-                        id=random.randint(State.PENDING, State.CHECKED_IN)
+                        id=statuses_next[random.randint(0, len(statuses_next) - 1)]
                     )
 
                 booking.save()
@@ -246,7 +262,7 @@ def add_product_bookings(nbr: int, days_ahead: int = 3, verbose: bool = False):
                 print("Exception:", ex)
         else:
             print(
-                f'Bokning tillagd {datum.strftime("%Y-%m-%d")} {booking.product} för {booking.user.name()} {booking.product.host.region}, med Status {booking.status.description}'
+                f'Bokning tillagd {date.strftime("%Y-%m-%d")} {booking.product} för {booking.user.name()} {booking.product.host.region}, med Status {booking.status.description}'
             )
 
 
