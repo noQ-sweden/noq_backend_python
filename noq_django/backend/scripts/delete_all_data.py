@@ -2,11 +2,12 @@
 
 from icecream import ic
 import sys
-
+import os
+from django.conf import settings
 from backend.models import Host, Client, Product, Region, Booking, Available
+from django.contrib.auth.models import User
 
 flag_all = False
-
 
 def kontrollera(typ: str) -> bool:
     global flag_all
@@ -29,7 +30,6 @@ def count():
     ic(Booking.objects.all().count())
     ic(Product.objects.all().count())
     ic(Region.objects.all().count())
-
     ic(Host.objects.all().count())
     ic(Client.objects.all().count())
 
@@ -38,6 +38,25 @@ def reset_all_data(all: bool = False):
     global flag_all
 
     flag_all = all
+
+    '''
+    Data needs to be deleted in following order due to dependencies
+    1. Client
+    2. Host
+    3. Region
+    4. Booking
+    5. User
+    6. Product
+    '''
+    if kontrollera("användare"):
+        for user in Client.objects.all():
+            ic(user, "borttagen")
+            user.delete()
+
+    if kontrollera("härbärgen"):
+        for host in Host.objects.all():
+            ic(host, "borttagen")
+            host.delete()
 
     if kontrollera("regioner"):
         print("Tar bort regioner")
@@ -49,15 +68,16 @@ def reset_all_data(all: bool = False):
         for booking in Booking.objects.all():
             booking.delete()
             # ic(booking, "borttagen")
-
+    '''
     if kontrollera("tillgängliga produkter"):
         for prd in Available.objects.all():
             prd.delete()
             # print(prd, "borttagen")
+    '''
 
-    if kontrollera("bokningar"):
-        for prd in Booking.objects.all():
-            prd.delete()
+    if kontrollera("användare"):
+        for user in User.objects.all():
+            user.delete()
             # print(prd, "borttagen")
 
     if kontrollera("produkter"):
@@ -65,17 +85,8 @@ def reset_all_data(all: bool = False):
             prd.delete()
             # print(prd, "borttagen")
 
-    if kontrollera("användare"):
-        for user in Client.objects.all():
-            ic(user, "borttagen")
-            # user.delete()
-
-    if kontrollera("härbärgen"):
-        for host in Host.objects.all():
-            ic(host, "borttagen")
-            # host.delete()
-
-    with open("backend/scripts/fake_credentials.txt", 'w') as file: #rensa innehållet i fake_credentials.txt
+    file_path = os.path.join(settings.BASE_DIR, 'backend', 'scripts', 'fake_credentials.txt')
+    with open(file_path, 'w') as file: #rensa innehållet i fake_credentials.txt
         file.truncate(0)
 
     # count()

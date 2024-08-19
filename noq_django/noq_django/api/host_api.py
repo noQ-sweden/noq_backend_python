@@ -56,10 +56,13 @@ def count_bookings(request):
     host = Host.objects.get(users=request.user)
 
     pending_count = Booking.objects.filter(product__host=host, status__description='pending').count()
-    arrivals_count = Booking.objects.filter(product__host=host, status__description='accepted',
-                                            start_date=date.today()).count()
+    arrivals_count = Booking.objects.filter(
+        product__host=host,
+        status__description__in=['accepted', 'reserved', 'confirmed'],
+        start_date=date.today()
+    ).count()
     departures_count = Booking.objects.filter(product__host=host, status__description='checked_in',
-                                              start_date=date.today() - timedelta(days=1)).count()
+                                              end_date=date.today()).count()
     current_guests_count = Booking.objects.filter(product__host=host, status__description='checked_in').count()
 
     spots = Product.objects.filter(host=host, total_places__gt=0)
@@ -86,27 +89,60 @@ def get_available_places(request, nr_of_days: int):
     products = Product.objects.filter(host_id=host)
     for day in range(nr_of_days):
         available_for_day = []
-        booking_date = current_date + timedelta(days=day)
+        available_date = current_date + timedelta(days=day)
         # Exclude bookings with status declined and in_queue
         for product in products:
-            nr_of_bookings = Booking.objects.filter(
-                Q(product=product)
-                & Q(start_date=booking_date)
-                & ~Q(status=State.DECLINED)
-                & ~Q(status=State.IN_QUEUE)
-            ).count()
+            available = Available.objects.filter(
+                product=product,
+                available_date=available_date
+            ).first()
 
-            places_left = product.total_places - nr_of_bookings
+            if available:
+                places_left = available.places_left
+            else:
+                places_left = product.total_places
+
             available_for_day.append(
                 AvailableSchema(
                     id=product.id,
-                    available_date=booking_date,
+                    available_date=available_date,
                     product=product,
                     places_left=places_left
                 )
             )
-        available_places[str(booking_date)] = available_for_day
+        available_places[str(available_date)] = available_for_day
     return AvailablePerDateSchema(available_dates=available_places)
+
+
+@router.get("/bookings/incoming", response=List[BookingSchema], tags=["host-frontpage"])
+def get_bookings_by_date(request, limiter: Optional[
+    int] = None):  # Limiter example /bookings/incoming?limiter=10 for 10 results, empty returns all
+    host = Host.objects.get(users=request.user)
+    current_date = datetime.today().date()
+    bookings = Booking.objects.filter(
+        product__host=host,
+        start_date=current_date)
+
+    if limiter is not None and limiter > 0:
+        return bookings[:limiter]
+
+    return bookings
+
+
+@router.get("/bookings/outgoing", response=List[BookingSchema], tags=["host-frontpage"])
+def get_bookings_by_date(request, limiter: Optional[
+    int] = None):  # Limiter example /bookings/outgoing?limiter=10 for 10 results, empty returns all
+    host = Host.objects.get(users=request.user)
+    current_date = datetime.today().date()
+    bookings = Booking.objects.filter(
+        product__host=host,
+        end_date=current_date)
+
+    if limiter is not None and limiter > 0:
+        return bookings[:limiter]
+
+    return bookings
+
 
 @router.get("/pending", response=List[BookingSchema], tags=["host-manage-requests"])
 def get_pending_bookings(request, limiter: Optional[

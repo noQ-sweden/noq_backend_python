@@ -60,5 +60,7 @@ def login_user(request, payload: LoginPostSchema):
     else:
         return LoginSchema(
             login_status=False,
-            message="Login Failed"
+            message="Login Failed",
+            groups=None,
+            host=None
         )
