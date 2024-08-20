@@ -1,8 +1,7 @@
-name: python test cases
+name: Python Test Cases
 
 on:
-  workflow_dispatch
-  
+  workflow_dispatch:
   push:
     branches:
       - noq-#494-test
