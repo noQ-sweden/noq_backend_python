@@ -1,25 +1,23 @@
 from django.test import TestCase
-from .models import Client, Region, User
+from backend.models import Client, Region, User
 
-
-class test_Client(TestCase):
+class TestClient(TestCase):
 
     def setUp(self):
-        region = Region(name="City")
-        region.save()
+        self.region = Region.objects.create(name="City")
 
     def test_region_get(self):
         region = Region.objects.get(name="City")
         self.assertIsInstance(region, Region)
 
-    def test_user(TestCase):
-        user = User()
-        user.save()
+    def test_user_creation(self):
+        user = User.objects.create(username="testuser")
 
         region = Region.objects.get(name="City")
+
         client = Client(
-            first_name="Tom Sawyer",
-            # user_type=man,
+            first_name="Tom",
+            last_name="Sawyer",
             gender="M",
             phone="123",
             email="a@e.se",
@@ -28,3 +26,5 @@ class test_Client(TestCase):
             user=user,
         )
         client.save()
+
+        self.assertTrue(Client.objects.filter(email="a@e.se").exists())
