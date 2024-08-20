@@ -193,8 +193,7 @@ class LoginSchema(Schema):
     login_status: bool
     message: str
     groups: Optional[List[str]] = None
-    host: HostSchema
-
+    host: Optional[HostSchema] = None
 
 
 class InvoiceCreateSchema(Schema):
