@@ -6,7 +6,7 @@ on:
       - main
   push:
     branches:
-      - noq-#494-test
+      - main
 
 jobs:
   test:
