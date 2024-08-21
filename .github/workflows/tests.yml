@@ -7,7 +7,6 @@ on:
   push:
     branches:
       - main
-      - noq-#494-test
 
 jobs:
   test:
