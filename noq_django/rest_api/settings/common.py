@@ -53,7 +53,7 @@ MIDDLEWARE = [
 ]
 
 Q_CLUSTER = {
-    "name": "rest_api",
+    "name": "noq_django",
     "orm": "default",
     "retry": 5,
     "timeout": 3,
