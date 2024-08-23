@@ -1,5 +1,5 @@
 """
-ASGI config for noq_django project.
+ASGI config for rest_api project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -13,7 +13,7 @@ from django.core.asgi import get_asgi_application
 
 os.environ.setdefault(
     'DJANGO_SETTINGS_MODULE', 
-    os.getenv('DJANGO_SETTINGS_MODULE', 'noq_django.settings.dev')
+    os.getenv('DJANGO_SETTINGS_MODULE', 'rest_api.settings.dev')
 )
 
 application = get_asgi_application()
