@@ -117,6 +117,22 @@ def add_hosts(nbr: int) -> int:
     return
 
 
+def add_caseworkers(nbr: int) -> int:
+    faker = Faker("sv_SE")
+
+    print("\n---- CASEWORKERS ----")
+    is_test_user: bool = True
+    if User.objects.filter(username="user.caseworker@test.nu").exists():
+        is_test_user = False
+        print("Test user exists already.")
+
+    new_user = make_user(group="caseworker", is_test_user=is_test_user)
+
+    if is_test_user: is_test_user = False
+
+    return
+
+
 def add_users(nbr: int):
     faker = Faker("sv_SE")
 
@@ -311,6 +327,7 @@ def run(*args):
     add_hosts(10)
     add_products(6)
     add_users(16)
+    add_caseworkers(1)
 
     add_booking_statuses()
     add_product_bookings(40, 7, v2_arg)

@@ -15,6 +15,7 @@ api = NinjaAPI(
 
 api.add_router("/user/", "rest_api.api.user_api.router")
 api.add_router("/host/", "rest_api.api.host_api.router")
+api.add_router("/caseworker/", "rest_api.api.caseworker_api.router")
 api.add_router("/so_admin/", "rest_api.api.admin_api.router")
 
 # temporör testsektion
