@@ -144,7 +144,12 @@ class BookingSchema(Schema):
     end_date: date
     product: ProductSchema
     user: UserSchema
+    shelter_name: str
 
+class UserShelterStayCountResponse(Schema):
+    user_id: int
+    total_nights: int
+    bookings: List[BookingSchema]
 
 class BookingPostSchema(Schema):
     """
