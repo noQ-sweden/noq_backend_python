@@ -33,7 +33,7 @@ def get_caseworker_data(request):
     except Exception as e:
         raise HttpError(500, f"An error occurred: {str(e)}")
 
-@router.get("/user_shelter_stay_count/", response=UserShelterStayCountResponse, tags=["host-frontpage"])
+@router.get("/user_shelter_stay_count/", response=UserShelterStayCountResponse, tags=["caseworker-frontpage"])
 def user_shelter_stay_count(request, user_id: int):
     selected_user = get_object_or_404(Client, id=user_id)
     bookings = Booking.objects.filter(user=selected_user).select_related('product', 'product__host')
