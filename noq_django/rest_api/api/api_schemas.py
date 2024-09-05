@@ -195,7 +195,6 @@ class LoginSchema(Schema):
     groups: Optional[List[str]] = None
     host: Optional[HostSchema] = None
 
-
 class InvoiceCreateSchema(Schema):
     """
     Schema for creating an Invoice.
@@ -221,4 +220,3 @@ class InvoiceResponseSchema(ModelSchema):
     class Config:
             model = Invoice
             model_fields = ['id', 'host', 'amount', 'description', 'status', 'due_date', 'currency', 'invoice_number', 'vat', 'vat_rate', 'sale_date', 'seller_vat_number', 'buyer_vat_number', 'buyer_name', 'buyer_address']
-
