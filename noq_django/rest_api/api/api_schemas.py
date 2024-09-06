@@ -200,8 +200,6 @@ class LoginSchema(Schema):
     groups: Optional[List[str]] = None
     host: Optional[HostSchema] = None
 
-
-
 class InvoiceCreateSchema(Schema):
     """
     Schema for creating an Invoice.
