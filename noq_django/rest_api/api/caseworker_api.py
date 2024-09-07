@@ -67,7 +67,6 @@ def get_pending_bookings(request, limiter: Optional[int] = None):  # Limiter exa
 
 
 @router.patch("/bookings/{booking_id}/accept", response=BookingSchema, tags=["caseworker-manage-requests"])
-
 def appoint_pending_booking(request, booking_id: int):
     hosts = Host.objects.filter(users=request.user)
     booking = get_object_or_404(Booking, id=booking_id, product__host__in=hosts, status__description='pending')
