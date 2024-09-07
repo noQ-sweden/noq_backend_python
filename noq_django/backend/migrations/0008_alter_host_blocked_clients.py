@@ -6,7 +6,8 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('backend', '0007_merge_20240830_1009'),
+        ('backend', '0006_invoice_buyer_address_invoice_buyer_name_and_more'),
+        
     ]
 
     operations = [
