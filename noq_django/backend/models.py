@@ -349,3 +349,32 @@ class Invoice(models.Model):
     def save(self, *args, **kwargs):
         self.calculate_vat()
         super().save(*args, **kwargs)
+
+class SleepingSpace(models.Model):  # English class name
+    BED_TYPES = [
+        ('Dubbelsäng över/under', 'Dubbelsäng över/under'),
+        ('Singelsäng', 'Singelsäng'),
+        ('Madrass', 'Madrass'),
+    ]
+    
+    ROOM_LOCATIONS = [
+        ('Sovsal', 'Sovsal'),
+        ('Dubbelrum', 'Dubbelrum'),
+        ('Eget rum', 'Eget rum'),
+    ]
+    
+    STATUS_OPTIONS = [
+        ('Ledig', 'Ledig'),
+        ('Upptagen', 'Upptagen'),
+        ('Avstängd', 'Avstängd'),
+    ]
+    
+    bed_type = models.CharField(max_length=25, choices=BED_TYPES)
+    room_location = models.CharField(max_length=20, choices=ROOM_LOCATIONS)
+    status = models.CharField(max_length=10, choices=STATUS_OPTIONS, default='Ledig')
+
+    class Meta:
+        db_table = 'sleeping_spaces'
+
+    def __str__(self):
+        return f"{self.bed_type} - {self.room_location} ({self.status})"
