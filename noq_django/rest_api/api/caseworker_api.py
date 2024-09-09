@@ -42,15 +42,6 @@ from datetime import date, timedelta
 
 router = Router(auth=lambda request: group_auth(request, "caseworker"))  # request defineras vid call, gruppnamnet är statiskt
 
-# api/caseworker/ returns the host information
-@router.get("/", response=str, tags=["caseworker-frontpage"])
-def get_caseworker_data(request):
-    try:
-        host = Host.objects.get(users=request.user)
-        return host
-    except:
-        raise HttpError(200, "User is not a caseworker.")
-
 @router.get("/bookings/pending", response=List[BookingSchema], tags=["caseworker-manage-requests"])
 def get_pending_bookings(request, limiter: Optional[int] = None):  # Limiter example /pending?limiter=10 for 10 results, empty returns all
     hosts = Host.objects.filter(users=request.user)
@@ -86,6 +77,22 @@ def decline_pending_booking(request, booking_id: int):
 
     try:
         booking.status = BookingStatus.objects.get(description='declined')
+        booking.save()
+        return booking
+    except BookingStatus.DoesNotExist:
+        raise HttpError(404, detail="Booking status does not exist.")
+
+
+# This API can be used to undo previous decision for accept or decline
+# Bookings that have status checked_in can't be changed.
+@router.patch("/bookings/{booking_id}/setpending", response=BookingSchema, tags=["caseworker-manage-requests"])
+def set_booking_pending(request, booking_id: int):
+    hosts = Host.objects.filter(users=request.user)
+    valid_statuses = ['accepted', 'declined']
+    booking = get_object_or_404(Booking, id=booking_id, product__host__in=hosts, status__description__in=valid_statuses)
+
+    try:
+        booking.status = BookingStatus.objects.get(description='pending')
         booking.save()
         return booking
     except BookingStatus.DoesNotExist:
