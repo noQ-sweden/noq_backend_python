@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
             name='SleepingSpace',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('bed_type', models.CharField(choices=[('Dubbelsäng över/under', 'Dubbelsäng över/under'), ('Singelsäng', 'Singelsäng'), ('Madrass', 'Madrass')], max_length=25)),
+                ('bed_type', models.CharField(choices=[('Dubbelsäng över', 'Dubbelsäng under'), ('Singelsäng', 'Singelsäng'), ('Madrass', 'Madrass')], max_length=25)),
                 ('room_location', models.CharField(choices=[('Sovsal', 'Sovsal'), ('Dubbelrum', 'Dubbelrum'), ('Eget rum', 'Eget rum')], max_length=20)),
                 ('status', models.CharField(choices=[('Ledig', 'Ledig'), ('Upptagen', 'Upptagen'), ('Avstängd', 'Avstängd')], default='Ledig', max_length=10)),
             ],

@@ -359,7 +359,7 @@ class Invoice(models.Model):
 
 class SleepingSpace(models.Model):  
     BED_TYPES = [
-        ('Dubbelsäng över/under', 'Dubbelsäng över/under'),
+        ('Dubbelsäng över', 'Dubbelsäng under'),
         ('Singelsäng', 'Singelsäng'),
         ('Madrass', 'Madrass'),
     ]
