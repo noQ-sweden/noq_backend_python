@@ -2,16 +2,18 @@ from django.contrib import admin
 
 from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus
 
-# admin.site.register(Host)
-# admin.site.register(Available)
-# admin.site.register(User)
-# admin.site.register(Product)
+
 admin.site.register(Region)
 # admin.site.register(Booking)
 
+# defining inline admin descriptior for the caseworkers relationship
+class CaseworkerInline(admin.TabularInline):
+    model = Host.caseworkers.through
+    extra = 1
+
 
 @admin.register(Client)
-class UserAdmin(admin.ModelAdmin):
+class ClientAdmin(admin.ModelAdmin):
     fields = (("first_name", "last_name"), "gender", "street", ("postcode", "city"), "region")
     list_display = ("first_name", "last_name", "gender", "street", "city", "region")
     list_filter = ("city","region")
@@ -25,6 +27,13 @@ class HostAdmin(admin.ModelAdmin):
     list_filter = ("city","region")
     ordering = ("name",)
     search_fields = ("name",)
+
+    # add the CaseworkerInline to allow editing caseworkers in the admin interface
+    inlines = [CaseworkerInline]
+
+    # optionally adding a filter to the admin panel to filter Hosts by Caseworkers
+    list_filter = ("city", "region", "caseworkers")
+    search_fields = ("name", "caseworkers__first_name")
 
 
 @admin.register(Booking)

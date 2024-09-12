@@ -126,7 +126,19 @@ def add_caseworkers(nbr: int) -> int:
         is_test_user = False
         print("Test user exists already.")
 
+    # Create or fetch the caseworker user
     new_user = make_user(group="caseworker", is_test_user=is_test_user)
+  
+
+    # fetch all hosts where user.host@test.nu is a user and assign casewoker
+    host_user = User.objects.filter(username="user.host@test.nu").first()
+    hosts_managed_by_host_user = Host.objects.filter(users=host_user)
+
+    # Assign the caseworker to the hosts
+    for host in hosts_managed_by_host_user:
+        host.caseworkers.add(new_user)
+        print(f"Assigned caseworker {new_user.username} to host {host.name}")
+
 
     if is_test_user: is_test_user = False
 

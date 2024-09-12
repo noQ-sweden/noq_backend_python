@@ -109,6 +109,11 @@ class Host(models.Model):
     )
     blocked_clients = models.ManyToManyField(Client, blank=True)
 
+    # Adding a many-to-many relationship with User
+    caseworkers = models.ManyToManyField(User, related_name="caseworkers")
+
+
+
     class Meta:
         db_table = "hosts"
 
