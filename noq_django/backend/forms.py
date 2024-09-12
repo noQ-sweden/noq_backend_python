@@ -143,4 +143,4 @@ class InvoiceForm(forms.ModelForm):
 class SleepingSpaceForm(forms.ModelForm):
     class Meta:
         model = SleepingSpace
-        fields = ['bed_type', 'room_location', 'status']
+        fields = ['bed_type', 'status']
