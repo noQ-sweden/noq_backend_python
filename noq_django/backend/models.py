@@ -100,6 +100,7 @@ class Client(models.Model):
 
 class Host(models.Model):
     users = models.ManyToManyField(User)
+    created_by = models.ForeignKey(User, related_name="created_hosts", on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=80)
     street = models.CharField(max_length=80)
     postcode = models.CharField(max_length=5, default="")
@@ -110,7 +111,7 @@ class Host(models.Model):
     blocked_clients = models.ManyToManyField(Client, blank=True)
 
     # Adding a many-to-many relationship with User
-    caseworkers = models.ManyToManyField(User, related_name="caseworkers")
+    caseworkers = models.ManyToManyField(User, related_name="caseworker_hosts")
 
 
 

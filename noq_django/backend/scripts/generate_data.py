@@ -121,7 +121,23 @@ def add_caseworkers(nbr: int) -> int:
     faker = Faker("sv_SE")
 
     print("\n---- CASEWORKERS ----")
-    is_test_user: bool = True
+    
+    # Loop to create or assign mutliple caseworkers
+    for i in range(nbr):
+        # Fetch or create a unique caseworker (user)
+        new_user = make_user(group="caseworker", is_test_user=False)
+
+        # Assign this user as a caseworker for multiple hosts
+        hosts_created_by_user = Host.objects.filter(created_by=new_user)
+
+        # Assign this user as a caseworker for the host they created
+        for host in hosts_created_by_user:
+            host.caseworkers.add(new_user)
+            print(f"Assigned caseworker {new_user.username} to host {host.name}")
+
+    
+
+    """ is_test_user: bool = True
     if User.objects.filter(username="user.caseworker@test.nu").exists():
         is_test_user = False
         print("Test user exists already.")
@@ -140,7 +156,7 @@ def add_caseworkers(nbr: int) -> int:
         print(f"Assigned caseworker {new_user.username} to host {host.name}")
 
 
-    if is_test_user: is_test_user = False
+    if is_test_user: is_test_user = False """
 
     return
 
