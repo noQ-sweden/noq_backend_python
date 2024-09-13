@@ -87,7 +87,7 @@ If you encounter a ModuleNotFoundError related to pkg_resources during the migra
     pip install setuptools
     pip install --upgrade pip
 
-Then retry running the migration commands.
+Then retry running the migration commands .
 
 ## Contributors
 
