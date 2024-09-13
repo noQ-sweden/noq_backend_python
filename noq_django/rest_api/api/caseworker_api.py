@@ -1,69 +1,62 @@
-from django.db.models import Q
-from ninja import NinjaAPI, Schema, ModelSchema, Router
-from ninja.errors import HttpError
-from datetime import datetime, timedelta
-
-from backend.models import (
-    Client,
-    Booking,
-)
-
-from .api_schemas import (
-    StatusSchema,
-    UserSchema,
-    HostSchema,
-    ProductSchema,
-    BookingSchema,
-    UserShelterStayCountResponse,
-)
-
-from backend.auth import group_auth
-
-from typing import List, Dict, Optional
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from datetime import date, timedelta
+from ninja import Router
+from backend.models import Client, Booking, Host
+from .api_schemas import (
+    BookingPerNightSchema,
+    UserShelterStayCountSchema,
+)
+from backend.auth import group_auth
+from typing import List
+from ninja.errors import HttpError
 
-router = Router(auth=lambda request: group_auth(request, "caseworker"))
+router = Router(auth=lambda request: group_auth(request, "caseworker"))  # request defineras vid call, gruppnamnet är statiskt
 
 # api/caseworker/ returns the host information
 @router.get("/", response=str, tags=["caseworker-frontpage"])
 def get_caseworker_data(request):
     try:
-        return HttpResponse("Caseworker frontpage data comes here...", status=200)
-    except Exception as e:
-        raise HttpError(500, f"An error occurred: {str(e)}")
+        host = Host.objects.get(users=request.user)
+        return host
+    except:
+        raise HttpError(200, "User is not a caseworker.")
 
-@router.get("/user_shelter_stay_count/", response=UserShelterStayCountResponse, tags=["caseworker-frontpage"])
-def user_shelter_stay_count(request, user_id: int):
-    selected_user = get_object_or_404(Client, id=user_id)
-    bookings = Booking.objects.filter(user=selected_user).select_related('product', 'product__host')
-    total_nights = sum((booking.end_date - booking.start_date).days for booking in bookings)
+@router.get("/get_user_shelter_stay_count/", response=UserShelterStayCountSchema, tags=["caseworker-frontpage"])
+def get_user_shelter_stay_count(request, user_id: int):
+    try:
+        selected_user = get_object_or_404(Client, id=user_id)
 
-    booking_list = [
-        BookingSchema(
-            id=booking.id,
-            status=StatusSchema(value=booking.status), 
-            start_date=booking.start_date.isoformat(),
-            end_date=booking.end_date.isoformat(),
-            product=ProductSchema(
-                id=booking.product.id,
-                name=booking.product.name,  
-                host=HostSchema(
-                    id=booking.product.host.id,
-                    name=booking.product.host.name
-                )
-            ),
-            user=UserSchema(
-                id=booking.user.id,
-                name=booking.user.name 
-            ),
-            shelter_name=booking.product.host.name
+        user_bookings = Booking.objects.filter(user=selected_user).select_related(
+            'product', 'product__host', 'user', 'user__region'
+        ).values(
+            'id', 'start_date', 'end_date', 
+            'product__host__region__name', 
+            'product__host__name',          
         )
-        for booking in bookings
-    ]
 
-    return {
-        "user_id": user_id,
-        "total_nights": total_nights,
-        "bookings": booking_list
-    }
+        total_nights = sum(
+            (booking['end_date'] - booking['start_date']).days
+            for booking in user_bookings
+        )
+
+        booking_list = [
+            BookingPerNightSchema(
+                id=booking['id'],
+                start_date=booking['start_date'].isoformat(),
+                end_date=booking['end_date'].isoformat(),
+                region=booking['product__host__region__name'],
+                shelter_name=booking['product__host__name'], 
+            )
+            for booking in user_bookings
+        ]
+
+        response_data = UserShelterStayCountSchema(
+            user_id=user_id,
+            total_nights=total_nights,
+            bookings=booking_list
+        )
+        
+        return response_data
+
+    except Exception as e:
+        return JsonResponse({'detail': f"An error occurred: {str(e)}"}, status=500)

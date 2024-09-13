@@ -144,12 +144,23 @@ class BookingSchema(Schema):
     end_date: date
     product: ProductSchema
     user: UserSchema
-    shelter_name: str
 
-class UserShelterStayCountResponse(Schema):
+class BookingPerNightSchema(Schema):
+    """
+    per booking, när övernattning 
+    uträknas för en brukare.
+    """
+    id: int
+    start_date: date
+    end_date: date
+    region: Optional[str] 
+    shelter_name: Optional[str]
+
+class UserShelterStayCountSchema(Schema):
     user_id: int
     total_nights: int
-    bookings: List[BookingSchema]
+    bookings: List[BookingPerNightSchema]
+
 
 class BookingPostSchema(Schema):
     """
