@@ -107,7 +107,7 @@ class Host(models.Model):
     region = models.ForeignKey(
         Region, on_delete=models.CASCADE, null=False, blank=False
     )
-    blocked_clients = models.ManyToManyField(Client)
+    blocked_clients = models.ManyToManyField(Client, blank=True)
 
     class Meta:
         db_table = "hosts"
