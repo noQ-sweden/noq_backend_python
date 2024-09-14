@@ -162,11 +162,46 @@ class TestCaseworkerHandleBookingApi(TestCase):
         pending_count = Booking.objects.filter(status=State.PENDING).count()
         self.assertEqual(pending_count, 2)
 
-        # We should get 3 pending bookings via rest api
+        # We should get 2 pending bookings via rest api
         response = self.client.get("/api/caseworker/bookings/pending")
         self.assertEqual(response.status_code, 200)
         parsed_response = json.loads(response.content)
         self.assertEqual(len(parsed_response), 2)
+
+
+    def test_bulk_accept_bookings(self):
+        # Connect host_user and host
+        host = Host.objects.get(name="Host 1")
+        caseworker_user = User.objects.get(username="user.caseworker@test.nu")
+        host.users.add(caseworker_user)
+        host.save()
+
+        # There should be 4 pending bookings to start with
+        bookings = Booking.objects.filter(status=State.PENDING).all()
+        pending_count = Booking.objects.filter(status=State.PENDING).count()
+        self.assertEqual(pending_count, 4)
+
+        # Accept 4 booking in a bulk, there should be 0 pending bookings left
+        pending_bookings = Booking.objects.filter(status=State.PENDING).all()
+        url = "/api/caseworker/bookings/bulk/accept"
+        payload = [
+            {'booking_id': 1},
+            {'booking_id': 2},
+            {'booking_id': 3},
+            {'booking_id': 4},
+        ]
+
+        response = self.client.patch(url, json.dumps(payload), format='json')
+        self.assertEqual(response.status_code, 200)
+        pending_count = Booking.objects.filter(status=State.PENDING).count()
+        self.assertEqual(pending_count, 0)
+
+        # We should get 0 pending bookings via rest api
+        response = self.client.get("/api/caseworker/bookings/pending")
+        self.assertEqual(response.status_code, 200)
+        parsed_response = json.loads(response.content)
+        self.assertEqual(len(parsed_response), 0)
+
 
     def tearDown(self):
         # After the tests delete all data generated for the tests
