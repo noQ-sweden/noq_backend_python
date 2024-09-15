@@ -169,7 +169,7 @@ class TestCaseworkerHandleBookingApi(TestCase):
         self.assertEqual(len(parsed_response), 2)
 
 
-    def test_bulk_accept_bookings(self):
+    def test_batch_accept_bookings(self):
         # Connect host_user and host
         host = Host.objects.get(name="Host 1")
         caseworker_user = User.objects.get(username="user.caseworker@test.nu")
@@ -181,9 +181,9 @@ class TestCaseworkerHandleBookingApi(TestCase):
         pending_count = Booking.objects.filter(status=State.PENDING).count()
         self.assertEqual(pending_count, 4)
 
-        # Accept 4 booking in a bulk, there should be 0 pending bookings left
+        # Accept 4 booking in a batch, there should be 0 pending bookings left
         pending_bookings = Booking.objects.filter(status=State.PENDING).all()
-        url = "/api/caseworker/bookings/bulk/accept"
+        url = "/api/caseworker/bookings/batch/accept"
         payload = [
             {'booking_id': 1},
             {'booking_id': 2},

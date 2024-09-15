@@ -165,8 +165,8 @@ def detailed_pending_booking(request, booking_id: int):
 
     return booking
 
-@router.patch("/pending/bulk/accept", response={200: dict, 400: dict}, tags=["caseworker-manage-requests"])
-def bulk_appoint_pending_booking(request, booking_ids: list[BookingUpdateSchema]):
+@router.patch("/pending/batch/accept", response={200: dict, 400: dict}, tags=["caseworker-manage-requests"])
+def batch_appoint_pending_booking(request, booking_ids: list[BookingUpdateSchema]):
     hosts = Host.objects.filter(users=request.user)
     # Use a transaction to ensure all or nothing behavior
     with transaction.atomic():
@@ -183,7 +183,7 @@ def bulk_appoint_pending_booking(request, booking_ids: list[BookingUpdateSchema]
         if errors:
             return 400, {'message': 'Some updates failed', 'errors': errors}
 
-    return 200, {'message': 'Bulk update successful'}
+    return 200, {'message': 'Batch update successful'}
 
 
 @router.patch("/pending/{booking_id}/appoint", response=BookingSchema, tags=["host-manage-requests"])
