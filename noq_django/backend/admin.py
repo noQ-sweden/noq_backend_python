@@ -1,10 +1,26 @@
 from django.contrib import admin
-
+from django.contrib.auth.models import Group
 from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus
 
 
-admin.site.register(Region)
-# admin.site.register(Booking)
+class CaseworkerGroupFilter(admin.SimpleListFilter):
+    title = "Caseworker" #Displayed title in the admin filter sidebar
+    parameter_name = "caseworker" # name of the filter
+
+    def lookups(self, request, model_admin):
+        try:
+            # Return a list od caseworkers (filtered by the 'caseworker' group)
+            caseworker_group = Group.objects.get(name='caseworker')
+            caseworkers = caseworker_group.user_set.all()
+            return [(user.id, f'{user.first_name} {user.last_name}') for user in caseworkers] 
+        except Group.DoesNotExist:
+            return []
+
+    def queryset(self, request, queryset):
+        # Filter host by the selected caseworkerfrom the list
+        if self.value():
+            return queryset.filter(caseworkers__id=self.value())
+        return queryset
 
 # defining inline admin descriptior for the caseworkers relationship
 class CaseworkerInline(admin.TabularInline):
@@ -24,16 +40,15 @@ class ClientAdmin(admin.ModelAdmin):
 @admin.register(Host)
 class HostAdmin(admin.ModelAdmin):
     list_display = ("name", "street", "postcode", "city", "region")
-    list_filter = ("city","region")
+    list_filter = ("city","region", CaseworkerGroupFilter) #Using the custum filter 
     ordering = ("name",)
-    search_fields = ("name",)
+    search_fields = ("name", "caseworkers__first_name")
+
+    # Exclude the 'caseworkers' field from the main form, as it's being handled by inline
+    exclude = ("caseworkers",)
 
     # add the CaseworkerInline to allow editing caseworkers in the admin interface
     inlines = [CaseworkerInline]
-
-    # optionally adding a filter to the admin panel to filter Hosts by Caseworkers
-    list_filter = ("city", "region", "caseworkers")
-    search_fields = ("name", "caseworkers__first_name")
 
 
 @admin.register(Booking)

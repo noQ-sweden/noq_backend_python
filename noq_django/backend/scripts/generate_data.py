@@ -118,22 +118,36 @@ def add_hosts(nbr: int) -> int:
 
 
 def add_caseworkers(nbr: int) -> int:
-    faker = Faker("sv_SE")
+    """ faker = Faker("sv_SE") """
+    """ Assign caseworkers to hosts in the same region """
 
     print("\n---- CASEWORKERS ----")
     
-    # Loop to create or assign mutliple caseworkers
-    for i in range(nbr):
-        # Fetch or create a unique caseworker (user)
-        new_user = make_user(group="caseworker", is_test_user=False)
+    # Initialize the counter
+    host_updated = 0
+    
+    caseworker_user = User.objects.filter(username="user.caseworker@test.nu").first()
+    if not caseworker_user:
+        caseworker_user = make_user(group="caseworker", is_test_user=True)
 
-        # Assign this user as a caseworker for multiple hosts
-        hosts_created_by_user = Host.objects.filter(created_by=new_user)
+    # Fetch the user from 'user.host@test.nu' who manages the hosts
+    host_user = User.objects.filter(username="user.host@test.nu").first()
+    if not host_user:
+        print("No user found for 'user.host@test.nu'. Cannot assign caseworkers.")
+        return 0
+    
+    # Fetch all hosts managed by 'user.host@test.nu'
+    hosts_managed_by_user = Host.objects.filter(users=host_user)
+    
 
-        # Assign this user as a caseworker for the host they created
-        for host in hosts_created_by_user:
-            host.caseworkers.add(new_user)
-            print(f"Assigned caseworker {new_user.username} to host {host.name}")
+    for host in hosts_managed_by_user:
+        hosts_in_region = Host.objects.filter(region=host.region)
+        for region_host in hosts_in_region:
+            region_host.caseworkers.add(caseworker_user)
+            print(f"Assigned caseworker {caseworker_user.username} to host {region_host.name} in region {region_host.region.name}")
+            host_updated += 1 # Increment the counter
+
+    return host_updated
 
     
 
