@@ -165,7 +165,7 @@ def detailed_pending_booking(request, booking_id: int):
 
     return booking
 
-@router.patch("/pending/batch/accept", response={200: dict, 400: dict}, tags=["caseworker-manage-requests"])
+@router.patch("/pending/batch/accept", response={200: dict, 400: dict}, tags=["host-manage-requests"])
 def batch_appoint_pending_booking(request, booking_ids: list[BookingUpdateSchema]):
     hosts = Host.objects.filter(users=request.user)
     # Use a transaction to ensure all or nothing behavior
