@@ -358,12 +358,12 @@ class Invoice(models.Model):
         super().save(*args, **kwargs)
 
 class SleepingSpace(models.Model):  
-    BED_TYPES = [
-        ('Dubbelsäng över', 'Dubbelsäng under'),
-        ('Singelsäng', 'Singelsäng'),
-        ('Madrass', 'Madrass'),
-    ]
     
+    BED_TYPES = [
+        ('Dubbelsäng över', 'Dubbelsäng över'),
+        ('Dubbelsäng under', 'Dubbelsäng under'),
+        ('Singelsäng', 'Singelsäng'),
+        ('Madrass', 'Madrass'),]
     STATUS_OPTIONS = [
         ('Ledig', 'Ledig'),
         ('Upptagen', 'Upptagen'),
