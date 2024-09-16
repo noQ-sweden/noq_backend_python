@@ -1,5 +1,9 @@
+from typing import Any
 from django.contrib import admin
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import User, Group
+from django.db.models.fields.related import ForeignKey
+from django.forms.models import ModelChoiceField
+from django.http import HttpRequest
 from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus
 
 
@@ -26,6 +30,15 @@ class CaseworkerGroupFilter(admin.SimpleListFilter):
 class CaseworkerInline(admin.TabularInline):
     model = Host.caseworkers.through
     extra = 1
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "user": #Assuming the 'user' is the foreign key name through model
+            # get caseworker group
+            caseworker_group = Group.objects.get(name='caseworker')
+            # filter users by the caseworker group
+            kwargs["queryset"] = User.objects.filter(groups=caseworker_group)
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(Client)
