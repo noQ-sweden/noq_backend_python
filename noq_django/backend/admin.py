@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus
+from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus, SleepingSpace
 
 # admin.site.register(Host)
 # admin.site.register(Available)
@@ -8,6 +8,8 @@ from .models import Host, Client, Product, Region, Booking, Available, Invoice, 
 # admin.site.register(Product)
 admin.site.register(Region)
 # admin.site.register(Booking)
+admin.site.register(SleepingSpace)
+
 
 
 @admin.register(Client)
