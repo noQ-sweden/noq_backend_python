@@ -2,6 +2,7 @@ from django.db.models import Q
 from ninja import NinjaAPI, Schema, ModelSchema, Router
 from ninja.errors import HttpError
 from datetime import datetime, timedelta
+from django.db import transaction
 
 from backend.models import (
     Client,
@@ -32,6 +33,7 @@ from .api_schemas import (
     AvailablePerDateSchema,
     InvoiceCreateSchema,
     InvoiceResponseSchema,
+    BookingUpdateSchema,
 )
 
 from backend.auth import group_auth
@@ -162,6 +164,26 @@ def detailed_pending_booking(request, booking_id: int):
     booking = get_object_or_404(Booking, id=booking_id, product__host=host, status__description='pending')
 
     return booking
+
+@router.patch("/pending/batch/accept", response={200: dict, 400: dict}, tags=["host-manage-requests"])
+def batch_appoint_pending_booking(request, booking_ids: list[BookingUpdateSchema]):
+    hosts = Host.objects.filter(users=request.user)
+    # Use a transaction to ensure all or nothing behavior
+    with transaction.atomic():
+        errors = []
+        for item in booking_ids:
+            booking_id = item.booking_id
+            booking = get_object_or_404(Booking, id=booking_id, product__host__in=hosts, status__description='pending')
+            try:
+                booking.status = BookingStatus.objects.get(description='accepted')
+                booking.save()
+            except Exception as e:
+                # Collect errors for any failed updates
+                errors.append({'booking': item.booking_id, 'error': str(e)})
+        if errors:
+            return 400, {'message': 'Some updates failed', 'errors': errors}
+
+    return 200, {'message': 'Batch update successful'}
 
 
 @router.patch("/pending/{booking_id}/appoint", response=BookingSchema, tags=["host-manage-requests"])

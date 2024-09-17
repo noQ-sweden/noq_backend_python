@@ -8,11 +8,11 @@ from backend.models import (
     Host, Client, Product, Region, Booking, State, BookingStatus, Available
 )
 from django.test import Client as TestClient
-from ..caseworker_api import router
+from ..host_api import router
 
-class TestCaseworkerHandleBookingApi(TestCase):
-    caseworker_user = None
-    caseworker_name = "user.caseworker@test.nu"
+class TestHostHandleBookingApi(TestCase):
+    host_user = None
+    host_name = "user.host@test.nu"
     user_name_one = "user.user1@test.nu"
     user_name_two = "user.user2@test.nu"
     user_name_three = "user.user3@test.nu"
@@ -24,18 +24,18 @@ class TestCaseworkerHandleBookingApi(TestCase):
         group_obj, created = Group.objects.get_or_create(name=group)
         user.groups.add(group_obj)
 
-    def caseworker_login(self):
+    def host_login(self):
         # Create host user and client users for the test
-        if User.objects.filter(username=self.caseworker_name).first() == None:
-            caseworker_user = self.create_user(self.caseworker_name, "caseworker")
+        if User.objects.filter(username=self.host_name).first() == None:
+            host_user = self.create_user(self.host_name, "host")
             client_user_one = self.create_user(self.user_name_one, "user")
             client_user_two = self.create_user(self.user_name_two, "user")
             client_user_three = self.create_user(self.user_name_three, "user")
             client_user_four = self.create_user(self.user_name_four, "user")
 
-        # Login the caseworker
+        # Login the host
         self.client = TestClient(router)
-        self.client.login(username=self.caseworker_name, password=self.password)
+        self.client.login(username=self.host_name, password=self.password)
         print(self.client)
 
 
@@ -54,7 +54,7 @@ class TestCaseworkerHandleBookingApi(TestCase):
 
     def setUp(self):
         # log in host user for the tests
-        self.caseworker_login()
+        self.host_login()
 
         # Create products that can be used during the tests
         if Product.objects.filter(id=1).first() == None:
@@ -122,58 +122,11 @@ class TestCaseworkerHandleBookingApi(TestCase):
                 booking.save()
 
 
-    def test_accept_and_decline_booking(self):
-        # Connect host_user and host
-        host = Host.objects.get(name="Host 1")
-        caseworker_user = User.objects.get(username="user.caseworker@test.nu")
-        host.users.add(caseworker_user)
-        host.save()
-
-        # There should be 4 pending bookings to start with
-        bookings = Booking.objects.filter(status=State.PENDING).all()
-        pending_count = Booking.objects.filter(status=State.PENDING).count()
-        self.assertEqual(pending_count, 4)
-
-        # We should get 4 pending bookings via rest api
-        response = self.client.get("/api/caseworker/bookings/pending")
-        self.assertEqual(response.status_code, 200)
-        parsed_response = json.loads(response.content)
-        self.assertEqual(len(parsed_response), 4)
-
-        # Accept 1 booking, there should be 3 pending bookings left
-        first_booking = Booking.objects.filter(status=State.PENDING).first()
-        url = "/api/caseworker/bookings/" + str(first_booking.id) + "/accept"
-        response = self.client.patch(url)
-        self.assertEqual(response.status_code, 200)
-        pending_count = Booking.objects.filter(status=State.PENDING).count()
-        self.assertEqual(pending_count, 3)
-
-        # We should get 3 pending bookings via rest api
-        response = self.client.get("/api/caseworker/bookings/pending")
-        self.assertEqual(response.status_code, 200)
-        parsed_response = json.loads(response.content)
-        self.assertEqual(len(parsed_response), 3)
-
-        # Decline 1 booking, there should be 2 pending bookings left
-        first_booking = Booking.objects.filter(status=State.PENDING).first()
-        url = "/api/caseworker/bookings/" + str(first_booking.id) + "/decline"
-        response = self.client.patch(url)
-        self.assertEqual(response.status_code, 200)
-        pending_count = Booking.objects.filter(status=State.PENDING).count()
-        self.assertEqual(pending_count, 2)
-
-        # We should get 2 pending bookings via rest api
-        response = self.client.get("/api/caseworker/bookings/pending")
-        self.assertEqual(response.status_code, 200)
-        parsed_response = json.loads(response.content)
-        self.assertEqual(len(parsed_response), 2)
-
-
     def test_batch_accept_bookings(self):
         # Connect host_user and host
         host = Host.objects.get(name="Host 1")
-        caseworker_user = User.objects.get(username="user.caseworker@test.nu")
-        host.users.add(caseworker_user)
+        host_user = User.objects.get(username="user.host@test.nu")
+        host.users.add(host_user)
         host.save()
 
         # There should be 4 pending bookings to start with
@@ -183,7 +136,7 @@ class TestCaseworkerHandleBookingApi(TestCase):
 
         # Accept 4 booking in a batch, there should be 0 pending bookings left
         pending_bookings = Booking.objects.filter(status=State.PENDING).all()
-        url = "/api/caseworker/bookings/batch/accept"
+        url = "/api/host/pending/batch/accept"
         payload = [
             {'booking_id': 1},
             {'booking_id': 2},
@@ -197,7 +150,7 @@ class TestCaseworkerHandleBookingApi(TestCase):
         self.assertEqual(pending_count, 0)
 
         # We should get 0 pending bookings via rest api
-        response = self.client.get("/api/caseworker/bookings/pending")
+        response = self.client.get("/api/host/pending")
         self.assertEqual(response.status_code, 200)
         parsed_response = json.loads(response.content)
         self.assertEqual(len(parsed_response), 0)
