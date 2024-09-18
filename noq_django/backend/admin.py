@@ -3,6 +3,9 @@ from django.contrib import admin
 from django.contrib.auth.models import User, Group
 from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus, SleepingSpace
 
+# Register the models.
+admin.site.register(Region)
+admin.site.register(SleepingSpace)
 
 class CaseworkerGroupFilter(admin.SimpleListFilter):
     title = "Caseworker" #Displayed title in the admin filter sidebar
@@ -37,9 +40,6 @@ class CaseworkerInline(admin.TabularInline):
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-# Register the models.
-admin.site.register(Region)
-admin.site.register(SleepingSpace)
 
 
 @admin.register(Client)
