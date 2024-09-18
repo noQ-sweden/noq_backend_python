@@ -1,14 +1,13 @@
 from icecream import ic
 from datetime import datetime, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
-
 from .util import debug
-
 from django.http import HttpResponse, HttpResponseNotAllowed
-
 from . import models
 from . import forms
 from . import tables
+from .models import SleepingSpace
+from .forms import SleepingSpaceForm
 from .models import Product
 from .forms import ProductForm
 import json
@@ -333,3 +332,39 @@ def product_delete(request, pk):
         product.delete()
         return redirect('product_list')
     return render(request, 'product_confirm_delete.html', {'product': product})
+
+
+def create_sleeping_space(request):
+    if request.method == 'POST':
+        form = SleepingSpaceForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('list_sleeping_spaces')
+    else:
+        form = SleepingSpaceForm()
+    return render(request, 'sleeping_space_form.html', {'form': form})
+
+
+def update_sleeping_space(request, pk):
+    sleeping_space = get_object_or_404(SleepingSpace, pk=pk)
+    if request.method == 'POST':
+        form = SleepingSpaceForm(request.POST, instance=sleeping_space)
+        if form.is_valid():
+            form.save()
+            return redirect('list_sleeping_spaces')
+    else:
+        form = SleepingSpaceForm(instance=sleeping_space)
+    return render(request, 'sleeping_space_form.html', {'form': form})
+
+
+def list_sleeping_spaces(request):
+    sleeping_spaces = SleepingSpace.objects.all()
+    return render(request, 'sleeping_space_list.html', {'sleeping_spaces': sleeping_spaces})
+
+
+def delete_sleeping_space(request, pk):
+    sleeping_space = get_object_or_404(SleepingSpace, pk=pk)
+    if request.method == 'POST':
+        sleeping_space.delete()
+        return redirect('list_sleeping_spaces')
+    return render(request, 'sleeping_space_confirm_delete.html', {'sleeping_space': sleeping_space})
