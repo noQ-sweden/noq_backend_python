@@ -1,19 +1,49 @@
+from typing import Any
 from django.contrib import admin
-
+from django.contrib.auth.models import User, Group
 from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus, SleepingSpace
 
-# admin.site.register(Host)
-# admin.site.register(Available)
-# admin.site.register(User)
-# admin.site.register(Product)
+# Register the models.
 admin.site.register(Region)
-# admin.site.register(Booking)
 admin.site.register(SleepingSpace)
+
+class CaseworkerGroupFilter(admin.SimpleListFilter):
+    title = "Caseworker" #Displayed title in the admin filter sidebar
+    parameter_name = "caseworker" # name of the filter
+
+    def lookups(self, request, model_admin):
+        try:
+            # Return a list od caseworkers (filtered by the 'caseworker' group)
+            caseworker_group = Group.objects.get(name='caseworker')
+            caseworkers = caseworker_group.user_set.all()
+            return [(user.id, f'{user.first_name} {user.last_name}') for user in caseworkers] 
+        except Group.DoesNotExist:
+            return []
+
+    def queryset(self, request, queryset):
+        # Filter host by the selected caseworkerfrom the list
+        if self.value():
+            return queryset.filter(caseworkers__id=self.value())
+        return queryset
+
+# defining inline admin descriptior for the caseworkers relationship
+class CaseworkerInline(admin.TabularInline):
+    model = Host.caseworkers.through
+    extra = 1
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "user": #Assuming the 'user' is the foreign key name through model
+            # get caseworker group
+            caseworker_group = Group.objects.get(name='caseworker')
+            # filter users by the caseworker group
+            kwargs["queryset"] = User.objects.filter(groups=caseworker_group)
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 
 @admin.register(Client)
-class UserAdmin(admin.ModelAdmin):
+class ClientAdmin(admin.ModelAdmin):
     fields = (("first_name", "last_name"), "gender", "street", ("postcode", "city"), "region")
     list_display = ("first_name", "last_name", "gender", "street", "city", "region")
     list_filter = ("city","region")
@@ -24,9 +54,15 @@ class UserAdmin(admin.ModelAdmin):
 @admin.register(Host)
 class HostAdmin(admin.ModelAdmin):
     list_display = ("name", "street", "postcode", "city", "region")
-    list_filter = ("city","region")
+    list_filter = ("city","region", CaseworkerGroupFilter) #Using the custum filter 
     ordering = ("name",)
-    search_fields = ("name",)
+    search_fields = ("name", "caseworkers__first_name")
+
+    # Exclude the 'caseworkers' field from the main form, as it's being handled by inline
+    exclude = ("caseworkers",)
+
+    # add the CaseworkerInline to allow editing caseworkers in the admin interface
+    inlines = [CaseworkerInline]
 
 
 @admin.register(Booking)
