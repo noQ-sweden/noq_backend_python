@@ -1,0 +1,7 @@
+<h1>Delete Sleeping Space</h1>
+<p>Are you sure you want to delete {{ sleeping_space.bed_type }} in {{ sleeping_space.room_location }}?</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Delete</button>
+</form>
+<a href="{% url 'list_sleeping_spaces' %}">Cancel</a>
