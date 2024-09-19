@@ -2,7 +2,7 @@ from django.db.models import Q
 from ninja import NinjaAPI, Schema, ModelSchema, Router
 from ninja.errors import HttpError
 from django.http import JsonResponse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from backend.models import (
     Client,
@@ -19,7 +19,6 @@ from backend.models import (
 )
 
 from .api_schemas import (
-    BookingPerNightSchema,
     UserShelterStayCountSchema,
     RegionSchema,
     UserSchema,
@@ -35,6 +34,7 @@ from .api_schemas import (
     AvailablePerDateSchema,
     InvoiceCreateSchema,
     InvoiceResponseSchema,
+    UserStaySummarySchema,
 )
 
 from backend.auth import group_auth
@@ -94,42 +94,70 @@ def decline_pending_booking(request, booking_id: int):
 
 
 
-@router.get("/get_user_shelter_stay_count/", response=UserShelterStayCountSchema, tags=["caseworker-frontpage"])
-def get_user_shelter_stay_count(request, user_id: int):
+@router.get("/guests/nights/count/{user_id}/{start_date}/{end_date}", response=UserShelterStayCountSchema, tags=["caseworker-frontpage"])
+def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date: str):
     try:
-        selected_user = get_object_or_404(Client, id=user_id)
+        start_date = date.fromisoformat(start_date)
+        end_date = date.fromisoformat(end_date)
 
-        user_bookings = Booking.objects.filter(user=selected_user).select_related(
-            'product', 'product__host', 'user', 'user__region'
+        user_bookings = Booking.objects.filter(
+            user_id=user_id,
+            start_date__lte=end_date,
+            end_date__gte=start_date
+        ).select_related(
+            'product__host__region'
         ).values(
-            'id', 'start_date', 'end_date', 
-            'product__host__region__name', 
-            'product__host__name',          
+            'user_id',
+            'product__host__id',
+            'product__host__name',
+            'product__host__street',
+            'product__host__postcode',
+            'product__host__city',
+            'product__host__region__name',
+            'product__host__region__id',
+            'start_date',
+            'end_date'
         )
 
-        total_nights = sum(
-            (booking['end_date'] - booking['start_date']).days
-            for booking in user_bookings
-        )
+        total_nights = 0
+        user_stay_counts = []
 
-        booking_list = [
-            BookingPerNightSchema(
-                id=booking['id'],
-                start_date=booking['start_date'].isoformat(),
-                end_date=booking['end_date'].isoformat(),
-                region=booking['product__host__region__name'],
-                shelter_name=booking['product__host__name'], 
-            )
-            for booking in user_bookings
-        ]
+        for booking in user_bookings:
+            nights = (min(booking['end_date'], end_date) - max(booking['start_date'], start_date)).days
+            if nights > 0:
+                total_nights += nights
+
+                host_data = {
+                    'id': booking['product__host__id'],
+                    'name': booking['product__host__name'],
+                    'street': booking['product__host__street'],
+                    'postcode': booking['product__host__postcode'],
+                    'city': booking['product__host__city'],
+                    'region': {
+                        'id': booking['product__host__region__id'],
+                        'name': booking['product__host__region__name']
+                    }
+                }
+                host = HostSchema(**host_data)
+
+                user_stay_counts.append(
+                    UserStaySummarySchema(
+                        total_nights=nights,
+                        start_date=booking['start_date'].isoformat(),
+                        end_date=booking['end_date'].isoformat(),
+                        host=host
+                    )
+                )
 
         response_data = UserShelterStayCountSchema(
             user_id=user_id,
-            total_nights=total_nights,
-            bookings=booking_list
+            user_stay_counts=user_stay_counts
         )
-        
+
         return response_data
 
+    except ValueError as ve:
+        return JsonResponse({'detail': "Invalid date format."}, status=400)
+
     except Exception as e:
-        return JsonResponse({'detail': f"An error occurred: {str(e)}"}, status=500)
+        return JsonResponse({'detail': "An internal error occurred. Please try again later."}, status=500)

@@ -145,22 +145,21 @@ class BookingSchema(Schema):
     product: ProductSchema
     user: UserSchema
 
-class BookingPerNightSchema(Schema):
+class UserStaySummarySchema(Schema):
     """
-    per booking, när övernattning 
-    uträknas för en brukare.
+    Sammanfattning av användarens övernattningar, inklusive användarens ID,
+    totalantal nätter och tillhörande värd.
     """
-    id: int
+    total_nights: int
     start_date: date
     end_date: date
-    region: Optional[str] 
-    shelter_name: Optional[str]
+    host: HostSchema
+
 
 class UserShelterStayCountSchema(Schema):
     user_id: int
-    total_nights: int
-    bookings: List[BookingPerNightSchema]
-
+    user_stay_counts: List[UserStaySummarySchema]
+    
 
 class BookingPostSchema(Schema):
     """
