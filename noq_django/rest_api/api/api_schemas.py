@@ -145,21 +145,6 @@ class BookingSchema(Schema):
     product: ProductSchema
     user: UserSchema
 
-class UserStaySummarySchema(Schema):
-    """
-    Sammanfattning av användarens övernattningar, inklusive användarens ID,
-    totalantal nätter och tillhörande värd.
-    """
-    total_nights: int
-    start_date: date
-    end_date: date
-    host: HostSchema
-
-
-class UserShelterStayCountSchema(Schema):
-    user_id: int
-    user_stay_counts: List[UserStaySummarySchema]
-    
 
 class BookingPostSchema(Schema):
     """
@@ -240,3 +225,19 @@ class InvoiceResponseSchema(ModelSchema):
     class Config:
             model = Invoice
             model_fields = ['id', 'host', 'amount', 'description', 'status', 'due_date', 'currency', 'invoice_number', 'vat', 'vat_rate', 'sale_date', 'seller_vat_number', 'buyer_vat_number', 'buyer_name', 'buyer_address']
+        
+class UserStaySummarySchema(Schema):
+    """
+    Sammanfattning av användarens övernattningar, inklusive användarens ID,
+    totalantal nätter och tillhörande värd.
+    """
+    total_nights: int
+    start_date: date
+    end_date: date
+    host: HostSchema
+
+
+class UserShelterStayCountSchema(Schema):
+    user_id: int
+    user_stay_counts: List[UserStaySummarySchema]
+    
