@@ -2,13 +2,12 @@ from django.db.models import Q
 from ninja import NinjaAPI, Schema, ModelSchema, Router
 from ninja.errors import HttpError
 from django.db import transaction
+from datetime import datetime, timedelta, date
 from django.http import JsonResponse
-
 from backend.auth import group_auth
 
 from typing import List, Dict, Optional
 from django.shortcuts import get_object_or_404
-from datetime import datetime, timedelta, date
 
 from backend.models import (
     Client,
@@ -25,7 +24,6 @@ from backend.models import (
 )
 
 from .api_schemas import (
-    UserShelterStayCountSchema,
     RegionSchema,
     UserSchema,
     UserPostSchema,
@@ -40,9 +38,12 @@ from .api_schemas import (
     AvailablePerDateSchema,
     InvoiceCreateSchema,
     InvoiceResponseSchema,
+    BookingUpdateSchema,
     UserStaySummarySchema,
-    BookingUpdateSchema
+    UserShelterStayCountSchema
 )
+
+
 router = Router(auth=lambda request: group_auth(request, "caseworker"))  # request defineras vid call, gruppnamnet är statiskt
 
 @router.get("/bookings/pending", response=List[BookingSchema], tags=["caseworker-manage-requests"])
@@ -121,12 +122,12 @@ def set_booking_pending(request, booking_id: int):
         return booking
     except BookingStatus.DoesNotExist:
         raise HttpError(404, detail="Booking status does not exist.")
+
 @router.get("/guests/nights/count/{user_id}/{start_date}/{end_date}", response=UserShelterStayCountSchema, tags=["caseworker-frontpage"])
 def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date: str):
     try:
         start_date = date.fromisoformat(start_date)
         end_date = date.fromisoformat(end_date)
-
 
         user_bookings = Booking.objects.filter(
             user_id=user_id,
