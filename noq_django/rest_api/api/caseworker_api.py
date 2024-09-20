@@ -136,7 +136,7 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
         ).select_related(
             'product__host__region'
         ).prefetch_related(
-            'product__host__caseworkers'  # Prefetch caseworkers for efficiency
+            'product__host__caseworkers'  
         )
 
         total_nights = 0
@@ -146,8 +146,7 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
             if nights > 0:
                 total_nights += nights
 
-                # Build the host data
-                host = booking.product.host  # Access the host directly
+                host = booking.product.host  
                 host_data = {
                     'id': host.id,
                     'name': host.name,
@@ -158,10 +157,9 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
                         'id': host.region.id,
                         'name': host.region.name
                     },
-                    'caseworkers': [cw.id for cw in host.caseworkers.all()]  # Extract caseworker IDs
+                    'caseworkers': [cw.id for cw in host.caseworkers.all()]  
                 }
 
-                # Add to user_stay_counts
                 user_stay_counts.append(
                     UserStaySummarySchema(
                         total_nights=nights,

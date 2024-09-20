@@ -91,7 +91,7 @@ class TestUserShelterStayCountApi(TestCase):
         )
 
     # Client 2 with three bookings
-        client_two = Client.objects.create(  # Store as instance variable
+        client_two = Client.objects.create( 
             first_name="Jane",
             last_name="Smith",
             gender="F",
