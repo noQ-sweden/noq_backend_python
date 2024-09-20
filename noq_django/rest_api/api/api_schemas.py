@@ -161,6 +161,11 @@ class BookingUpdateSchema(Schema):
     booking_id: int
 
 
+
+class BookingUpdateSchema(Schema):
+    booking_id: int
+
+
 class AvailableSchema(Schema):
     """
     Available för att kunna se om en Product har tillgängliga platser

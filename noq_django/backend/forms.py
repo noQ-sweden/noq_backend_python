@@ -1,5 +1,3 @@
-# yourapp/forms.py
-
 from django import forms
 from django.urls import reverse, reverse_lazy
 from django.core.exceptions import ValidationError
@@ -9,6 +7,8 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit, Fieldset, Field, MultiField, Div, Layout
 
 from . import models
+from .models import SleepingSpace
+
 
 
 class AvailableForm(forms.Form):
@@ -139,3 +139,8 @@ class InvoiceForm(forms.ModelForm):
             self.fields['status'].initial = models.InvoiceStatus.objects.get(name='open')
         except models.InvoiceStatus.DoesNotExist:
             self.fields['status'].initial = None
+
+class SleepingSpaceForm(forms.ModelForm):
+    class Meta:
+        model = SleepingSpace
+        fields = ['bed_type', 'status']

@@ -24,4 +24,8 @@ urlpatterns = [
     path('products/new/', views.product_create, name='product_create'),
     path('products/<int:pk>/edit/', views.product_update, name='product_update'),
     path('products/<int:pk>/delete/', views.product_delete, name='product_delete'),
+    path('sleeping_spaces/', views.list_sleeping_spaces, name='list_sleeping_spaces'),
+    path('sleeping_spaces/create/', views.create_sleeping_space, name='create_sleeping_space'),
+    path('sleeping_spaces/update/<int:pk>/', views.update_sleeping_space, name='update_sleeping_space'),
+    path('sleeping_spaces/delete/<int:pk>/', views.delete_sleeping_space, name='delete_sleeping_space'),
 ]

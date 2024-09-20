@@ -16,6 +16,7 @@ class State(IntEnum):
     IN_QUEUE = 5
     RESERVED = 6
     CONFIRMED = 7
+    COMPLETED = 8
 
 class Region(models.Model):
     name = models.CharField(max_length=80)
@@ -109,6 +110,9 @@ class Host(models.Model):
     )
     blocked_clients = models.ManyToManyField(Client, blank=True)
 
+    # Adding a many-to-many relationship with User
+    caseworkers = models.ManyToManyField(User, related_name="caseworker_hosts")
+
     class Meta:
         db_table = "hosts"
 
@@ -125,12 +129,18 @@ class Product(models.Model):
         ('room', 'Room'),
         ('woman-only', 'Woman Only'),
     ]
+    ROOM_LOCATIONS = [
+        ('Sovsal', 'Sovsal'),
+        ('Dubbelrum', 'Dubbelrum'),
+        ('Eget rum', 'Eget rum'),
+    ]
 
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=100)
     total_places = models.IntegerField()
     host = models.ForeignKey(Host, on_delete=models.CASCADE, blank=True)
     type = models.CharField(max_length=12, choices=TYPE_CHOICES)
+    room_location = models.CharField(max_length=20, choices=ROOM_LOCATIONS)  
     requirements = models.ForeignKey(
         ProductRequirement, on_delete=models.CASCADE, null=True, blank=True
     )
@@ -349,3 +359,25 @@ class Invoice(models.Model):
     def save(self, *args, **kwargs):
         self.calculate_vat()
         super().save(*args, **kwargs)
+
+class SleepingSpace(models.Model):  
+    
+    BED_TYPES = [
+        ('Dubbelsäng över', 'Dubbelsäng över'),
+        ('Dubbelsäng under', 'Dubbelsäng under'),
+        ('Singelsäng', 'Singelsäng'),
+        ('Madrass', 'Madrass'),]
+    STATUS_OPTIONS = [
+        ('Ledig', 'Ledig'),
+        ('Upptagen', 'Upptagen'),
+        ('Avstängd', 'Avstängd'),
+    ]
+    
+    bed_type = models.CharField(max_length=25, choices=BED_TYPES)
+    status = models.CharField(max_length=10, choices=STATUS_OPTIONS, default='Ledig')
+
+    class Meta:
+        db_table = 'sleeping_spaces'
+
+    def __str__(self):
+        return f"{self.bed_type} ({self.status})"

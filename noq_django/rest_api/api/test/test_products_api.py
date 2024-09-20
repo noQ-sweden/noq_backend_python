@@ -106,7 +106,10 @@ class TestProductsApi(TestCase):
                 "name": "Host 1",
                 "street": "",
                 "postcode": "",
-                "city": "Malmö"
+                "city": "Malmö",
+                "caseworkers": [
+                    0
+                    ]
             },
             "type": "room"
         }

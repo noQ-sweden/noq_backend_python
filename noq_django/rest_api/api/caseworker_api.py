@@ -135,46 +135,39 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
             end_date__gte=start_date
         ).select_related(
             'product__host__region'
-        ).values(
-            'user_id',
-            'product__host__id',
-            'product__host__name',
-            'product__host__street',
-            'product__host__postcode',
-            'product__host__city',
-            'product__host__region__name',
-            'product__host__region__id',
-            'start_date',
-            'end_date'
+        ).prefetch_related(
+            'product__host__caseworkers'  # Prefetch caseworkers for efficiency
         )
 
         total_nights = 0
         user_stay_counts = []
-
         for booking in user_bookings:
-            nights = (min(booking['end_date'], end_date) - max(booking['start_date'], start_date)).days
+            nights = (min(booking.end_date, end_date) - max(booking.start_date, start_date)).days
             if nights > 0:
                 total_nights += nights
 
+                # Build the host data
+                host = booking.product.host  # Access the host directly
                 host_data = {
-                    'id': booking['product__host__id'],
-                    'name': booking['product__host__name'],
-                    'street': booking['product__host__street'],
-                    'postcode': booking['product__host__postcode'],
-                    'city': booking['product__host__city'],
+                    'id': host.id,
+                    'name': host.name,
+                    'street': host.street,
+                    'postcode': host.postcode,
+                    'city': host.city,
                     'region': {
-                        'id': booking['product__host__region__id'],
-                        'name': booking['product__host__region__name']
-                    }
+                        'id': host.region.id,
+                        'name': host.region.name
+                    },
+                    'caseworkers': [cw.id for cw in host.caseworkers.all()]  # Extract caseworker IDs
                 }
-                host = HostSchema(**host_data)
 
+                # Add to user_stay_counts
                 user_stay_counts.append(
                     UserStaySummarySchema(
                         total_nights=nights,
-                        start_date=booking['start_date'].isoformat(),
-                        end_date=booking['end_date'].isoformat(),
-                        host=host
+                        start_date=booking.start_date.isoformat(),
+                        end_date=booking.end_date.isoformat(),
+                        host=host_data
                     )
                 )
 
