@@ -40,6 +40,7 @@ def login_user(request, payload: LoginPostSchema):
     email = payload.email
     password = payload.password
     
+    # Authenticate user
     user = authenticate(request, username=email, password=password)
     if user is not None:
         login(request, user)
@@ -52,16 +53,21 @@ def login_user(request, payload: LoginPostSchema):
             except Host.DoesNotExist:
                 pass
 
+        # Add firt_name and last_name to the response        
         return LoginSchema(
             login_status=True,
             message="Login Successful",
             groups=user_groups,
-            host=host
+            host=host,
+            first_name=user.first_name, # Include users first_name 
+            last_name=user.last_name # Include users last_name
         )
     else:
         return LoginSchema(
             login_status=False,
             message="Login Failed",
             groups=None,
-            host=None
+            host=None,
+            first_name=None,
+            last_name=None
         )
