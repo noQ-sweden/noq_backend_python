@@ -34,6 +34,7 @@ from .api_schemas import (
     InvoiceCreateSchema,
     InvoiceResponseSchema,
     BookingUpdateSchema,
+    ProductSchemaWithPlacesLeft,
 )
 
 from backend.auth import group_auth
@@ -120,3 +121,43 @@ def set_booking_pending(request, booking_id: int):
         return booking
     except BookingStatus.DoesNotExist:
         raise HttpError(404, detail="Booking status does not exist.")
+    
+
+@router.get("/available_all", response=List[ProductSchemaWithPlacesLeft], tags=["host-available"])
+def get_available_places_all(request):
+    # Retrieve all hosts the caseworker is responsible for
+    hosts = Host.objects.filter(caseworkers=request.user)  # Assuming caseworkers are linked to Hosts via the 'users' relationship
+    
+    if not hosts.exists():
+        # No hosts associated with the caseworker, return a 404 error
+        raise HttpError(404, "No hosts associated with this caseworker.")
+    
+    available_products = []
+    
+    # Loop through each host and get the products
+    for host in hosts:
+        products = Product.objects.filter(host=host)
+        
+        # Loop through each product and check available places
+        for product in products:
+            # Find availability for the product
+            available = Available.objects.filter(product=product).first()
+            
+            # Calculate the number of places left
+            places_left = available.places_left if available else product.total_places
+            
+            # Append the product with the remaining places to the list
+            available_products.append(
+                ProductSchemaWithPlacesLeft(
+                    id=product.id,
+                    name=product.name,
+                    description=product.description,
+                    total_places=product.total_places,
+                    host=product.host,  
+                    type=product.type,
+                    places_left=places_left
+                )
+            )
+    
+    # Return the full list of available products across all hosts
+    return available_products

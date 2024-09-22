@@ -203,6 +203,48 @@ class TestCaseworkerHandleBookingApi(TestCase):
         self.assertEqual(len(parsed_response), 0)
 
 
+    def test_get_available_places_all(self):
+        # Connect host_caseworker and host
+        host = Host.objects.get(name="Host 1")
+        caseworker_user = User.objects.get(username="user.caseworker@test.nu")
+        host.caseworkers.add(caseworker_user) 
+        host.save()
+
+        # Get products that belong to the host
+        products = Product.objects.filter(host=host)
+
+        # Create availability records for the products
+        current_date = datetime.now().date()
+        for product in products:
+            current_bookings = Booking.objects.filter(product=product).count()
+            places_left = product.total_places - current_bookings
+            Available.objects.create(
+                product=product, 
+                places_left=places_left,
+                available_date=current_date
+            )
+
+        # Test the new API that returns available places for all products
+        response = self.client.get("/api/caseworker/available_all")
+
+        # Assert that the response status is 200
+        self.assertEqual(response.status_code, 200)
+
+        # Parse the response data
+        data = json.loads(response.content)
+
+        # Check that the correct number of products is returned
+        self.assertEqual(len(data), len(products))
+
+        # Check if the available places match the dynamically calculated places for each product
+        for i, product in enumerate(products):
+            current_bookings = Booking.objects.filter(product=product).count() 
+            expected_places_left = product.total_places - current_bookings
+            self.assertEqual(data[i]['places_left'], expected_places_left)
+            self.assertEqual(data[i]['name'], product.name)
+            self.assertEqual(data[i]['description'], product.description)
+
+
     def tearDown(self):
         # After the tests delete all data generated for the tests
         self.delete_products()
