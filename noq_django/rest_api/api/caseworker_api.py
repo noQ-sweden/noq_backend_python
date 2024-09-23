@@ -123,7 +123,7 @@ def set_booking_pending(request, booking_id: int):
         raise HttpError(404, detail="Booking status does not exist.")
     
 
-@router.get("/available_all", response=List[ProductSchemaWithPlacesLeft], tags=["host-available"])
+@router.get("/available_all", response=List[ProductSchemaWithPlacesLeft], tags=["caseworker-available"])
 def get_available_places_all(request):
     # Retrieve all hosts the caseworker is responsible for
     hosts = Host.objects.filter(caseworkers=request.user)  # Assuming caseworkers are linked to Hosts via the 'users' relationship
