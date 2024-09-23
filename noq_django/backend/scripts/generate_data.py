@@ -36,17 +36,23 @@ def make_user(group: str, is_test_user: bool) -> User:  # användargrupp, använ
     if is_test_user:
         password = "P4ssw0rd_for_Te5t+User"
         email = "user." + group + "@test.nu"
+        first_name = "Test"
+        last_name = group.capitalize()
     else:
         password = faker.password()
         email = faker.email()
+        if first_name is None:
+            first_name = faker.first_name()
+        if last_name is None:
+            last_name = faker.last_name()
 
-    user = User.objects.create_user(username=email, password=password)
+    user = User.objects.create_user(username=email, password=password, first_name=first_name, last_name=last_name)
     group_obj, created = Group.objects.get_or_create(name=group)
     user.groups.add(group_obj)
 
     credentials_file = os.path.join(settings.BASE_DIR, 'backend', 'scripts', 'fake_credentials.txt')  # spara inloggningar till fil i testsyfte.
     with open(credentials_file, "a") as file:
-        file.write(f"Email: {email}, Password: {password}, Group: {group}\n")
+        file.write(f"First Name: {first_name}, Last Name: {last_name}, Email: {email}, Password: {password}, Group: {group}\n")
 
     return user
 
@@ -128,7 +134,12 @@ def add_caseworkers(nbr: int) -> int:
     
     caseworker_user = User.objects.filter(username="user.caseworker@test.nu").first()
     if not caseworker_user:
-        caseworker_user = make_user(group="caseworker", is_test_user=True)
+        caseworker_user = make_user(
+            group="caseworker",
+            is_test_user=True,
+            first_name="Test",
+            last_name="Caseworker",
+            )
 
     # Fetch the user from 'user.host@test.nu' who manages the hosts
     host_user = User.objects.filter(username="user.host@test.nu").first()
@@ -148,31 +159,6 @@ def add_caseworkers(nbr: int) -> int:
             host_updated += 1 # Increment the counter
 
     return host_updated
-
-    
-
-    """ is_test_user: bool = True
-    if User.objects.filter(username="user.caseworker@test.nu").exists():
-        is_test_user = False
-        print("Test user exists already.")
-
-    # Create or fetch the caseworker user
-    new_user = make_user(group="caseworker", is_test_user=is_test_user)
-  
-
-    # fetch all hosts where user.host@test.nu is a user and assign casewoker
-    host_user = User.objects.filter(username="user.host@test.nu").first()
-    hosts_managed_by_host_user = Host.objects.filter(users=host_user)
-
-    # Assign the caseworker to the hosts
-    for host in hosts_managed_by_host_user:
-        host.caseworkers.add(new_user)
-        print(f"Assigned caseworker {new_user.username} to host {host.name}")
-
-
-    if is_test_user: is_test_user = False """
-
-    return
 
 
 def add_users(nbr: int):
@@ -210,13 +196,13 @@ def add_users(nbr: int):
 
         last_name: str = faker.last_name()
 
-        if Client.objects.filter(first_name=first_name, last_name=last_name).values():
+        if Client.objects.filter(first_name=first_name, last_name=last_name).exists():
             continue
 
         last_edit = datetime.now() - timedelta(days=random.randint(0, 31))
 
         user = Client(
-            user=make_user(group="user", is_test_user=is_test_user),
+            user=make_user(group="user", is_test_user=is_test_user, first_name=first_name, last_name=last_name),
             first_name=first_name,
             last_name=last_name,
             region=region_obj,
@@ -229,7 +215,8 @@ def add_users(nbr: int):
         )
         user.save(fake_data=last_edit)
 
-        if is_test_user: is_test_user=False
+        if is_test_user: 
+            is_test_user=False
 
 def add_booking_statuses():
     statuses = [
