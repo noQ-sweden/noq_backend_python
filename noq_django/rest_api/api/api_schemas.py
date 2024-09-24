@@ -72,6 +72,8 @@ class HostSchema(ModelSchema):
     """
 
     region: RegionSchema
+    caseworkers: Optional[List[int]] = None
+
 
     class Meta:
         model = Host

@@ -156,8 +156,7 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
                     'region': {
                         'id': host.region.id,
                         'name': host.region.name
-                    },
-                    'caseworkers': [cw.id for cw in host.caseworkers.all()]  
+                    }
                 }
 
                 user_stay_counts.append(
@@ -177,7 +176,7 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
         return response_data
 
     except ValueError as ve:
-        return JsonResponse({'detail': "Invalid date format."}, status=400)
+        return JsonResponse({'detail': "Something went wrong..."}, status=400)
 
     except Exception as e:
         return JsonResponse({'detail': "An internal error occurred. Please try again later."}, status=500)
