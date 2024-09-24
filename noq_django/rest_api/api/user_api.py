@@ -36,31 +36,6 @@ from datetime import date
 router = Router(auth=lambda request: group_auth(request, "user")) #request defineras vid call, gruppnamnet är statiskt
 
 @router.get("/available/{selected_date}", response=List[AvailableProductsSchema], tags=["user-booking"])
-def list_available2(request, selected_date: str):
-    try:
-        selected_date = models.DateField().to_python(selected_date)
-    except ValueError:
-        raise HttpError(404, "Invalid date, dates need to be in the YYYY-MM-DD format")
-
-    available_list = Available.objects.filter(available_date=selected_date) #get all available products
-
-    hostproduct_dict = {}
-
-    for available in available_list: #create dict of available products sorted by host
-        if available.product.host in hostproduct_dict:
-            product = available.product
-            product.places_left = available.places_left
-            hostproduct_dict[available.product.host].append(available.product)
-        else:
-            product = available.product
-            product.places_left = available.places_left
-            hostproduct_dict[available.product.host] = [available.product]
-
-    
-    return [{"host": host, "products": products} for host, products in hostproduct_dict.items()]
-
-
-@router.get("/available/{selected_date}", response=List[AvailableProductsSchema], tags=["user-booking"])
 def list_available(request, selected_date: str):
     try:
         selected_date = models.DateField().to_python(selected_date)
