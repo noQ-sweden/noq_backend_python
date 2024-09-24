@@ -164,7 +164,7 @@ def get_available_places_all(request):
     # Return the full list of available products across all hosts
     return available_products
 
-@router.get("/guests/nights/count/{user_id}/{start_date}/{end_date}", response=UserShelterStayCountSchema, tags=["caseworker-frontpage"])
+@router.get("/guests/nights/count/{user_id}/{start_date}/{end_date}", response=UserShelterStayCountSchema, tags=["caseworker-user-shelter-stay"])
 def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date: str):
     try:
         start_date = date.fromisoformat(start_date)
@@ -175,13 +175,12 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
             start_date__lte=end_date,
             end_date__gte=start_date
         ).select_related(
-            'product__host__region'
-        ).prefetch_related(
-            'product__host__caseworkers'  
+            'product__host__region' 
         )
 
         total_nights = 0
         user_stay_counts = []
+        
         for booking in user_bookings:
             nights = (min(booking.end_date, end_date) - max(booking.start_date, start_date)).days
             if nights > 0:
@@ -197,7 +196,7 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
                     'region': {
                         'id': host.region.id,
                         'name': host.region.name
-                    }
+                    },
                 }
 
                 user_stay_counts.append(
@@ -217,7 +216,7 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
         return response_data
 
     except ValueError as ve:
-        return JsonResponse({'detail': "Something went wrong..."}, status=400)
+        return JsonResponse({'detail': f"Something went wrong: {str(ve)}"}, status=400)
 
     except Exception as e:
         return JsonResponse({'detail': "An internal error occurred. Please try again later."}, status=500)

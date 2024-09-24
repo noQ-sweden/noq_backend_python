@@ -72,8 +72,6 @@ class HostSchema(ModelSchema):
     """
 
     region: RegionSchema
-    caseworkers: Optional[List[int]] = None
-
 
     class Meta:
         model = Host
@@ -233,6 +231,19 @@ class InvoiceResponseSchema(ModelSchema):
         model = Invoice
         model_fields = ['id', 'host', 'amount', 'description', 'status', 'due_date', 'currency', 'invoice_number', 'vat', 'vat_rate', 'sale_date', 'seller_vat_number', 'buyer_vat_number', 'buyer_name', 'buyer_address']
         
+class ShelterHostSchema(ModelSchema):
+    """
+
+    Host schema för att utesluta caseworker
+
+    """
+
+    region: RegionSchema
+
+    class Meta:
+        model = Host
+        exclude = ("blocked_clients","users","caseworkers",)
+    
 class UserStaySummarySchema(Schema):
     """
     Sammanfattning av användarens övernattningar, inklusive användarens ID,
@@ -241,7 +252,7 @@ class UserStaySummarySchema(Schema):
     total_nights: int
     start_date: date
     end_date: date
-    host: HostSchema
+    host: ShelterHostSchema
 
 
 class UserShelterStayCountSchema(Schema):
