@@ -128,6 +128,11 @@ class Product(models.Model):
     TYPE_CHOICES = [
         ('room', 'Room'),
         ('woman-only', 'Woman Only'),
+        ('washingmachine', 'Washing Machine'),
+        ('hygieneproducts', 'Hygiene Products'),
+        ('breakfast', 'Breakfast'),
+        ('dinner', 'Dinner'),
+        ('storage', 'Storage'),
     ]
     ROOM_LOCATIONS = [
         ('Sovsal', 'Sovsal'),
