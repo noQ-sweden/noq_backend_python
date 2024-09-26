@@ -126,7 +126,7 @@ class TestCaseworkerHandleBookingApi(TestCase):
         # Connect host_user and host
         host = Host.objects.get(name="Host 1")
         caseworker_user = User.objects.get(username="user.caseworker@test.nu")
-        host.users.add(caseworker_user)
+        host.caseworkers.add(caseworker_user)
         host.save()
 
         # There should be 4 pending bookings to start with
@@ -173,7 +173,7 @@ class TestCaseworkerHandleBookingApi(TestCase):
         # Connect host_user and host
         host = Host.objects.get(name="Host 1")
         caseworker_user = User.objects.get(username="user.caseworker@test.nu")
-        host.users.add(caseworker_user)
+        host.caseworkers.add(caseworker_user)
         host.save()
 
         # There should be 4 pending bookings to start with

@@ -62,7 +62,7 @@ def get_pending_bookings(request, limiter: Optional[int] = None):  # Limiter exa
 
 @router.patch("/bookings/batch/accept", response={200: dict, 400: dict}, tags=["caseworker-manage-requests"])
 def batch_appoint_pending_booking(request, booking_ids: list[BookingUpdateSchema]):
-    hosts = Host.objects.filter(users=request.user)
+    hosts = Host.objects.filter(caseworkers=request.user)
     # Use a transaction to ensure all or nothing behavior
     with transaction.atomic():
         errors = []
@@ -83,7 +83,7 @@ def batch_appoint_pending_booking(request, booking_ids: list[BookingUpdateSchema
 
 @router.patch("/bookings/{booking_id}/accept", response=BookingSchema, tags=["caseworker-manage-requests"])
 def appoint_pending_booking(request, booking_id: int):
-    hosts = Host.objects.filter(users=request.user)
+    hosts = Host.objects.filter(caseworkers=request.user)
     booking = get_object_or_404(Booking, id=booking_id, product__host__in=hosts, status__description='pending')
 
     try:
@@ -96,7 +96,7 @@ def appoint_pending_booking(request, booking_id: int):
 
 @router.patch("/bookings/{booking_id}/decline", response=BookingSchema, tags=["caseworker-manage-requests"])
 def decline_pending_booking(request, booking_id: int):
-    hosts = Host.objects.filter(users=request.user)
+    hosts = Host.objects.filter(caseworkers=request.user)
     booking = get_object_or_404(Booking, id=booking_id, product__host__in=hosts, status__description='pending')
 
     try:
@@ -111,7 +111,7 @@ def decline_pending_booking(request, booking_id: int):
 # Bookings that have status checked_in can't be changed.
 @router.patch("/bookings/{booking_id}/setpending", response=BookingSchema, tags=["caseworker-manage-requests"])
 def set_booking_pending(request, booking_id: int):
-    hosts = Host.objects.filter(users=request.user)
+    hosts = Host.objects.filter(caseworkers=request.user)
     valid_statuses = ['accepted', 'declined']
     booking = get_object_or_404(Booking, id=booking_id, product__host__in=hosts, status__description__in=valid_statuses)
 
