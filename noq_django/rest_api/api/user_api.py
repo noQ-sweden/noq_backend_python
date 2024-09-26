@@ -61,9 +61,13 @@ def list_available(request, selected_date: str):
 
 @router.post("/request_booking", response=BookingSchema, tags=["user-booking"])
 def request_booking(request, booking_data: BookingPostSchema):
-
+    
     try:
         product = Product.objects.get(id=booking_data.product_id)
+        
+        if not product.bookable :
+            raise HttpError(404, "This product is not bookable.")
+    
         Available.objects.filter(product=product)
     except Available.DoesNotExist:
         raise HttpError(404, "Product is not available")

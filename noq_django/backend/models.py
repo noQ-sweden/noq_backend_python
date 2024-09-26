@@ -149,6 +149,7 @@ class Product(models.Model):
     requirements = models.ForeignKey(
         ProductRequirement, on_delete=models.CASCADE, null=True, blank=True
     )
+    bookable = models.BooleanField(default=True)
 
     class Meta:
         db_table = "product"
