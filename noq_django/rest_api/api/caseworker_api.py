@@ -47,7 +47,7 @@ router = Router(auth=lambda request: group_auth(request, "caseworker"))  # reque
 
 @router.get("/bookings/pending", response=List[BookingSchema], tags=["caseworker-manage-requests"])
 def get_pending_bookings(request, limiter: Optional[int] = None):  # Limiter example /pending?limiter=10 for 10 results, empty returns all
-    hosts = Host.objects.filter(users=request.user)
+    hosts = Host.objects.filter(caseworkers=request.user)
     bookings = []
     for host in hosts:
         host_bookings = Booking.objects.filter(product__host=host, status__description='pending')
