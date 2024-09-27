@@ -5,6 +5,7 @@ from django.db import transaction
 from datetime import datetime, timedelta, date
 from django.http import JsonResponse
 from backend.auth import group_auth
+from django.core.paginator import Paginator
 
 from typing import List, Dict, Optional
 from django.shortcuts import get_object_or_404
@@ -165,7 +166,7 @@ def get_available_places_all(request):
     return available_products
 
 @router.get("/guests/nights/count/{user_id}/{start_date}/{end_date}", response=UserShelterStayCountSchema, tags=["caseworker-user-shelter-stay"])
-def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date: str):
+def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date: str, page: int = 1, per_page: int = 20):
     try:
         start_date = date.fromisoformat(start_date)
         end_date = date.fromisoformat(end_date)
@@ -175,13 +176,19 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
             start_date__lte=end_date,
             end_date__gte=start_date
         ).select_related(
-            'product__host__region' 
+            'product__host__region'
+        ).only(
+            'start_date', 'end_date', 'product__host__id', 'product__host__name',
+            'product__host__street', 'product__host__postcode', 'product__host__city', 'product__host__region__id', 'product__host__region__name'
         )
+
+        paginator = Paginator(user_bookings, per_page)
+        user_stay_counts_page = paginator.get_page(page)
 
         total_nights = 0
         user_stay_counts = []
-        
-        for booking in user_bookings:
+
+        for booking in user_stay_counts_page:
             nights = (min(booking.end_date, end_date) - max(booking.start_date, start_date)).days
             if nights > 0:
                 total_nights += nights
@@ -208,10 +215,13 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
                     )
                 )
 
-        response_data = UserShelterStayCountSchema(
-            user_id=user_id,
-            user_stay_counts=user_stay_counts
-        )
+        response_data = {
+            "user_id": user_id,
+            "total_nights": total_nights,
+            "user_stay_counts": user_stay_counts,
+            "total_pages": paginator.num_pages,
+            "current_page": user_stay_counts_page.number,
+        }
 
         return response_data
 
