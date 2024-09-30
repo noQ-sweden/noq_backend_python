@@ -2,7 +2,13 @@ from django.db.models import Q
 from ninja import NinjaAPI, Schema, ModelSchema, Router
 from ninja.errors import HttpError
 from django.db import transaction
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+from django.http import JsonResponse
+from backend.auth import group_auth
+from django.core.paginator import Paginator
+
+from typing import List, Dict, Optional
+from django.shortcuts import get_object_or_404
 
 from backend.models import (
     Client,
@@ -35,19 +41,16 @@ from .api_schemas import (
     InvoiceResponseSchema,
     BookingUpdateSchema,
     ProductSchemaWithPlacesLeft,
+    UserStaySummarySchema,
+    UserShelterStayCountSchema
 )
 
-from backend.auth import group_auth
-
-from typing import List, Dict, Optional
-from django.shortcuts import get_object_or_404
-from datetime import date, timedelta
 
 router = Router(auth=lambda request: group_auth(request, "caseworker"))  # request defineras vid call, gruppnamnet är statiskt
 
 @router.get("/bookings/pending", response=List[BookingSchema], tags=["caseworker-manage-requests"])
 def get_pending_bookings(request, limiter: Optional[int] = None):  # Limiter example /pending?limiter=10 for 10 results, empty returns all
-    hosts = Host.objects.filter(users=request.user)
+    hosts = Host.objects.filter(caseworkers=request.user)
     bookings = []
     for host in hosts:
         host_bookings = Booking.objects.filter(product__host=host, status__description='pending')
@@ -62,7 +65,7 @@ def get_pending_bookings(request, limiter: Optional[int] = None):  # Limiter exa
 
 @router.patch("/bookings/batch/accept", response={200: dict, 400: dict}, tags=["caseworker-manage-requests"])
 def batch_appoint_pending_booking(request, booking_ids: list[BookingUpdateSchema]):
-    hosts = Host.objects.filter(users=request.user)
+    hosts = Host.objects.filter(caseworkers=request.user)
     # Use a transaction to ensure all or nothing behavior
     with transaction.atomic():
         errors = []
@@ -83,7 +86,7 @@ def batch_appoint_pending_booking(request, booking_ids: list[BookingUpdateSchema
 
 @router.patch("/bookings/{booking_id}/accept", response=BookingSchema, tags=["caseworker-manage-requests"])
 def appoint_pending_booking(request, booking_id: int):
-    hosts = Host.objects.filter(users=request.user)
+    hosts = Host.objects.filter(caseworkers=request.user)
     booking = get_object_or_404(Booking, id=booking_id, product__host__in=hosts, status__description='pending')
 
     try:
@@ -96,7 +99,7 @@ def appoint_pending_booking(request, booking_id: int):
 
 @router.patch("/bookings/{booking_id}/decline", response=BookingSchema, tags=["caseworker-manage-requests"])
 def decline_pending_booking(request, booking_id: int):
-    hosts = Host.objects.filter(users=request.user)
+    hosts = Host.objects.filter(caseworkers=request.user)
     booking = get_object_or_404(Booking, id=booking_id, product__host__in=hosts, status__description='pending')
 
     try:
@@ -111,7 +114,7 @@ def decline_pending_booking(request, booking_id: int):
 # Bookings that have status checked_in can't be changed.
 @router.patch("/bookings/{booking_id}/setpending", response=BookingSchema, tags=["caseworker-manage-requests"])
 def set_booking_pending(request, booking_id: int):
-    hosts = Host.objects.filter(users=request.user)
+    hosts = Host.objects.filter(caseworkers=request.user)
     valid_statuses = ['accepted', 'declined']
     booking = get_object_or_404(Booking, id=booking_id, product__host__in=hosts, status__description__in=valid_statuses)
 
@@ -161,3 +164,69 @@ def get_available_places_all(request):
     
     # Return the full list of available products across all hosts
     return available_products
+
+@router.get("/guests/nights/count/{user_id}/{start_date}/{end_date}", response=UserShelterStayCountSchema, tags=["caseworker-user-shelter-stay"])
+def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date: str, page: int = 1, per_page: int = 20):
+    try:
+        start_date = date.fromisoformat(start_date)
+        end_date = date.fromisoformat(end_date)
+
+        user_bookings = Booking.objects.filter(
+            user_id=user_id,
+            start_date__lte=end_date,
+            end_date__gte=start_date
+        ).select_related(
+            'product__host__region'
+        ).only(
+            'start_date', 'end_date', 'product__host__id', 'product__host__name',
+            'product__host__street', 'product__host__postcode', 'product__host__city', 'product__host__region__id', 'product__host__region__name'
+        )
+
+        paginator = Paginator(user_bookings, per_page)
+        user_stay_counts_page = paginator.get_page(page)
+
+        total_nights = 0
+        user_stay_counts = []
+
+        for booking in user_stay_counts_page:
+            nights = (min(booking.end_date, end_date) - max(booking.start_date, start_date)).days
+            if nights > 0:
+                total_nights += nights
+
+                host = booking.product.host  
+                host_data = {
+                    'id': host.id,
+                    'name': host.name,
+                    'street': host.street,
+                    'postcode': host.postcode,
+                    'city': host.city,
+                    'region': {
+                        'id': host.region.id,
+                        'name': host.region.name
+                    },
+                }
+
+                user_stay_counts.append(
+                    UserStaySummarySchema(
+                        total_nights=nights,
+                        start_date=booking.start_date.isoformat(),
+                        end_date=booking.end_date.isoformat(),
+                        host=host_data
+                    )
+                )
+
+        response_data = {
+            "user_id": user_id,
+            "total_nights": total_nights,
+            "user_stay_counts": user_stay_counts,
+            "total_pages": paginator.num_pages,
+            "current_page": user_stay_counts_page.number,
+        }
+
+        return response_data
+
+    except ValueError as ve:
+        return JsonResponse({'detail': "Something went wrong"}, status=400)
+
+    except Exception as e:
+        return JsonResponse({'detail': "An internal error occurred. Please try again later."}, status=500)
