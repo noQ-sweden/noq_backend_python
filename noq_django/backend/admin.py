@@ -44,7 +44,7 @@ class CaseworkerInline(admin.TabularInline):
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    fields = (("first_name", "last_name"), "gender", "street", ("postcode", "city"), "region")
+    fields = (("user", "unokod"), ("first_name", "last_name"), "gender", ("street", "postcode", "city", "phone"), "region")
     list_display = ("first_name", "last_name", "gender", "street", "city", "region")
     list_filter = ("city","region")
     ordering = ("first_name",)
