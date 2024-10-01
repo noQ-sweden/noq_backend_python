@@ -40,6 +40,8 @@ class UserSchema(ModelSchema):
     """
 
     region: RegionSchema
+    first_name: str # Add first name
+    last_name: str # Add last name
 
     class Meta:
         model = Client
@@ -204,6 +206,8 @@ class LoginSchema(Schema):
     message: str
     groups: Optional[List[str]] = None
     host: Optional[HostSchema] = None
+    first_name: Optional[str] = None # add first name
+    last_name: Optional[str] = None # add last name
 
 class InvoiceCreateSchema(Schema):
     """

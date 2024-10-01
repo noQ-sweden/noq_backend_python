@@ -8,6 +8,57 @@ from backend.models import (Host, Client, Product, Region, Booking,
 from datetime import datetime, timedelta
 from .test_data import TestData
 
+# New Test Class for Login functionality
+class TestUserApi(TestCase):
+    def setUp(self):
+        # Create a user for login testing
+        self.test_user = User.objects.create_user(
+            username="testuser",
+            password="testpassword",
+            first_name="Test",
+            last_name="User"
+        )
+        self.client = self.client_class()
+
+    def test_user_login(self):
+        # Simulate a login request
+        url = "/api/login/"
+        data = {
+            "email": "testuser",
+            "password": "testpassword"
+        }
+        response = self.client.post(url, data, content_type="application/json")
+        
+        # Check the response code is 200 (successful login)
+        self.assertEqual(response.status_code, 200)
+        
+        # Parse the response content
+        data = json.loads(response.content)
+
+        # Parse the response for debbugin purposes
+        print("Login response data:", data)
+        
+        # Check if the login was successful
+        self.assertEqual(data["login_status"], True)
+        
+        # Verify that the correct first and last name are returned
+        self.assertEqual(data["first_name"], "Test")
+        self.assertEqual(data["last_name"], "User")
+
+    def tearDown(self):
+        # Cleanup the created user
+        self.test_user.delete()
+
+# Existing Test Class for Product API
+class TestProductsApi(TestCase):
+    t_data = None
+
+    def setUp(self):
+        # Add data to the db
+        self.t_data = TestData()
+        # log in host user for the tests
+        self.t_data.user_login(user_group="user", nr_of_users=2)
+
 class TestProductsApi(TestCase):
     t_data = None
 
