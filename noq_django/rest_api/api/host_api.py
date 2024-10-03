@@ -123,7 +123,8 @@ def get_bookings_by_date(request, limiter: Optional[
     current_date = datetime.today().date()
     bookings = Booking.objects.filter(
         product__host=host,
-        start_date=current_date)
+        start_date=current_date
+    ).exclude(status__description='checked_in')
 
     if limiter is not None and limiter > 0:
         return bookings[:limiter]
@@ -138,7 +139,8 @@ def get_bookings_by_date(request, limiter: Optional[
     current_date = datetime.today().date()
     bookings = Booking.objects.filter(
         product__host=host,
-        end_date=current_date)
+        end_date=current_date,
+        status__description='checked_in')
 
     if limiter is not None and limiter > 0:
         return bookings[:limiter]
