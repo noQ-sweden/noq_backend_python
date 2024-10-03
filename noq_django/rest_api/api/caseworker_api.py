@@ -6,9 +6,10 @@ from datetime import datetime, timedelta, date
 from django.http import JsonResponse
 from backend.auth import group_auth
 from django.core.paginator import Paginator
-
+from django.contrib.auth.models import User, Group
 from typing import List, Dict, Optional
 from django.shortcuts import get_object_or_404
+from django.db import transaction, IntegrityError
 
 from backend.models import (
     Client,
@@ -42,7 +43,8 @@ from .api_schemas import (
     BookingUpdateSchema,
     ProductSchemaWithPlacesLeft,
     UserStaySummarySchema,
-    UserShelterStayCountSchema
+    UserShelterStayCountSchema,
+    UserRegistrationSchema
 )
 
 
@@ -230,3 +232,73 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
 
     except Exception as e:
         return JsonResponse({'detail': "An internal error occurred. Please try again later."}, status=500)
+
+
+"""
+Register a new user and client in the system.
+
+This function handles the registration of a new user by checking for existing users with the same email, creating a user and client record, and managing any errors that may occur during the process. It ensures that all operations are performed atomically to maintain data integrity.
+
+Args:
+    request: The HTTP request object.
+    user_data (UserRegistrationSchema): The data required for user registration, including email, password, and personal details.
+
+Returns:
+    tuple: A tuple containing the HTTP status code and a dictionary with either a success message and user ID or an error message.
+
+Raises:
+    ValueError: If the specified region does not exist in the database.
+    IntegrityError: If there is an integrity issue during user or client creation.
+"""
+
+@router.post("/register", response={201: dict, 400: dict}, tags=["caseworker-register-new-user"])
+def register_user(request, user_data: UserRegistrationSchema):
+    if Client.objects.filter(email=user_data.email).exists():
+        return 400, {"error": "Användare med denna e-postadress finns redan."}
+
+    try:
+        # för att säkerställa att antingen allt lyckas eller rullas tillbaka om något misslyckas.
+        with transaction.atomic():  
+
+            region_obj = Region.objects.filter(id=user_data.region).first()
+            if not region_obj:
+                raise ValueError("Regionen finns inte i databasen.")
+
+            userClient = User.objects.create_user(
+                username=user_data.email,
+                password=user_data.password,
+                first_name=user_data.first_name,
+                last_name=user_data.last_name
+            )
+
+            group_obj, created = Group.objects.get_or_create(name="user")
+            userClient.groups.add(group_obj)
+
+            user = Client(
+                user=userClient,
+                first_name=user_data.first_name,
+                last_name=user_data.last_name,
+                region=region_obj,
+                phone=user_data.phone,
+                email=user_data.email,
+                gender=user_data.gender, 
+                street=user_data.street,
+                postcode=user_data.postcode,  
+                city=user_data.city,
+                country=user_data.country,
+                day_of_birth=user_data.day_of_birth,
+                personnr_lastnr=user_data.personnr_lastnr or "",
+            )
+
+            user.save()
+
+    except IntegrityError:
+        # Om något går fel under transaktionen, rulla tillbaka allt
+        return 400, {"error": "Något gick fel: En användare eller klient kunde inte skapas."}
+    except ValueError as e:
+        return 400, {"error": f"Något gick fel: {str(e)}"}
+    except Exception as e:
+        return 400, {"error": f"Något gick fel: {str(e)}"}
+
+    return 201, {"success": "Användare registrerad!", "user_id": user.id}
+
