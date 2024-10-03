@@ -128,6 +128,11 @@ class Product(models.Model):
     TYPE_CHOICES = [
         ('room', 'Room'),
         ('woman-only', 'Woman Only'),
+        ('washingmachine', 'Washing Machine'),
+        ('hygieneproducts', 'Hygiene Products'),
+        ('breakfast', 'Breakfast'),
+        ('dinner', 'Dinner'),
+        ('storage', 'Storage'),
     ]
     ROOM_LOCATIONS = [
         ('Sovsal', 'Sovsal'),
@@ -139,11 +144,12 @@ class Product(models.Model):
     description = models.CharField(max_length=100)
     total_places = models.IntegerField()
     host = models.ForeignKey(Host, on_delete=models.CASCADE, blank=True)
-    type = models.CharField(max_length=12, choices=TYPE_CHOICES)
+    type = models.CharField(max_length=16, choices=TYPE_CHOICES)
     room_location = models.CharField(max_length=20, choices=ROOM_LOCATIONS)  
     requirements = models.ForeignKey(
         ProductRequirement, on_delete=models.CASCADE, null=True, blank=True
     )
+    bookable = models.BooleanField(default=True)
 
     class Meta:
         db_table = "product"
