@@ -239,6 +239,32 @@ def set_booking_pending(request, booking_id: int):
         raise HttpError(404, detail="Booking status does not exist.")
 
 
+@router.patch("/bookings/{booking_id}/checkin", response=BookingSchema, tags=["host-manage-bookings"])
+def set_booking_pending(request, booking_id: int):
+    host = Host.objects.get(users=request.user)
+    booking = get_object_or_404(Booking, id=booking_id, product__host=host)
+
+    try:
+        booking.status = BookingStatus.objects.get(description='checked_in')
+        booking.save()
+        return booking
+    except BookingStatus.DoesNotExist:
+        raise HttpError(404, detail="Booking status does not exist.")
+
+
+@router.patch("/bookings/{booking_id}/checkout", response=BookingSchema, tags=["host-manage-bookings"])
+def set_booking_pending(request, booking_id: int):
+    host = Host.objects.get(users=request.user)
+    booking = get_object_or_404(Booking, id=booking_id, product__host=host)
+
+    try:
+        booking.status = BookingStatus.objects.get(description='completed')
+        booking.save()
+        return booking
+    except BookingStatus.DoesNotExist:
+        raise HttpError(404, detail="Booking status does not exist.")
+
+
 # Mall för List
 @router.get("/hosts", response=List[HostSchema], tags=["Hosts"])
 def host_list(request):
