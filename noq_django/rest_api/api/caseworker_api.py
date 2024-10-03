@@ -11,7 +11,6 @@ from django.contrib.auth.models import User, Group
 from typing import List, Dict, Optional
 from django.shortcuts import get_object_or_404
 from django.db import transaction, IntegrityError
-import logging
 
 from backend.models import (
     Client,
@@ -304,8 +303,6 @@ def register_user(request, user_data: UserRegistrationSchema):
 
     return 201, {"success": "Användare registrerad!", "user_id": user.id}
 
-logger = logging.getLogger(__name__)
-
 
 """
 Deletes a user from the system using their email address. 
@@ -340,7 +337,5 @@ def delete_user(request, email: str):
         
         return 200, {"message": "Användaren har tagits bort."}
 
-    except Exception as e:
-        logger.error(f"Något gick fel vid radering av användaren med e-post {email}: {str(e)}")
-        
+    except Exception as e:        
         return 500, {"error": "Ett internt fel inträffade, vänligen försök igen senare."}
