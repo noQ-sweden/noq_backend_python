@@ -1,6 +1,7 @@
 from django.db.models import Q
 from ninja import NinjaAPI, Schema, ModelSchema, Router
 from ninja.errors import HttpError
+from ninja.responses import Response
 from django.db import transaction
 from datetime import datetime, timedelta, date
 from django.http import JsonResponse
@@ -10,6 +11,7 @@ from django.contrib.auth.models import User, Group
 from typing import List, Dict, Optional
 from django.shortcuts import get_object_or_404
 from django.db import transaction, IntegrityError
+import logging
 
 from backend.models import (
     Client,
@@ -251,7 +253,7 @@ Raises:
     IntegrityError: If there is an integrity issue during user or client creation.
 """
 
-@router.post("/register", response={201: dict, 400: dict}, tags=["caseworker-register-new-user"])
+@router.post("/register", response={201: dict, 400: dict}, tags=["caseworker-register-user"])
 def register_user(request, user_data: UserRegistrationSchema):
     if Client.objects.filter(email=user_data.email).exists():
         return 400, {"error": "Användare med denna e-postadress finns redan."}
@@ -302,3 +304,43 @@ def register_user(request, user_data: UserRegistrationSchema):
 
     return 201, {"success": "Användare registrerad!", "user_id": user.id}
 
+logger = logging.getLogger(__name__)
+
+
+"""
+Deletes a user from the system using their email address. 
+The function verifies the user's existence and group membership before proceeding with the deletion.
+
+Args:
+    request: The HTTP request object.
+    email (str): The email address of the user to be deleted.
+
+Returns:
+    tuple: A tuple containing the HTTP status code and a dictionary with a message or error.
+
+Raises:
+    Exception: Logs an error and returns a 500 status code if an internal error occurs.
+
+Examples:
+    DELETE /delete/user?email=user@example.com
+"""
+
+@router.delete("/delete/user", response={200: dict, 400: dict, 500: dict}, tags=["caseworker-delete-user"])
+def delete_user(request, email: str):
+    try:
+        user = User.objects.filter(username=email).first()
+
+        if not user:
+            return 400, {"error": "Användare finns inte."}
+
+        if not user.groups.filter(name="user").exists():
+            return 400, {"error": "Användaren tillhör inte gruppen 'user'."}
+
+        user.delete()
+        
+        return 200, {"message": "Användaren har tagits bort."}
+
+    except Exception as e:
+        logger.error(f"Något gick fel vid radering av användaren med e-post {email}: {str(e)}")
+        
+        return 500, {"error": "Ett internt fel inträffade, vänligen försök igen senare."}
