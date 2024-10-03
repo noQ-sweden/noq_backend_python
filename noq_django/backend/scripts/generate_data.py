@@ -31,8 +31,9 @@ def get_cities(index: int):
     return list[index][1]
 
 
-def make_user(group: str, is_test_user: bool) -> User:  # användargrupp, användarnamn
+def make_user(group: str, is_test_user: bool, first_name: str = None, last_name: str = None) -> User:
     faker = Faker("sv_SE")
+
     if is_test_user:
         password = "P4ssw0rd_for_Te5t+User"
         email = "user." + group + "@test.nu"
@@ -354,9 +355,9 @@ def run(*args):
         print("HOSTS:", antal_hosts, "BOOKINGS:", antal_bookings)
     add_region(5)
     add_hosts(10)
+    add_caseworkers(1)
     add_products(6)
     add_users(16)
-    add_caseworkers(1)
 
     add_booking_statuses()
     add_product_bookings(40, 7, v2_arg)
