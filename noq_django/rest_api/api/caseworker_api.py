@@ -11,7 +11,6 @@ from django.contrib.auth.models import User, Group
 from typing import List, Dict, Optional
 from django.shortcuts import get_object_or_404
 from django.db import transaction, IntegrityError
-
 from backend.models import (
     Client,
     Host,
@@ -239,25 +238,28 @@ Get information about a user with user ID
 """
 @router.get("/user/{user_id}", response=UserRegistrationSchema, tags=["caseworker-GET-user"])
 def get_user_information(request, user_id: int):
-    user = get_object_or_404(Client, user_id=user_id)
+    user = get_object_or_404(User, id=user_id)  
+    
+    client = get_object_or_404(Client, user=user)  
     
     user_data = UserRegistrationSchema(
-        first_name=user.first_name,
-        last_name=user.last_name,
-        email=user.email,
-        password=user.user.password,
-        phone=user.phone,
-        gender=user.gender,
-        street=user.street,
-        postcode=user.postcode,
-        city=user.city,
-        region=user.region.id,
-        country=user.country,
-        day_of_birth=user.day_of_birth.isoformat(),
-        personnr_lastnr=user.personnr_lastnr
+        first_name=client.first_name,
+        last_name=client.last_name,
+        email=client.email,
+        username=user.username,
+        phone=client.phone,
+        gender=client.gender,
+        street=client.street,
+        postcode=client.postcode,
+        city=client.city,
+        region=client.region.id if client.region else None, 
+        country=client.country,
+        day_of_birth=client.day_of_birth.isoformat() if client.day_of_birth else None,
+        personnr_lastnr=client.personnr_lastnr
     )
 
     return user_data
+
 
 """
 Register a new user and client in the system.
@@ -276,7 +278,8 @@ def register_user(request, user_data: UserRegistrationSchema):
                 raise ValueError("Regionen finns inte i databasen.")
 
             userClient = User.objects.create_user(
-                username=user_data.email,
+                email=user_data.email,
+                username=user_data.username,
                 password=user_data.password,
                 first_name=user_data.first_name,
                 last_name=user_data.last_name
@@ -303,25 +306,25 @@ def register_user(request, user_data: UserRegistrationSchema):
 
             user.save()
 
-    except IntegrityError:
-        # Om något går fel under transaktionen, rulla tillbaka allt
+    except IntegrityError as e:
+         # Om något går fel under transaktionen, rulla tillbaka allt
         return 400, {"error": "Något gick fel: En användare eller klient kunde inte skapas."}
     except ValueError as e:
-        return 400, {"error": f"Något gick fel: {str(e)}"}
+        return 400, {"error": "Något gick fel."}
     except Exception as e:
-        return 400, {"error": f"Något gick fel: {str(e)}"}
+        return 400, {"error": "Något gick fel."}
 
-    return 201, {"success": "Användare registrerad!", "user_id": user.id}
+    return 201, {"success": "Användare registrerad!", "user_id": userClient.id}
 
 
 """
-Deletes a user from the system using their email address. 
+Deletes a user from the system using their ID. 
 The function verifies the user's existence and group membership before proceeding with the deletion.
 """
 @router.delete("/delete/user", response={200: dict, 400: dict, 500: dict}, tags=["caseworker-DELETE-user"])
-def delete_user(request, email: str):
+def delete_user(request, id: int):
     try:
-        user = User.objects.filter(username=email).first()
+        user = User.objects.filter(id=id).first()
 
         if not user:
             return 400, {"error": "Användare finns inte."}
@@ -336,38 +339,70 @@ def delete_user(request, email: str):
     except Exception as e:        
         return 500, {"error": "Ett internt fel inträffade, vänligen försök igen senare."}
 
-# Endpoint för att uppdatera brukare
+"""
+Updates the user and client information based on the provided payload. 
+This function checks if the user belongs to the 'user' group and updates their details accordingly.
+"""
 @router.put("/update/user/{user_id}", response={200: UserRegistrationSchema, 400: dict, 404: dict}, tags=["caseworker-UPDATE-user"])
 def update_user(request, user_id: int, payload: UserRegistrationSchema):
     try:
-        # Hämta användaren baserat på user_id
         user = User.objects.get(id=user_id)
 
-        # Kontrollera om användaren tillhör gruppen "user"
         if not user.groups.filter(name="user").exists():
             return 400, {"error": "Användaren tillhör inte gruppen 'user'."}
 
-        # Uppdatera användarens fält
-        user.email = payload.email
-        if payload.password:
-            user.set_password(payload.password)  # Uppdatera lösenord om det finns i payload
-        user.first_name = payload.first_name
-        user.last_name = payload.last_name
-        user.profile.phone = payload.phone
-        user.profile.gender = payload.gender
-        user.profile.street = payload.street
-        user.profile.postcode = payload.postcode
-        user.profile.city = payload.city
-        user.profile.country = payload.country
-        user.profile.region_id = payload.region  # Använd ID för region
-        user.profile.day_of_birth = payload.day_of_birth
-        user.profile.personnr_lastnr = payload.personnr_lastnr
+        client = Client.objects.get(user=user)
 
-        # Spara de uppdaterade uppgifterna
-        user.save()
+        if payload.email is not None and client.email != payload.email:
+            client.email = payload.email
+            user.email = payload.email 
+        
+        if payload.username is not None and client.user.username != payload.username:
+            client.user.username = payload.username
+            user.username = payload.username
+            
+        if payload.first_name is not None and client.first_name != payload.first_name:
+            client.first_name = payload.first_name
+            user.first_name = payload.first_name  
+            
+        if payload.last_name is not None and client.last_name != payload.last_name:
+            client.last_name = payload.last_name
+            
+        if payload.phone is not None and client.phone != payload.phone:
+            client.phone = payload.phone
+            
+        if payload.gender is not None and client.gender != payload.gender:
+            client.gender = payload.gender
+            
+        if payload.street is not None and client.street != payload.street:
+            client.street = payload.street
+            
+        if payload.postcode is not None and client.postcode != payload.postcode:
+            client.postcode = payload.postcode
+            
+        if payload.city is not None and client.city != payload.city:
+            client.city = payload.city
+            
+        if payload.country is not None and client.country != payload.country:
+            client.country = payload.country
+            
+        if payload.region is not None and client.region_id != payload.region:
+            client.region_id = payload.region
+            
+        if payload.day_of_birth is not None and client.day_of_birth != payload.day_of_birth:
+            client.day_of_birth = payload.day_of_birth
+            
+        if payload.personnr_lastnr is not None and client.personnr_lastnr != payload.personnr_lastnr:
+            client.personnr_lastnr = payload.personnr_lastnr
 
-        # Returnera hela användarobjektet
+        user.save()  
+        client.save()  
+
         return 200, payload
 
     except User.DoesNotExist:
         return 404, {"error": "Användaren med angivet ID finns inte."}
+    except Client.DoesNotExist:
+        return 404, {"error": "Kunden som är kopplad till användaren finns inte."}
+    except Exception as e:
+        return 400, {"error"}

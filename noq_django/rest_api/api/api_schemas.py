@@ -53,7 +53,8 @@ class UserRegistrationSchema(Schema):
     schema för att registrera en ny brukare
     """
     email: str
-    password: str
+    username: str
+    password: Optional[str] = None
     first_name: str
     last_name: str
     phone: str
