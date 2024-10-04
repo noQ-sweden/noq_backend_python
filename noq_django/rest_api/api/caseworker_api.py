@@ -234,24 +234,34 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
     except Exception as e:
         return JsonResponse({'detail': "An internal error occurred. Please try again later."}, status=500)
 
+"""
+Get information about a user with user ID
+"""
+@router.get("/user/{user_id}", response=UserRegistrationSchema, tags=["caseworker-GET-user"])
+def get_user_information(request, user_id: int):
+    user = get_object_or_404(Client, user_id=user_id)
+    
+    user_data = UserRegistrationSchema(
+        first_name=user.first_name,
+        last_name=user.last_name,
+        email=user.email,
+        password=user.user.password,
+        phone=user.phone,
+        gender=user.gender,
+        street=user.street,
+        postcode=user.postcode,
+        city=user.city,
+        region=user.region.id,
+        country=user.country,
+        day_of_birth=user.day_of_birth.isoformat(),
+        personnr_lastnr=user.personnr_lastnr
+    )
+
+    return user_data
 
 """
 Register a new user and client in the system.
-
-This function handles the registration of a new user by checking for existing users with the same email, creating a user and client record, and managing any errors that may occur during the process. It ensures that all operations are performed atomically to maintain data integrity.
-
-Args:
-    request: The HTTP request object.
-    user_data (UserRegistrationSchema): The data required for user registration, including email, password, and personal details.
-
-Returns:
-    tuple: A tuple containing the HTTP status code and a dictionary with either a success message and user ID or an error message.
-
-Raises:
-    ValueError: If the specified region does not exist in the database.
-    IntegrityError: If there is an integrity issue during user or client creation.
 """
-
 @router.post("/register", response={201: dict, 400: dict}, tags=["caseworker-register-user"])
 def register_user(request, user_data: UserRegistrationSchema):
     if Client.objects.filter(email=user_data.email).exists():
@@ -307,22 +317,8 @@ def register_user(request, user_data: UserRegistrationSchema):
 """
 Deletes a user from the system using their email address. 
 The function verifies the user's existence and group membership before proceeding with the deletion.
-
-Args:
-    request: The HTTP request object.
-    email (str): The email address of the user to be deleted.
-
-Returns:
-    tuple: A tuple containing the HTTP status code and a dictionary with a message or error.
-
-Raises:
-    Exception: Logs an error and returns a 500 status code if an internal error occurs.
-
-Examples:
-    DELETE /delete/user?email=user@example.com
 """
-
-@router.delete("/delete/user", response={200: dict, 400: dict, 500: dict}, tags=["caseworker-delete-user"])
+@router.delete("/delete/user", response={200: dict, 400: dict, 500: dict}, tags=["caseworker-DELETE-user"])
 def delete_user(request, email: str):
     try:
         user = User.objects.filter(username=email).first()
@@ -339,3 +335,39 @@ def delete_user(request, email: str):
 
     except Exception as e:        
         return 500, {"error": "Ett internt fel inträffade, vänligen försök igen senare."}
+
+# Endpoint för att uppdatera brukare
+@router.put("/update/user/{user_id}", response={200: UserRegistrationSchema, 400: dict, 404: dict}, tags=["caseworker-UPDATE-user"])
+def update_user(request, user_id: int, payload: UserRegistrationSchema):
+    try:
+        # Hämta användaren baserat på user_id
+        user = User.objects.get(id=user_id)
+
+        # Kontrollera om användaren tillhör gruppen "user"
+        if not user.groups.filter(name="user").exists():
+            return 400, {"error": "Användaren tillhör inte gruppen 'user'."}
+
+        # Uppdatera användarens fält
+        user.email = payload.email
+        if payload.password:
+            user.set_password(payload.password)  # Uppdatera lösenord om det finns i payload
+        user.first_name = payload.first_name
+        user.last_name = payload.last_name
+        user.profile.phone = payload.phone
+        user.profile.gender = payload.gender
+        user.profile.street = payload.street
+        user.profile.postcode = payload.postcode
+        user.profile.city = payload.city
+        user.profile.country = payload.country
+        user.profile.region_id = payload.region  # Använd ID för region
+        user.profile.day_of_birth = payload.day_of_birth
+        user.profile.personnr_lastnr = payload.personnr_lastnr
+
+        # Spara de uppdaterade uppgifterna
+        user.save()
+
+        # Returnera hela användarobjektet
+        return 200, payload
+
+    except User.DoesNotExist:
+        return 404, {"error": "Användaren med angivet ID finns inte."}
