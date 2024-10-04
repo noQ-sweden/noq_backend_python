@@ -227,6 +227,7 @@ def add_booking_statuses():
         {"id": State.IN_QUEUE, "description": "in_queue"},
         {"id": State.RESERVED, "description": "reserved"},
         {"id": State.CONFIRMED, "description": "confirmed"},
+        {"id": State.ADVISED_AGAINST, "description": "advised_against"},
     ]
 
     for status in statuses:

@@ -103,6 +103,7 @@ class test_Booking(TestCase):
             BookingStatus(id=State.IN_QUEUE, description="in_queue"),
             BookingStatus(id=State.RESERVED, description="reserved"),
             BookingStatus(id=State.CONFIRMED, description="confirmed"),
+            BookingStatus(id=State.ADVISED_AGAINST, description="advised_against"),
         ])
 
     # Booking a product with valid data saves the booking and updates availability

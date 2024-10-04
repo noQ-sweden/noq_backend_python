@@ -17,6 +17,7 @@ class State(IntEnum):
     RESERVED = 6
     CONFIRMED = 7
     COMPLETED = 8
+    ADVISED_AGAINST = 9
 
 class Region(models.Model):
     name = models.CharField(max_length=80)
@@ -263,7 +264,7 @@ class Booking(models.Model):
         # Check if there is free places available for the booking period
         # - Booking count is only valid if booking has status pending
         # - in_queue or declined will not book a place
-        # - accepted, reserved, confirmed or checked_in already have
+        # - accepted, advised_against, reserved, confirmed or checked_in already have
         #   a booked place
         if self.status.id == State.PENDING:
             bookings_per_date = self.bookings_count_per_date()
