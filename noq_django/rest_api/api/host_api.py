@@ -177,9 +177,10 @@ def batch_appoint_pending_booking(request, booking_ids: list[BookingUpdateSchema
         errors = []
         for item in booking_ids:
             booking_id = item.booking_id
-            booking = get_object_or_404(Booking, id=booking_id, product__host__in=hosts, status__description='pending')
+            status_list = ['pending', 'accepted']
+            booking = get_object_or_404(Booking, id=booking_id, product__host__in=hosts, status__description__in=status_list)
             try:
-                booking.status = BookingStatus.objects.get(description='accepted')
+                booking.status = BookingStatus.objects.get(description='reserved')
                 booking.save()
             except Exception as e:
                 # Collect errors for any failed updates
