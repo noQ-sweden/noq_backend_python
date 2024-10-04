@@ -67,7 +67,7 @@ def request_booking(request, booking_data: BookingPostSchema):
     try:
         product = Product.objects.get(id=booking_data.product_id)
         
-        if not product.bookable :
+        if not product.bookable:
             raise HttpError(422, "This product is not bookable.")
     
         Available.objects.filter(product=product)

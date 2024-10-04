@@ -250,10 +250,11 @@ class Booking(models.Model):
                     code="woman-only",
                 )
 
+        status_list = ['completed', 'declined']
         # Check if there is another booking for the same user and date
         existing_booking = Booking.objects.filter(
             user=self.user, start_date=self.start_date
-        ).first()
+        ).exclude(status__description__in=status_list).first()
 
         if existing_booking and self.id != existing_booking.id:
             raise ValidationError(
@@ -295,6 +296,7 @@ class Booking(models.Model):
                 & Q(end_date__gt=date_time)
                 & ~Q(status=State.DECLINED)
                 & ~Q(status=State.IN_QUEUE)
+                & ~Q(status=State.COMPLETED)
             ).count()
             date = f"{date_time:%Y-%m-%d}"
             booking_counts[date] = count

@@ -153,7 +153,7 @@ def get_bookings_by_date(request, limiter: Optional[
 def get_pending_bookings(request, limiter: Optional[
     int] = None):  # Limiter example /pending?limiter=10 for 10 results, empty returns all
     host = Host.objects.get(users=request.user)
-    status_list = ['pending', 'accepted']
+    status_list = ['pending', 'accepted', 'advised_against']
     bookings = Booking.objects.filter(product__host=host, status__description__in=status_list)
 
     if limiter is not None and limiter > 0:
@@ -177,7 +177,7 @@ def batch_appoint_pending_booking(request, booking_ids: list[BookingUpdateSchema
         errors = []
         for item in booking_ids:
             booking_id = item.booking_id
-            status_list = ['pending', 'accepted']
+            status_list = ['pending', 'accepted', 'advised_against']
             booking = get_object_or_404(Booking, id=booking_id, product__host__in=hosts, status__description__in=status_list)
             try:
                 booking.status = BookingStatus.objects.get(description='reserved')
@@ -194,7 +194,7 @@ def batch_appoint_pending_booking(request, booking_ids: list[BookingUpdateSchema
 @router.patch("/pending/{booking_id}/appoint", response=BookingSchema, tags=["host-manage-requests"])
 def appoint_pending_booking(request, booking_id: int):
     host = Host.objects.get(users=request.user)
-    status_list = ['pending', 'accepted']
+    status_list = ['pending', 'accepted', 'advised_against']
     booking = get_object_or_404(Booking, id=booking_id, product__host=host, status__description__in=status_list)
 
     try:
@@ -208,7 +208,8 @@ def appoint_pending_booking(request, booking_id: int):
 @router.patch("/pending/{booking_id}/decline", response=BookingSchema, tags=["host-manage-requests"])
 def decline_pending_booking(request, booking_id: int):
     host = Host.objects.get(users=request.user)
-    booking = get_object_or_404(Booking, id=booking_id, product__host=host, status__description='pending')
+    status_list = ['pending', 'accepted', 'advised_against']
+    booking = get_object_or_404(Booking, id=booking_id, product__host=host, status__description__in=status_list)
 
     try:
         booking.status = BookingStatus.objects.get(description='declined')

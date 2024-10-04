@@ -31,7 +31,7 @@ def get_cities(index: int):
     return list[index][1]
 
 
-def make_user(group: str, is_test_user: bool) -> User:  # användargrupp, användarnamn
+def make_user(group: str, is_test_user: bool, first_name: str, last_name: str) -> User:  # användargrupp, användarnamn
     faker = Faker("sv_SE")
     if is_test_user:
         password = "P4ssw0rd_for_Te5t+User"

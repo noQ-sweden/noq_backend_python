@@ -107,7 +107,7 @@ def decline_pending_booking(request, booking_id: int):
         booking.save()
         return booking
     except BookingStatus.DoesNotExist:
-        raise HttpError(404, detail="Booking status does not exist.")
+        raise HttpError(404, "Booking status does not exist.")
 
 
 # This API can be used to undo previous decision for accept or decline
@@ -123,7 +123,7 @@ def set_booking_pending(request, booking_id: int):
         booking.save()
         return booking
     except BookingStatus.DoesNotExist:
-        raise HttpError(404, detail="Booking status does not exist.")
+        raise HttpError(404, "Booking status does not exist.")
     
 
 @router.get("/available_all", response=List[ProductSchemaWithPlacesLeft], tags=["caseworker-available"])
