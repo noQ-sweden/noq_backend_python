@@ -64,8 +64,41 @@ def list_available(request, selected_date: str):
 def create_booking(request, booking_data: BookingPostSchema):
     try:
         product = Product.objects.get(id=booking_data.product_id)
-        available = Available.objects.filter(product=product, available_date__range=[booking_data.start_date, booking_data.end_date]).exists()
-        if not available:
+        is_available = Available.objects.filter(product=product, available_date__range=[booking_data.start_date, booking_data.end_date]).exists()
+        if not is_available:
+            raise Available.DoesNotExist()
+    except Product.DoesNotExist:
+        raise HttpError(404, "Product does not exist")
+    except Available.DoesNotExist:
+        raise HttpError(404, "Product is not available for the selected dates")
+
+    user = Client.objects.get(user=request.user)
+    booking = Booking(
+        start_date=booking_data.start_date,
+        end_date=booking_data.end_date,
+        product=product,
+        user=user,
+        status=BookingStatus.objects.get(description="pending")
+    )
+    
+    try:
+        booking.full_clean()
+        booking.save()
+    except ValidationError as e:
+        raise HttpError(400, str(e))
+    except Exception as e:
+        if hasattr(e, 'code') and e.code == "full":
+            raise HttpError(409, "This product is fully booked for the selected dates")
+        raise HttpError(500, "An unexpected error occurred")
+
+    return booking
+
+@router.post("/request_booking", response=BookingSchema, tags=["user-booking"])
+def create_booking(request, booking_data: BookingPostSchema):
+    try:
+        product = Product.objects.get(id=booking_data.product_id)
+        is_available = Available.objects.filter(product=product, available_date__range=[booking_data.start_date, booking_data.end_date]).exists()
+        if not is_available:
             raise Available.DoesNotExist()
     except Product.DoesNotExist:
         raise HttpError(404, "Product does not exist")
