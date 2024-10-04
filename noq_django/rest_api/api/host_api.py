@@ -3,6 +3,7 @@ from ninja import NinjaAPI, Schema, ModelSchema, Router
 from ninja.errors import HttpError
 from datetime import datetime, timedelta
 from django.db import transaction
+from django.utils import timezone
 
 from backend.models import (
     Client,
@@ -120,7 +121,7 @@ def get_available_places(request, nr_of_days: int):
 def get_bookings_by_date(request, limiter: Optional[
     int] = None):  # Limiter example /bookings/incoming?limiter=10 for 10 results, empty returns all
     host = Host.objects.get(users=request.user)
-    current_date = datetime.today().date()
+    current_date = timezone.now().date()
     bookings = Booking.objects.filter(
         product__host=host,
         start_date=current_date
@@ -136,7 +137,7 @@ def get_bookings_by_date(request, limiter: Optional[
 def get_bookings_by_date(request, limiter: Optional[
     int] = None):  # Limiter example /bookings/outgoing?limiter=10 for 10 results, empty returns all
     host = Host.objects.get(users=request.user)
-    current_date = datetime.today().date()
+    current_date = timezone.now().date()
     bookings = Booking.objects.filter(
         product__host=host,
         end_date=current_date,
@@ -152,7 +153,8 @@ def get_bookings_by_date(request, limiter: Optional[
 def get_pending_bookings(request, limiter: Optional[
     int] = None):  # Limiter example /pending?limiter=10 for 10 results, empty returns all
     host = Host.objects.get(users=request.user)
-    bookings = Booking.objects.filter(product__host=host, status__description='pending')
+    status_list = ['pending', 'accepted']
+    bookings = Booking.objects.filter(product__host=host, status__description__in=status_list)
 
     if limiter is not None and limiter > 0:
         return bookings[:limiter]
@@ -191,10 +193,11 @@ def batch_appoint_pending_booking(request, booking_ids: list[BookingUpdateSchema
 @router.patch("/pending/{booking_id}/appoint", response=BookingSchema, tags=["host-manage-requests"])
 def appoint_pending_booking(request, booking_id: int):
     host = Host.objects.get(users=request.user)
-    booking = get_object_or_404(Booking, id=booking_id, product__host=host, status__description='pending')
+    status_list = ['pending', 'accepted']
+    booking = get_object_or_404(Booking, id=booking_id, product__host=host, status__description__in=status_list)
 
     try:
-        booking.status = BookingStatus.objects.get(description='accepted')
+        booking.status = BookingStatus.objects.get(description='reserved')
         booking.save()
         return booking
     except BookingStatus.DoesNotExist:
