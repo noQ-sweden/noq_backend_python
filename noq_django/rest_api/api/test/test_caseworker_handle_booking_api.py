@@ -91,6 +91,7 @@ class TestCaseworkerHandleBookingApi(TestCase):
             {"id": State.IN_QUEUE, "description": "in_queue"},
             {"id": State.RESERVED, "description": "reserved"},
             {"id": State.CONFIRMED, "description": "confirmed"},
+            {"id": State.ADVISED_AGAINST, "description": "advised_against"},
         ]
 
         for status in statuses:
@@ -155,12 +156,15 @@ class TestCaseworkerHandleBookingApi(TestCase):
         self.assertEqual(len(parsed_response), 3)
 
         # Decline 1 booking, there should be 2 pending bookings left
+        # and 1 booking in advice_against state
         first_booking = Booking.objects.filter(status=State.PENDING).first()
         url = "/api/caseworker/bookings/" + str(first_booking.id) + "/decline"
         response = self.client.patch(url)
         self.assertEqual(response.status_code, 200)
         pending_count = Booking.objects.filter(status=State.PENDING).count()
         self.assertEqual(pending_count, 2)
+        against_count = Booking.objects.filter(status=State.ADVISED_AGAINST).count()
+        self.assertEqual(against_count, 1)
 
         # We should get 2 pending bookings via rest api
         response = self.client.get("/api/caseworker/bookings/pending")
