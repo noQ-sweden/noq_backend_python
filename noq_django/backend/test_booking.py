@@ -95,7 +95,8 @@ class test_Booking(TestCase):
             requirements=None,
         )
 
-        status = BookingStatus.objects.bulk_create([
+
+        status_objects = [
             BookingStatus(id=State.PENDING, description="pending"),
             BookingStatus(id=State.DECLINED, description="declined"),
             BookingStatus(id=State.ACCEPTED, description="accepted"),
@@ -104,7 +105,10 @@ class test_Booking(TestCase):
             BookingStatus(id=State.RESERVED, description="reserved"),
             BookingStatus(id=State.CONFIRMED, description="confirmed"),
             BookingStatus(id=State.ADVISED_AGAINST, description="advised_against"),
-        ])
+        ]
+
+        for status in status_objects:
+            BookingStatus.objects.get_or_create(id=status.id, defaults={"description": status.description})
 
     # Booking a product with valid data saves the booking and updates availability
     def test_booking_with_valid_data(self):
