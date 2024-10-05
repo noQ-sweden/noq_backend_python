@@ -226,7 +226,8 @@ class Booking(models.Model):
     def save(self, *args, **kwargs):
 
         # Check that the booked date is not in the past
-        if str(self.start_date) < str(datetime.today().date()):
+        if str(self.start_date) < str(datetime.today().date())\
+                and self.status.id != State.COMPLETED:
             raise ValidationError(
                 ("Fel: Bokningen börjar före dagens datum!"),
                 code="Date error",
