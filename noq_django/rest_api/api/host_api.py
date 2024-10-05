@@ -58,12 +58,13 @@ def get_host_data(request):
 def count_bookings(request):
     host = Host.objects.get(users=request.user)
 
-    pending_count = Booking.objects.filter(product__host=host, status__description='pending').count()
+    pending_count = Booking.objects.filter(
+        product__host=host,
+        status__description__in=['pending', 'advised_against', 'accepted']).count()
     arrivals_count = Booking.objects.filter(
         product__host=host,
-        status__description__in=['accepted', 'reserved', 'confirmed'],
         start_date=date.today()
-    ).count()
+    ).exclude(status__description__in=['completed', 'declined', 'checked_in']).count()
     departures_count = Booking.objects.filter(product__host=host, status__description='checked_in',
                                               end_date=date.today()).count()
     current_guests_count = Booking.objects.filter(product__host=host, status__description='checked_in').count()
