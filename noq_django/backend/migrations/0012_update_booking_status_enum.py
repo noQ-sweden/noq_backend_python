@@ -8,6 +8,7 @@ from django.db import migrations
 def update_booking_status_from_enum(apps, schema_editor):
     # Get the BookingStatus model
     BookingStatus = apps.get_model('backend', 'BookingStatus')
+    State = apps.get_model('backend', 'State')
 
     # Create a list of descriptions based on the `State` enum values
     status_objects = [
