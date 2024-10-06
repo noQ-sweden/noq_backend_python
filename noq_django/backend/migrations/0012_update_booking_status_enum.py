@@ -10,20 +10,20 @@ def update_booking_status_from_enum(apps, schema_editor):
     BookingStatus = apps.get_model('backend', 'BookingStatus')
 
     # Create a list of descriptions based on the `State` enum values
-    statuses = [
-        "pending",
-        "declined",
-        "accepted",
-        "checked_in",
-        "in_queue",
-        "reserved",
-        "confirmed",
-        "completed",
-        "advised_against"]
+    status_objects = [
+        BookingStatus(id=State.PENDING, description="pending"),
+        BookingStatus(id=State.DECLINED, description="declined"),
+        BookingStatus(id=State.ACCEPTED, description="accepted"),
+        BookingStatus(id=State.CHECKED_IN, description="checked_in"),
+        BookingStatus(id=State.IN_QUEUE, description="in_queue"),
+        BookingStatus(id=State.RESERVED, description="reserved"),
+        BookingStatus(id=State.CONFIRMED, description="confirmed"),
+        BookingStatus(id=State.COMPLETED, description="completed"),
+        BookingStatus(id=State.ADVISED_AGAINST, description="advised_against"),
+    ]
 
-    # Iterate through the statuses and add them to the BookingStatus table if they don't exist
-    for description in statuses:
-        BookingStatus.objects.get_or_create(description=description)
+    for status in status_objects:
+        BookingStatus.objects.get_or_create(id=status.id, defaults={"description": status.description})
 
 
 class Migration(migrations.Migration):
