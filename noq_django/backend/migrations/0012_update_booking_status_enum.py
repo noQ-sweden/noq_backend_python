@@ -8,19 +8,18 @@ from django.db import migrations
 def update_booking_status_from_enum(apps, schema_editor):
     # Get the BookingStatus model
     BookingStatus = apps.get_model('backend', 'BookingStatus')
-    State = apps.get_model('backend', 'State')
 
     # Create a list of descriptions based on the `State` enum values
     status_objects = [
-        BookingStatus(id=State.PENDING, description="pending"),
-        BookingStatus(id=State.DECLINED, description="declined"),
-        BookingStatus(id=State.ACCEPTED, description="accepted"),
-        BookingStatus(id=State.CHECKED_IN, description="checked_in"),
-        BookingStatus(id=State.IN_QUEUE, description="in_queue"),
-        BookingStatus(id=State.RESERVED, description="reserved"),
-        BookingStatus(id=State.CONFIRMED, description="confirmed"),
-        BookingStatus(id=State.COMPLETED, description="completed"),
-        BookingStatus(id=State.ADVISED_AGAINST, description="advised_against"),
+        BookingStatus(id=1, description="pending"),
+        BookingStatus(id=2, description="declined"),
+        BookingStatus(id=3, description="accepted"),
+        BookingStatus(id=4, description="checked_in"),
+        BookingStatus(id=5, description="in_queue"),
+        BookingStatus(id=6, description="reserved"),
+        BookingStatus(id=7, description="confirmed"),
+        BookingStatus(id=8, description="completed"),
+        BookingStatus(id=9, description="advised_against"),
     ]
 
     for status in status_objects:
