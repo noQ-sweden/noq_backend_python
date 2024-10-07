@@ -103,6 +103,6 @@ def list_bookings(request):
     ).exclude(
         end_date__lt=timezone.now().date(),
         status__description__in=status_list
-    ).order_by('-start_date')
+    ).order_by('start_date')
 
     return bookings
