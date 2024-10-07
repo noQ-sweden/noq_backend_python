@@ -140,10 +140,8 @@ def get_bookings_by_date(request, limiter: Optional[
 def get_bookings_by_date(request, limiter: Optional[
     int] = None):  # Limiter example /bookings/outgoing?limiter=10 for 10 results, empty returns all
     host = Host.objects.get(users=request.user)
-    current_date = timezone.now().date()
     bookings = Booking.objects.filter(
         product__host=host,
-        end_date=current_date,
         status__description='checked_in')
 
     if limiter is not None and limiter > 0:
