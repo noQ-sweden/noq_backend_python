@@ -98,11 +98,12 @@ def list_bookings(request):
     user = Client.objects.get(user=request.user)
     status_list = ['completed', 'checked_in']
     # List of bookings for the user
-    bookings = Booking.objects.filter(
+    bookings = (Booking.objects.filter(
         user=user
     ).exclude(
-        end_date__lt=timezone.now().date(),
+        end_date__lt=timezone.now().date()
+    ).exclude(
         status__description__in=status_list
-    ).order_by('start_date')
+    ).order_by('start_date'))
 
     return bookings
