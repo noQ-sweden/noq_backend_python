@@ -1,6 +1,7 @@
 from ninja import NinjaAPI, Schema, ModelSchema, Router
 from ninja.errors import HttpError
 from django.db import models
+from django.utils import timezone
 from backend.models import (
     Client,
     Host,
@@ -91,3 +92,17 @@ def request_booking(request, booking_data: BookingPostSchema):
 
     return booking
     
+@router.get("/bookings", response=List[BookingSchema], tags=["user-booking"])
+def list_bookings(request):
+
+    user = Client.objects.get(user=request.user)
+    status_list = ['completed', 'checked_in']
+    # List of bookings for the user
+    bookings = Booking.objects.filter(
+        user=user
+    ).exclude(
+        end_date__lt=timezone.now().date(),
+        status__description__in=status_list
+    ).order_by('start_date')
+
+    return bookings
