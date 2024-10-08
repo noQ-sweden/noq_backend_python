@@ -367,6 +367,8 @@ def update_user(request, user_id: int, payload: UserRegistrationSchema):
             
         if payload.last_name is not None and client.last_name != payload.last_name:
             client.last_name = payload.last_name
+            user.last_name = payload.last_name  
+
             
         if payload.phone is not None and client.phone != payload.phone:
             client.phone = payload.phone
