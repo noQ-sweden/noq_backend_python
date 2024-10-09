@@ -279,7 +279,7 @@ def register_user(request, user_data: UserRegistrationSchema):
 
             userClient = User.objects.create_user(
                 email=user_data.email,
-                username=user_data.username,
+                username=user_data.email,
                 password=user_data.password,
                 first_name=user_data.first_name,
                 last_name=user_data.last_name
@@ -357,9 +357,9 @@ def update_user(request, user_id: int, payload: UserRegistrationSchema):
             client.email = payload.email
             user.email = payload.email 
         
-        if payload.username is not None and client.user.username != payload.username:
-            client.user.username = payload.username
-            user.username = payload.username
+        if payload.email is not None and client.user.username != payload.email:
+            client.user.username = payload.email
+            user.username = payload.email
             
         if payload.first_name is not None and client.first_name != payload.first_name:
             client.first_name = payload.first_name
@@ -368,7 +368,6 @@ def update_user(request, user_id: int, payload: UserRegistrationSchema):
         if payload.last_name is not None and client.last_name != payload.last_name:
             client.last_name = payload.last_name
             user.last_name = payload.last_name  
-
             
         if payload.phone is not None and client.phone != payload.phone:
             client.phone = payload.phone
