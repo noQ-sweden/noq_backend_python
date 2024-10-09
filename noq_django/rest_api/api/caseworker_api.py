@@ -167,9 +167,15 @@ def get_available_places_all(request):
     # Return the full list of available products across all hosts
     return available_products
 
-@router.get("/guests/nights/count/{user_id}/{start_date}/{end_date}", response=UserShelterStayCountSchema, tags=["caseworker-user-shelter-stay"])
+@router.get("/guests/nights/count/{user_id}/{start_date}/{end_date}", response={400: dict, 200: UserShelterStayCountSchema}, tags=["caseworker-user-shelter-stay"])
 def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date: str, page: int = 1, per_page: int = 20):
     try:
+
+        user = User.objects.filter(id=user_id).first()
+
+        if not user:
+            return 400, {"error": "Användare finns inte."}
+        
         start_date = date.fromisoformat(start_date)
         end_date = date.fromisoformat(end_date)
 
@@ -238,6 +244,7 @@ Get information about a user with user ID
 """
 @router.get("/user/{user_id}", response=UserRegistrationSchema, tags=["caseworker-GET-user"])
 def get_user_information(request, user_id: int):
+
     user = get_object_or_404(User, id=user_id)  
     
     client = get_object_or_404(Client, user=user)  
@@ -266,6 +273,7 @@ Register a new user and client in the system.
 """
 @router.post("/register", response={201: dict, 400: dict}, tags=["caseworker-register-user"])
 def register_user(request, user_data: UserRegistrationSchema):
+
     if Client.objects.filter(email=user_data.email).exists():
         return 400, {"error": "Användare med denna e-postadress finns redan."}
 
@@ -346,7 +354,11 @@ This function checks if the user belongs to the 'user' group and updates their d
 @router.put("/update/user/{user_id}", response={200: UserRegistrationSchema, 400: dict, 404: dict}, tags=["caseworker-UPDATE-user"])
 def update_user(request, user_id: int, payload: UserRegistrationSchema):
     try:
-        user = User.objects.get(id=user_id)
+        
+        user = User.objects.filter(id=user_id).first()
+
+        if not user:
+            return 400, {"error": "Användaren finns inte."}
 
         if not user.groups.filter(name="user").exists():
             return 400, {"error": "Användaren tillhör inte gruppen 'user'."}
