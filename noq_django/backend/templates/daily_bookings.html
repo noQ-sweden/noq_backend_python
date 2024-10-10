@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<h1>Todays bookings</h1>
+
+{% if bookings %}
+    <table>
+        <thead>
+            <tr>
+                <th>Guest Name</th>
+                <th>Room Number</th>
+                <th>Check-in Date</th>
+                <th>Check-out Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+            <tr>
+                <td>{{ booking.guest_name }}</td>
+                <td>{{ booking.room_number }}</td>
+                <td>{{ booking.check_in_date }}</td>
+                <td>{{ booking.check_out_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p class="no-bookings">No bookings for today.</p>
+{% endif %}
+
+</body>
+</html>

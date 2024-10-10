@@ -12,6 +12,8 @@ from .models import Product
 from .forms import ProductForm
 import json
 from urllib.parse import urlencode
+from django.utils import timezone
+
 
         
 def main_view(request):
@@ -271,6 +273,10 @@ def host_bookings_view(request, host_id):
     bookings = models.Booking.objects.filter(product__host=host)
     return render(request, 'host_bookings.html', {'bookings': bookings, 'host': host})
 
+def daily_bookings_view(request):
+    today = timezone.now().date()
+    bookings = models.Booking.objects.filter(check_in_date=today)
+    return render(request, 'daily_bookings.html', {'bookings': bookings})
 
 def product_list(request):
     products = Product.objects.all()
