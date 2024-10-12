@@ -61,7 +61,8 @@ class TestCaseworkerHandleBookingApi(TestCase):
             region = Region.objects.create(name="Malmö")
             hostA = Host.objects.create(name="Host 1", street="", postcode="", city="Malmö", region_id=region.id)
             productA = Product.objects.create(name="room", total_places=5, host_id=hostA.id, type="room")
-
+        
+        flag_choices = ['OK', 'FLAG', 'DANGER', 'UNKNOWN']
         # Create clients
         for i in range(1, 5):
             client = Client.objects.create(
@@ -81,6 +82,7 @@ class TestCaseworkerHandleBookingApi(TestCase):
                 requirements=None,
                 last_edit=datetime.now().date(),
                 user=User.objects.get(id=i),
+                flag=flag_choices[i % len(flag_choices)]
             )
 
         statuses = [

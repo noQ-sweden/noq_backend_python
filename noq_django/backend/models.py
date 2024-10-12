@@ -72,6 +72,14 @@ class Client(models.Model):
     # Datum för senaste uppdateringen av användarodellen, för att avgöra om användaren är aktiv
     last_edit = models.DateField(verbose_name="Senaste Aktivitet")
 
+    FLAG_CHOICES = [
+        ('OK', 'OK'),          # Ok Green circle
+        ('FLAG', 'Flag'),      # Red Flagged
+        ('DANGER', 'Danger'),  # Danger Red circle
+        ('UNKNOWN', 'Unknown') # Default status Blue outlined circle
+    ]
+    flag = models.CharField(max_length=10, choices=FLAG_CHOICES, default='UNKNOWN')
+
     class Meta:
         db_table = "client"
 
