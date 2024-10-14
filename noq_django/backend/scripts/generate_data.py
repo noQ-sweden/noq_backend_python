@@ -34,7 +34,7 @@ def get_cities(index: int):
 """ 
 def make_user(group: str, is_test_user: bool, first_name: str = None, last_name: str = None) -> User:
 """
-def make_user(group: str, is_test_user: bool) -> User:
+def make_user(group: str, is_test_user: bool, first_name: str, last_name: str) -> User:
     faker = Faker("sv_SE")
 
     if is_test_user:
@@ -231,6 +231,7 @@ def add_booking_statuses():
         {"id": State.IN_QUEUE, "description": "in_queue"},
         {"id": State.RESERVED, "description": "reserved"},
         {"id": State.CONFIRMED, "description": "confirmed"},
+        {"id": State.ADVISED_AGAINST, "description": "advised_against"},
     ]
 
     for status in statuses:

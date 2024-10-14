@@ -17,6 +17,7 @@ class State(IntEnum):
     RESERVED = 6
     CONFIRMED = 7
     COMPLETED = 8
+    ADVISED_AGAINST = 9
 
 class Region(models.Model):
     name = models.CharField(max_length=80)
@@ -128,6 +129,11 @@ class Product(models.Model):
     TYPE_CHOICES = [
         ('room', 'Room'),
         ('woman-only', 'Woman Only'),
+        ('washingmachine', 'Washing Machine'),
+        ('hygieneproducts', 'Hygiene Products'),
+        ('breakfast', 'Breakfast'),
+        ('dinner', 'Dinner'),
+        ('storage', 'Storage'),
     ]
     ROOM_LOCATIONS = [
         ('Sovsal', 'Sovsal'),
@@ -139,11 +145,12 @@ class Product(models.Model):
     description = models.CharField(max_length=100)
     total_places = models.IntegerField()
     host = models.ForeignKey(Host, on_delete=models.CASCADE, blank=True)
-    type = models.CharField(max_length=12, choices=TYPE_CHOICES)
+    type = models.CharField(max_length=16, choices=TYPE_CHOICES)
     room_location = models.CharField(max_length=20, choices=ROOM_LOCATIONS)  
     requirements = models.ForeignKey(
         ProductRequirement, on_delete=models.CASCADE, null=True, blank=True
     )
+    bookable = models.BooleanField(default=True)
 
     class Meta:
         db_table = "product"
@@ -219,7 +226,8 @@ class Booking(models.Model):
     def save(self, *args, **kwargs):
 
         # Check that the booked date is not in the past
-        if str(self.start_date) < str(datetime.today().date()):
+        if str(self.start_date) < str(datetime.today().date())\
+                and self.status.id != State.COMPLETED:
             raise ValidationError(
                 ("Fel: Bokningen börjar före dagens datum!"),
                 code="Date error",
@@ -243,10 +251,11 @@ class Booking(models.Model):
                     code="woman-only",
                 )
 
+        status_list = ['completed', 'declined']
         # Check if there is another booking for the same user and date
         existing_booking = Booking.objects.filter(
             user=self.user, start_date=self.start_date
-        ).first()
+        ).exclude(status__description__in=status_list).first()
 
         if existing_booking and self.id != existing_booking.id:
             raise ValidationError(
@@ -257,7 +266,7 @@ class Booking(models.Model):
         # Check if there is free places available for the booking period
         # - Booking count is only valid if booking has status pending
         # - in_queue or declined will not book a place
-        # - accepted, reserved, confirmed or checked_in already have
+        # - accepted, advised_against, reserved, confirmed or checked_in already have
         #   a booked place
         if self.status.id == State.PENDING:
             bookings_per_date = self.bookings_count_per_date()
@@ -288,6 +297,7 @@ class Booking(models.Model):
                 & Q(end_date__gt=date_time)
                 & ~Q(status=State.DECLINED)
                 & ~Q(status=State.IN_QUEUE)
+                & ~Q(status=State.COMPLETED)
             ).count()
             date = f"{date_time:%Y-%m-%d}"
             booking_counts[date] = count

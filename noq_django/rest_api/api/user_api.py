@@ -1,6 +1,7 @@
 from ninja import NinjaAPI, Schema, ModelSchema, Router
 from ninja.errors import HttpError
 from django.db import models
+from django.utils import timezone
 from backend.models import (
     Client,
     Host,
@@ -42,28 +43,34 @@ def list_available(request, selected_date: str):
     except ValueError:
         raise HttpError(404, "Invalid date, dates need to be in the YYYY-MM-DD format")
 
-    available_list = Available.objects.filter(available_date=selected_date) #get all available products
+    # List of unavailable products
+    unavailable_products = Available.objects.filter(available_date=selected_date, places_left=0)
+
+    # Get available products
+    available_products_list = Product.objects.exclude(id__in=unavailable_products.values('product_id'))
 
     hostproduct_dict = {}
 
-    for available in available_list: #create dict of available products sorted by host
-        if available.product.host in hostproduct_dict:
-            product = available.product
-            product.places_left = available.places_left
-            hostproduct_dict[available.product.host].append(available.product)
+    for product in available_products_list: #create dict of available products sorted by host
+        available = Available.objects.filter(available_date=selected_date, product=product)
+        places_left = available.first().places_left if available.exists() else product.total_places
+        product.places_left = places_left
+        if product.host in hostproduct_dict:
+            hostproduct_dict[product.host].append(product)
         else:
-            product = available.product
-            product.places_left = available.places_left
-            hostproduct_dict[available.product.host] = [available.product]
+            hostproduct_dict[product.host] = [product]
 
-    
     return [{"host": host, "products": products} for host, products in hostproduct_dict.items()]
 
 @router.post("/request_booking", response=BookingSchema, tags=["user-booking"])
 def request_booking(request, booking_data: BookingPostSchema):
-
+    
     try:
         product = Product.objects.get(id=booking_data.product_id)
+        
+        if not product.bookable:
+            raise HttpError(422, "This product is not bookable.")
+    
         Available.objects.filter(product=product)
     except Available.DoesNotExist:
         raise HttpError(404, "Product is not available")
@@ -85,3 +92,18 @@ def request_booking(request, booking_data: BookingPostSchema):
 
     return booking
     
+@router.get("/bookings", response=List[BookingSchema], tags=["user-booking"])
+def list_bookings(request):
+
+    user = Client.objects.get(user=request.user)
+    status_list = ['completed', 'checked_in']
+    # List of bookings for the user
+    bookings = (Booking.objects.filter(
+        user=user
+    ).exclude(
+        end_date__lt=timezone.now().date()
+    ).exclude(
+        status__description__in=status_list
+    ).order_by('start_date'))
+
+    return bookings

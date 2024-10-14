@@ -13,7 +13,7 @@ from backend.models import (
 from typing import List, Dict
 from django.shortcuts import get_object_or_404
 from ninja.security import django_auth, django_auth_superuser, HttpBearer
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 
 date_string: str
 
@@ -160,6 +160,7 @@ class BookingSchema(Schema):
     """
     id: int
     status: StatusSchema
+    booking_time: datetime
     start_date: date
     end_date: date
     product: ProductSchema
