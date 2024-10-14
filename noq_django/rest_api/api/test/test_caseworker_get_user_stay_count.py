@@ -155,7 +155,6 @@ class TestUserShelterStayCountApi(TestCase):
         
         self.assertGreaterEqual(len(response_data["user_stay_counts"]), 3)  
     
-    """
     def test_client_with_one_stay(self):
         
         user_one = User.objects.filter(username=self.user_name_one).first()
@@ -182,7 +181,7 @@ class TestUserShelterStayCountApi(TestCase):
         self.assertEqual(response_data["user_id"], user_one.id)
 
         self.assertEqual(len(response_data["user_stay_counts"]), 1)  
-    """
+        
     def test_client_no_stays(self):
 
         user_three = User.objects.filter(username=self.user_name_three).first()
