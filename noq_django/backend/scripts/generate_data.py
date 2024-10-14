@@ -31,7 +31,10 @@ def get_cities(index: int):
     return list[index][1]
 
 
+""" 
 def make_user(group: str, is_test_user: bool, first_name: str = None, last_name: str = None) -> User:
+"""
+def make_user(group: str, is_test_user: bool) -> User:
     faker = Faker("sv_SE")
 
     if is_test_user:

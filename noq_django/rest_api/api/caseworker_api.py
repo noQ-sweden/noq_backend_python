@@ -174,7 +174,7 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
         user = User.objects.filter(id=user_id).first()
 
         if not user:
-            return 400, {"error": "Användare finns inte."}
+            return JsonResponse( {"error": "Användare finns inte."}, status=400)
         
         start_date = date.fromisoformat(start_date)
         end_date = date.fromisoformat(end_date)
@@ -335,7 +335,7 @@ def delete_user(request, id: int):
         user = User.objects.filter(id=id).first()
 
         if not user:
-            return 400, {"error": "Användare finns inte."}
+            return JsonResponse( {"error": "Användare finns inte."}, status=400)
 
         if not user.groups.filter(name="user").exists():
             return 400, {"error": "Användaren tillhör inte gruppen 'user'."}
@@ -358,7 +358,7 @@ def update_user(request, user_id: int, payload: UserRegistrationSchema):
         user = User.objects.filter(id=user_id).first()
 
         if not user:
-            return 400, {"error": "Användaren finns inte."}
+            return JsonResponse( {"error": "Användare finns inte."}, status=400)
 
         if not user.groups.filter(name="user").exists():
             return 400, {"error": "Användaren tillhör inte gruppen 'user'."}
