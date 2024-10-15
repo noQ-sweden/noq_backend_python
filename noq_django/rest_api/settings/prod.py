@@ -4,11 +4,10 @@ import os
 SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = False
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
-ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS if host.strip()]
+SERVER_IP = os.environ.get('ALLOWED_HOSTS')
 
 CORS_ALLOWED_ORIGINS = [ 
-    "http://51.21.97.243",
+    f'http://{SERVER_IP}',
 ]
 
 CORS_ALLOWED_ORIGIN_REGEXES = [
@@ -17,6 +16,8 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", SERVER_IP]
 
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
