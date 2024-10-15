@@ -4,6 +4,9 @@ import os
 SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = False
 
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS if host.strip()]
+
 CORS_ALLOWED_ORIGINS = [ 
     "http://51.21.97.243",
 ]
@@ -16,8 +19,6 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 CORS_ALLOW_CREDENTIALS = True
 
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
-
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "51.21.97.243", "172.26.3.179"]
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
