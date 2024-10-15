@@ -171,16 +171,16 @@ def get_available_places_all(request):
 def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date: str, page: int = 1, per_page: int = 20):
     try:
 
-        user = User.objects.filter(id=user_id).first()
+        client = Client.objects.get(user=User.objects.filter(id=user_id).first())
 
-        if not user:
+        if not client:
             return JsonResponse( {"error": "Användare finns inte."}, status=400)
         
         start_date = date.fromisoformat(start_date)
         end_date = date.fromisoformat(end_date)
 
         user_bookings = Booking.objects.filter(
-            user_id=user_id,
+            user_id=client,
             start_date__lte=end_date,
             end_date__gte=start_date
         ).select_related(
