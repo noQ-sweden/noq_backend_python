@@ -73,8 +73,8 @@ class Client(models.Model):
     last_edit = models.DateField(verbose_name="Senaste Aktivitet")
 
     FLAG_CHOICES = [
-        ('OK', True),       
-        ('DANGER', False) 
+        ('DANGER', True),       
+        ('OK', False) 
     ]
     flag = models.BooleanField(default=True)
 
