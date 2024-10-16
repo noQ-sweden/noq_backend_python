@@ -42,7 +42,7 @@ class UserSchema(ModelSchema):
     region: RegionSchema
     first_name: str # Add first name
     last_name: str # Add last name
-    flag: str
+    flag: bool # Add flag to user ok true false danger
 
     class Meta:
         model = Client

@@ -73,12 +73,10 @@ class Client(models.Model):
     last_edit = models.DateField(verbose_name="Senaste Aktivitet")
 
     FLAG_CHOICES = [
-        ('OK', 'OK'),          # Ok Green circle
-        ('FLAG', 'Flag'),      # Red Flagged
-        ('DANGER', 'Danger'),  # Danger Red circle
-        ('UNKNOWN', 'Unknown') # Default status Blue outlined circle
+        ('OK', True),       
+        ('DANGER', False) 
     ]
-    flag = models.CharField(max_length=10, choices=FLAG_CHOICES, default='UNKNOWN')
+    flag = models.BooleanField(default=True)
 
     class Meta:
         db_table = "client"
