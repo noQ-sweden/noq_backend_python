@@ -72,6 +72,12 @@ class Client(models.Model):
     # Datum för senaste uppdateringen av användarodellen, för att avgöra om användaren är aktiv
     last_edit = models.DateField(verbose_name="Senaste Aktivitet")
 
+    FLAG_CHOICES = [
+        ('DANGER', True),       
+        ('OK', False) 
+    ]
+    flag = models.BooleanField(default=True)
+
     class Meta:
         db_table = "client"
 
