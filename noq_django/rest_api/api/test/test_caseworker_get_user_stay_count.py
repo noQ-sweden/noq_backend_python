@@ -30,11 +30,6 @@ class TestUserShelterStayCountApi(TestCase):
             client_user_three = self.create_user(self.user_name_three, "user")
             caseworker_user = self.create_user(self.caseworker_name, "caseworker")
 
-       # Skriv ut alla användare som finns just nu
-        print("Users after creating clients:")
-        for user in User.objects.all():
-            print(f"Username: {user.username}, ID: {user.id}")
-
         # Login the caseworker
         self.client = TestClient(router)
         self.client.login(username=self.caseworker_name, password=self.password)
@@ -88,7 +83,6 @@ class TestUserShelterStayCountApi(TestCase):
             )
             clients.append(client)
 
-        # Create statuses
         statuses = [
             {"id": State.PENDING, "description": "pending"},
             {"id": State.DECLINED, "description": "declined"},
@@ -107,7 +101,6 @@ class TestUserShelterStayCountApi(TestCase):
                 )
                 booking_status.save()
 
-        # Create bookings based on requirements
         host = Host.objects.get(name="Host 1")
         host_products = Product.objects.filter(host=host)
 
@@ -158,15 +151,6 @@ class TestUserShelterStayCountApi(TestCase):
     def test_client_with_one_stay(self):
         
         user_one = User.objects.filter(username=self.user_name_one).first()
-        print("USER ONE",user_one.__dict__)
-
-        client_one = Client.objects.filter(user=user_one).first()
-        print("CLIENT ONE:", client_one.__dict__)
-        user_one_bookings = Booking.objects.filter(user=client_one)
-
-        # Skriver ut alla bokningar för user_one
-        for booking in user_one_bookings:
-            print("BOOKING", booking.__dict__)
 
         start_date = datetime.now().date().isoformat()  
         end_date = (datetime.now().date() + timedelta(days=30)).isoformat() 
@@ -176,7 +160,6 @@ class TestUserShelterStayCountApi(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
-        print("DATA", response_data)
 
         self.assertEqual(response_data["user_id"], user_one.id)
 
