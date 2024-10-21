@@ -329,7 +329,7 @@ def register_user(request, user_data: UserRegistrationSchema):
 Deletes a user from the system using their ID. 
 The function verifies the user's existence and group membership before proceeding with the deletion.
 """
-@router.delete("/delete/user", response={200: dict, 400: dict, 500: dict}, tags=["caseworker-CRUD-user"])
+@router.delete("/delete/user/{id}", response={200: dict, 400: dict, 500: dict}, tags=["caseworker-CRUD-user"])
 def delete_user(request, id: int):
     try:
         user = User.objects.filter(id=id).first()
