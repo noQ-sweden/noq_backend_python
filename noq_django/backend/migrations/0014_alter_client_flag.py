@@ -2,10 +2,6 @@
 
 from django.db import migrations, models
 
-def set_default_flag_false(apps, schema_editor):
-    Client = apps.get_model('backend', 'Client')
-    Client.objects.all().update(flag=False)
-
 
 class Migration(migrations.Migration):
 
@@ -19,5 +15,4 @@ class Migration(migrations.Migration):
             name='flag',
             field=models.BooleanField(default=True),
         ),
-        migrations.RunPython(set_default_flag_false),
     ]
