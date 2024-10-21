@@ -242,7 +242,7 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
 """
 Get information about a user with user ID
 """
-@router.get("/user/{user_id}", response=UserRegistrationSchema, tags=["caseworker-GET-user"])
+@router.get("/user/{user_id}", response=UserRegistrationSchema, tags=["caseworker-CRUD-user"])
 def get_user_information(request, user_id: int):
 
     user = get_object_or_404(User, id=user_id)  
@@ -271,7 +271,7 @@ def get_user_information(request, user_id: int):
 """
 Register a new user and client in the system.
 """
-@router.post("/register", response={201: dict, 400: dict}, tags=["caseworker-register-user"])
+@router.post("/register", response={201: dict, 400: dict}, tags=["caseworker-CRUD-user"])
 def register_user(request, user_data: UserRegistrationSchema):
 
     if Client.objects.filter(email=user_data.email).exists():
@@ -329,7 +329,7 @@ def register_user(request, user_data: UserRegistrationSchema):
 Deletes a user from the system using their ID. 
 The function verifies the user's existence and group membership before proceeding with the deletion.
 """
-@router.delete("/delete/user", response={200: dict, 400: dict, 500: dict}, tags=["caseworker-DELETE-user"])
+@router.delete("/delete/user", response={200: dict, 400: dict, 500: dict}, tags=["caseworker-CRUD-user"])
 def delete_user(request, id: int):
     try:
         user = User.objects.filter(id=id).first()
@@ -351,7 +351,7 @@ def delete_user(request, id: int):
 Updates the user and client information based on the provided payload. 
 This function checks if the user belongs to the 'user' group and updates their details accordingly.
 """
-@router.put("/update/user/{user_id}", response={200: UserRegistrationSchema, 400: dict, 404: dict}, tags=["caseworker-UPDATE-user"])
+@router.put("/update/user/{user_id}", response={200: UserRegistrationSchema, 400: dict, 404: dict}, tags=["caseworker-CRUD-user"])
 def update_user(request, user_id: int, payload: UserRegistrationSchema):
     try:
         
