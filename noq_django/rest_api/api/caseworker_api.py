@@ -414,4 +414,4 @@ def update_user(request, user_id: int, payload: UserInfoSchema):
         return JsonResponse(payload.dict(), status=200)
 
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=400)
+        return JsonResponse({"error": "Ett internt fel inträffade, vänligen försök igen senare."}, status=400)
