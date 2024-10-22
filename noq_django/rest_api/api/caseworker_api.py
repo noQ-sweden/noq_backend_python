@@ -44,7 +44,7 @@ from .api_schemas import (
     ProductSchemaWithPlacesLeft,
     UserStaySummarySchema,
     UserShelterStayCountSchema,
-    UserRegistrationSchema
+    UserInfoSchema
 )
 
 
@@ -242,14 +242,14 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
 """
 Get information about a user with user ID
 """
-@router.get("/user/{user_id}", response=UserRegistrationSchema, tags=["caseworker-CRUD-user"])
+@router.get("/user/{user_id}", response=UserInfoSchema, tags=["caseworker-CRUD-user"])
 def get_user_information(request, user_id: int):
 
     user = get_object_or_404(User, id=user_id)  
     
     client = get_object_or_404(Client, user=user)  
     
-    user_data = UserRegistrationSchema(
+    user_data = UserInfoSchema(
         first_name=client.first_name,
         last_name=client.last_name,
         email=client.email,
@@ -272,7 +272,7 @@ def get_user_information(request, user_id: int):
 Register a new user and client in the system.
 """
 @router.post("/register", response={201: dict, 400: dict}, tags=["caseworker-CRUD-user"])
-def register_user(request, user_data: UserRegistrationSchema):
+def register_user(request, user_data: UserInfoSchema):
 
     if Client.objects.filter(email=user_data.email).exists():
         return 400, {"error": "Användare med denna e-postadress finns redan."}
@@ -351,8 +351,8 @@ def delete_user(request, id: int):
 Updates the user and client information based on the provided payload. 
 This function checks if the user belongs to the 'user' group and updates their details accordingly.
 """
-@router.put("/update/user/{user_id}", response={200: UserRegistrationSchema, 400: dict, 404: dict}, tags=["caseworker-CRUD-user"])
-def update_user(request, user_id: int, payload: UserRegistrationSchema):
+@router.put("/update/user/{user_id}", response={200: UserInfoSchema, 400: dict, 404: dict}, tags=["caseworker-CRUD-user"])
+def update_user(request, user_id: int, payload: UserInfoSchema):
     try:
         
         user = User.objects.filter(id=user_id).first()

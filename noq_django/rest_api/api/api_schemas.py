@@ -48,7 +48,7 @@ class UserSchema(ModelSchema):
         model = Client
         fields = "__all__"
 
-class UserRegistrationSchema(Schema):
+class UserInfoSchema(Schema):
     """
     schema för att registrera en ny brukare
     """
