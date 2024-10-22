@@ -274,6 +274,18 @@ Register a new user and client in the system.
 @router.post("/register", response={201: dict, 400: dict}, tags=["caseworker-CRUD-user"])
 def register_user(request, user_data: UserInfoSchema):
 
+    if not user_data.email or not user_data.email.strip():
+        return 400, {"error": "e-post måste anges och får inte vara tom."}
+
+    if not user_data.password or not user_data.password.strip():
+        return 400, {"error": "Lösenord måste anges och får inte vara tomt."}
+    
+    if not user_data.day_of_birth:
+        return 400, {"error": "Födelsedag måste anges med korrekt format, xxxx-xx-xx"}
+    
+    if not user_data.region:
+        return 400, {"error": "Region måste anges."}
+    
     if Client.objects.filter(email=user_data.email).exists():
         return 400, {"error": "Användare med denna e-postadress finns redan."}
 
@@ -354,68 +366,52 @@ This function checks if the user belongs to the 'user' group and updates their d
 @router.put("/update/user/{user_id}", response={200: UserInfoSchema, 400: dict, 404: dict}, tags=["caseworker-CRUD-user"])
 def update_user(request, user_id: int, payload: UserInfoSchema):
     try:
-        
         user = User.objects.filter(id=user_id).first()
 
         if not user:
-            return JsonResponse( {"error": "Användare finns inte."}, status=400)
+            return JsonResponse({"error": "Användare finns inte."}, status=404)
 
         if not user.groups.filter(name="user").exists():
-            return 400, {"error": "Användaren tillhör inte gruppen 'user'."}
+            return JsonResponse({"error": "Användaren tillhör inte gruppen 'user'."}, status=400)
 
-        client = Client.objects.get(user=user)
+        try:
+            client = Client.objects.get(user=user)
+        except Client.DoesNotExist:
+            return JsonResponse({"error": "Kunden som är kopplad till användaren finns inte."}, status=404)
 
-        if payload.email is not None and client.email != payload.email:
-            client.email = payload.email
-            user.email = payload.email 
-        
-        if payload.email is not None and client.user.username != payload.email:
-            client.user.username = payload.email
-            user.username = payload.email
-            
-        if payload.first_name is not None and client.first_name != payload.first_name:
-            client.first_name = payload.first_name
-            user.first_name = payload.first_name  
-            
-        if payload.last_name is not None and client.last_name != payload.last_name:
-            client.last_name = payload.last_name
-            user.last_name = payload.last_name  
-            
-        if payload.phone is not None and client.phone != payload.phone:
-            client.phone = payload.phone
-            
-        if payload.gender is not None and client.gender != payload.gender:
-            client.gender = payload.gender
-            
-        if payload.street is not None and client.street != payload.street:
-            client.street = payload.street
-            
-        if payload.postcode is not None and client.postcode != payload.postcode:
-            client.postcode = payload.postcode
-            
-        if payload.city is not None and client.city != payload.city:
-            client.city = payload.city
-            
-        if payload.country is not None and client.country != payload.country:
-            client.country = payload.country
-            
-        if payload.region is not None and client.region_id != payload.region:
-            client.region_id = payload.region
-            
-        if payload.day_of_birth is not None and client.day_of_birth != payload.day_of_birth:
-            client.day_of_birth = payload.day_of_birth
-            
-        if payload.personnr_lastnr is not None and client.personnr_lastnr != payload.personnr_lastnr:
-            client.personnr_lastnr = payload.personnr_lastnr
+        # Mapping of payload fields to the corresponding model fields
+        updates = {
+            'email': payload.email,
+            'first_name': payload.first_name,
+            'last_name': payload.last_name,
+            'phone': payload.phone,
+            'gender': payload.gender,
+            'street': payload.street,
+            'postcode': payload.postcode,
+            'city': payload.city,
+            'country': payload.country,
+            'region_id': payload.region,
+            'day_of_birth': payload.day_of_birth,
+            'personnr_lastnr': payload.personnr_lastnr
+        }
 
-        user.save()  
-        client.save()  
+        # Using transaction.atomic to ensure all updates happen in a single transaction
+        with transaction.atomic():
+            # Update fields if they have changed
+            for field, value in updates.items():
+                if value is not None:
+                    if hasattr(client, field) and getattr(client, field) != value:
+                        setattr(client, field, value)
 
-        return 200, payload
+                    # Also update the corresponding user field if it exists
+                    if field in ['email', 'first_name', 'last_name']:
+                        setattr(user, field, value)
 
-    except User.DoesNotExist:
-        return 404, {"error": "Användaren med angivet ID finns inte."}
-    except Client.DoesNotExist:
-        return 404, {"error": "Kunden som är kopplad till användaren finns inte."}
+            # Save Changes
+            user.save()
+            client.save()
+
+        return JsonResponse(payload.dict(), status=200)
+
     except Exception as e:
-        return 400, {"error"}
+        return JsonResponse({"error": str(e)}, status=400)
