@@ -189,7 +189,7 @@ class CaseworkerCRUDUserTests(TestCase):
     response = self.client.get(f"/api/caseworker/user/{user_one.id}")
     self.assertEqual(response.status_code, 404)  
 
-   def test_no_password(self):
+   def test_register_no_password(self):
       """Password must exist"""
 
       user_data = {
@@ -213,7 +213,7 @@ class CaseworkerCRUDUserTests(TestCase):
       self.assertEqual(response.status_code, 400)
       self.assertEqual(response_data["error"], "Lösenord måste anges och får inte vara tomt.")
 
-   def test_no_email(self):
+   def test_register_no_email(self):
       """Email must exist"""
 
       user_data = {
@@ -238,7 +238,7 @@ class CaseworkerCRUDUserTests(TestCase):
       self.assertEqual(response.status_code, 400)
       self.assertEqual(response_data["error"], "e-post måste anges och får inte vara tom.")
 
-   def test_no_region(self):
+   def test_register_no_region(self):
       """Region must exist"""
 
       user_data = {
@@ -262,7 +262,7 @@ class CaseworkerCRUDUserTests(TestCase):
       self.assertEqual(response.status_code, 422)
  
 
-   def test_no_day_of_birth(self):
+   def test_register_no_day_of_birth(self):
       """day_of_birth must exist with correct format"""
 
       user_data = {
@@ -278,6 +278,53 @@ class CaseworkerCRUDUserTests(TestCase):
          "region": self.region.id, # Have to exist
          "country": "",
          "day_of_birth": "", # Have to exist in the correct format
+         "personnr_lastnr": ""
+      }
+      url = '/api/caseworker/register'
+      response = self.client.post(url, data=json.dumps(user_data), content_type='application/json')
+      self.assertEqual(response.status_code, 422)
+
+
+   def test_update_no_region(self):
+      """Region must exist"""
+
+      user_data = {
+         "first_name": "",
+         "last_name": "",
+         "email": "test@noq.nu", 
+         "password": "testpassword",
+         "phone": "",
+         "gender": "",
+         "street": "",
+         "postcode": "",
+         "city": "",
+         "region": "", # Have to exist
+         "country": "",
+         "day_of_birth": "1990-01-01", # Have to exist
+         "personnr_lastnr": ""
+      }
+      url = '/api/caseworker/register'
+      response = self.client.post(url, data=json.dumps(user_data), content_type='application/json')
+      response_data = json.loads(response.content)
+      self.assertEqual(response.status_code, 422)
+
+
+   def test_update_no_day_of_birth(self):
+      """day_of_birth must exist with correct format"""
+
+      user_data = {
+         "first_name": "",
+         "last_name": "",
+         "email": "test@noq.nu", # Have to exist
+         "password": "testpassword",
+         "phone": "",
+         "gender": "",
+         "street": "",
+         "postcode": "",
+         "city": "",
+         "region": self.region.id, # Have to exist
+         "country": "",
+         "day_of_birth": "", # Have to exist in the correct format, xxxx-xx-xx
          "personnr_lastnr": ""
       }
       url = '/api/caseworker/register'
