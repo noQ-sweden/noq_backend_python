@@ -268,6 +268,29 @@ class Booking(models.Model):
                 ("Har redan en bokning samma dag!"),
                 code="already_booked",
             )
+            
+        # Ensure that the user cannot create bookings that overlap with their existing bookings.
+        existing_bookings = Booking.objects.filter(
+        user=self.user,
+        start_date__lt=self.end_date,
+        end_date__gt=self.start_date,
+        )
+
+            # Allow saving if:
+            # 1. The existing booking's status is IN_QUEUE and the new status is ACCEPTED
+            # 2. The existing booking's status is PENDING and the new status is DECLINED
+        if existing_bookings.exists():
+            for existing_booking in existing_bookings:
+                if (existing_booking.status.id == State.IN_QUEUE and self.status.id == State.ACCEPTED) or \
+                (existing_booking.status.id == State.PENDING and self.status.id == State.DECLINED):
+                    # Allow saving the booking
+                    pass
+                else:
+                # If none of the conditions were met, raise a ValidationError
+                    raise ValidationError(
+                        ("You already have a booking that overlaps with these dates."),
+                        code="overlapping_booking",
+                    )
 
         # Check if there is free places available for the booking period
         # - Booking count is only valid if booking has status pending
