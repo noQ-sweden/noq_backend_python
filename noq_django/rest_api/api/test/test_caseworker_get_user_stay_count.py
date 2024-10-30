@@ -8,12 +8,13 @@ from datetime import date, datetime, timedelta
 import json
 from django.test import Client as TestClient
 from ..caseworker_api import router
-
 class TestUserShelterStayCountApi(TestCase):
 
+    caseworker_user = None
     caseworker_name = "user.caseworker@test.nu"
     user_name_one = "user.user1@test.nu"
     user_name_two = "user.user2@test.nu"
+    user_name_three = "user.user3@test.nu"
     password = "VeryBadPassword!"
 
     def create_user(self, username, group):
@@ -22,19 +23,66 @@ class TestUserShelterStayCountApi(TestCase):
         user.groups.add(group_obj)
 
     def caseworker_login(self):
-        if not User.objects.filter(username=self.caseworker_name).exists():
-            self.create_user(self.caseworker_name, "caseworker")
+        # Create host user and client users for the test
+        if User.objects.filter(username=self.caseworker_name).first() == None:
+            client_user_one = self.create_user(self.user_name_one, "user")
+            client_user_two = self.create_user(self.user_name_two, "user")
+            client_user_three = self.create_user(self.user_name_three, "user")
+            caseworker_user = self.create_user(self.caseworker_name, "caseworker")
 
-        if not User.objects.filter(username=self.user_name_one).exists():
-            self.create_user(self.user_name_one, "user")
-        if not User.objects.filter(username=self.user_name_two).exists():
-            self.create_user(self.user_name_two, "user")
-
+        # Login the caseworker
         self.client = TestClient(router)
         self.client.login(username=self.caseworker_name, password=self.password)
+        print(self.client)
+
+
+    def delete_users(self):
+        # Delete the host_user created for the tests
+        users = User.objects.all().delete()
+
+
+    def delete_products(self):
+        # Delete all products created for the tests
+        Product.objects.all().delete()
+        Available.objects.all().delete()
+        Host.objects.all().delete()
+        Region.objects.all().delete()
 
     def setUp(self):
+        # log in host user for the tests
         self.caseworker_login()
+
+        # Create products that can be used during the tests
+        if Product.objects.filter(id=1).first() is None:
+            region = Region.objects.create(name="Malmö")
+            hostA = Host.objects.create(name="Host 1", street="", postcode="", city="Malmö", region_id=region.id)
+            productA = Product.objects.create(name="room", total_places=5, host_id=hostA.id, type="room")
+
+        user_group = Group.objects.get(name="user")
+
+        # Create clients
+        clients = []
+        for i, user in enumerate(User.objects.filter(groups=user_group), start=1):
+            client = Client.objects.create(
+                first_name="John" + str(i),
+                last_name="Doe",
+                gender="M",
+                street="123 Main St",
+                postcode="12345",
+                city="New York",
+                country="USA",
+                phone="123-456-7890",
+                email="john.doe@example.com",
+                unokod="ABC123",
+                day_of_birth=datetime.now().date() + timedelta(weeks=-1500),
+                personnr_lastnr="1234",
+                region=region,
+                requirements=None,
+                last_edit=datetime.now().date(),
+                user=user,
+            )
+            clients.append(client)
+
         statuses = [
             {"id": State.PENDING, "description": "pending"},
             {"id": State.DECLINED, "description": "declined"},
@@ -48,171 +96,95 @@ class TestUserShelterStayCountApi(TestCase):
 
         for status in statuses:
             if not BookingStatus.objects.filter(id=status["id"]).exists():
-                BookingStatus.objects.create(id=status["id"], description=status["description"])
+                booking_status = BookingStatus.objects.create(
+                    id=status["id"], description=status["description"]
+                )
+                booking_status.save()
 
-        if not Region.objects.filter(name="Malmö").exists():
-            region = Region.objects.create(name="Malmö")
-            hostA = Host.objects.create(name="Host 1", street="", postcode="", city="Malmö", region=region)
+        host = Host.objects.get(name="Host 1")
+        host_products = Product.objects.filter(host=host)
 
-        if not Product.objects.filter(name="room").exists():
-            productA = Product.objects.create(name="room", total_places=5, host=hostA, type="room")
-
-        region = Region.objects.get(name="Malmö")
-
-        # Client 1 with one booking
-        client_one = Client.objects.create(
-            first_name="John",
-            last_name="Doe",
-            gender="M",
-            street="123 Main St",
-            postcode="12345",
-            city="New York",
-            country="USA",
-            phone="123-456-7890",
-            email=self.user_name_one,
-            unokod="ABC123",
-            day_of_birth=datetime.now().date() + timedelta(weeks=-1500),
-            personnr_lastnr="1234",
-            region=region,
-            requirements=None,
-            last_edit=datetime.now().date(),
-            user=User.objects.get(username=self.user_name_one),
-        )
-
-
-        # Create one booking for client_one
-        start_date_one = datetime.now()
-        end_date_one = start_date_one + timedelta(days=1)
-        Booking.objects.create(
-            start_date=start_date_one,
-            end_date=end_date_one,
-            product=productA,
+        client_one = Client.objects.get(user=User.objects.get(username=self.user_name_one))
+        booking_1 = Booking(
+            start_date=datetime.now(),
+            end_date=datetime.now() + timedelta(days=1),
+            product=host_products.first(),
             user=client_one,
             status=BookingStatus.objects.get(id=State.PENDING)
         )
+        booking_1.save()
 
-    # Client 2 with three bookings
-        client_two = Client.objects.create( 
-            first_name="Jane",
-            last_name="Smith",
-            gender="F",
-            street="456 Elm St",
-            postcode="67890",
-            city="Los Angeles",
-            country="USA",
-            phone="987-654-3210",
-            email=self.user_name_two,
-            unokod="DEF456",
-            day_of_birth=datetime.now().date() + timedelta(weeks=-1500),
-            personnr_lastnr="5678",
-            region=region,
-            requirements=None,
-            last_edit=datetime.now().date(),
-            user=User.objects.get(username=self.user_name_two),
-        )
-
-        # Create three bookings for client_two
+        client_two = Client.objects.get(user=User.objects.get(username=self.user_name_two))
         booking_dates = [
-            (datetime.now() + timedelta(days=2), datetime.now() + timedelta(days=3)),
-            (datetime.now() + timedelta(days=4), datetime.now() + timedelta(days=5)),
-            (datetime.now() + timedelta(days=6), datetime.now() + timedelta(days=7)),
+            (datetime.now(), datetime.now() + timedelta(days=1)),  
+            (datetime.now() + timedelta(days=1), datetime.now() + timedelta(days=2)),  
+            (datetime.now() + timedelta(days=2), datetime.now() + timedelta(days=4)),  
         ]
 
         for start, end in booking_dates:
-            Booking.objects.create(
+            booking = Booking(
                 start_date=start,
                 end_date=end,
-                product=productA,
-                user=client_two,  
+                product=host_products.first(),
+                user=client_two,
                 status=BookingStatus.objects.get(id=State.PENDING)
             )
+            booking.save()
 
 
-    def test_get_user_shelter_stay_count(self):
+    def test_client_multiple_stays(self):
+
+        user_two = User.objects.filter(username=self.user_name_two).first()
 
         start_date = datetime.now().date().isoformat()  
-        end_date = (datetime.now().date() + timedelta(days=1)).isoformat() 
-        
-        url = f"/api/caseworker/guests/nights/count/1/{start_date}/{end_date}"
+        end_date = (datetime.now().date() + timedelta(days=30)).isoformat() 
+        url = f"/api/caseworker/guests/nights/count/{user_two.id}/{start_date}/{end_date}"
         response = self.client.get(url)
-
         self.assertEqual(response.status_code, 200)
 
         response_data = json.loads(response.content)
 
-        self.assertIn("user_id", response_data)
-        self.assertEqual(response_data["user_id"], 1)
+        self.assertEqual(response_data["user_id"], user_two.id)
+        
+        self.assertGreaterEqual(len(response_data["user_stay_counts"]), 3)  
+    
+    def test_client_with_one_stay(self):
+        
+        user_one = User.objects.filter(username=self.user_name_one).first()
 
-        self.assertIn("user_stay_counts", response_data)
-        self.assertIsInstance(response_data["user_stay_counts"], list)
-        self.assertGreater(len(response_data["user_stay_counts"]), 0)
-
-        first_stay = response_data["user_stay_counts"][0]
-        self.assertIn("total_nights", first_stay)
-        self.assertEqual(first_stay["total_nights"], 1)
-
-        self.assertIn("start_date", first_stay)
-        self.assertEqual(first_stay["start_date"], start_date)
-        self.assertIn("end_date", first_stay)
-        self.assertEqual(first_stay["end_date"], end_date)
-
-        self.assertIn("host", first_stay)
-        host = first_stay["host"]
-        self.assertIn("id", host)
-        self.assertEqual(host["id"], 1)
-        self.assertIn("name", host)
-        self.assertEqual(host["name"], "Host 1")
-        self.assertIn("street", host)
-        self.assertEqual(host["street"], "")
-        self.assertIn("postcode", host)
-        self.assertEqual(host["postcode"], "")
-        self.assertIn("city", host)
-        self.assertEqual(host["city"], "Malmö")
-
-        self.assertIn("region", host)
-        region = host["region"]
-        self.assertIn("id", region)
-        self.assertEqual(region["id"], 1)
-        self.assertIn("name", region)
-        self.assertEqual(region["name"], "Malmö")
-    """"
-    def test_get_user_shelter_stay_multiple_bookings(self):
         start_date = datetime.now().date().isoformat()  
         end_date = (datetime.now().date() + timedelta(days=30)).isoformat() 
 
-        url = f"/api/caseworker/guests/nights/count/2/{start_date}/{end_date}"
+        url = f"/api/caseworker/guests/nights/count/{user_one.id}/{start_date}/{end_date}"
+
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-
         response_data = json.loads(response.content)
 
-        #print("Bookings for client two:", Booking.objects.filter(user=self.client_two).count())
-        print("START", start_date, "END", end_date)
+        self.assertEqual(response_data["user_id"], user_one.id)
 
-        self.assertIn("user_id", response_data)
-        self.assertEqual(response_data["user_id"], 2)
-        self.assertGreaterEqual(len(response_data["user_stay_counts"]), 2) 
+        self.assertEqual(len(response_data["user_stay_counts"]), 1)  
+        
+    def test_client_no_stays(self):
 
-        """
+        user_three = User.objects.filter(username=self.user_name_three).first()
+
+        start_date = datetime.now().date().isoformat()  
+        end_date = (datetime.now().date() + timedelta(days=30)).isoformat() 
+
+        url = f"/api/caseworker/guests/nights/count/{user_three.id}/{start_date}/{end_date}"
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        
+        response_data = json.loads(response.content)
+        
+        self.assertEqual(response_data['user_stay_counts'], [])
+
+
     def tearDown(self):
-    # Delete all bookings created during tests
-        Booking.objects.all().delete()
-        
-        # Delete all clients created during tests
-        Client.objects.all().delete()
-        
-        # Delete all products created during tests
-        Product.objects.all().delete()
-        
-        # Delete all hosts created during tests
-        Host.objects.all().delete()
-        
-        # Delete all regions created during tests
-        Region.objects.all().delete()
-        
-        # Delete all booking statuses created during tests
-        BookingStatus.objects.all().delete()
-        
-        # Delete all users created during tests
         User.objects.all().delete()
+        Client.objects.all().delete()
+        Booking.objects.all().delete()
+        Product.objects.all().delete()
 

@@ -32,6 +32,7 @@ class RegionSchema(ModelSchema):
         fields = "__all__"
 
 
+
 class UserSchema(ModelSchema):
     """
     User - för både Brukare och användare i systemet
@@ -48,6 +49,23 @@ class UserSchema(ModelSchema):
         model = Client
         fields = "__all__"
 
+class UserInfoSchema(Schema):
+    """
+    schema för att registrera en ny brukare
+    """
+    email: str
+    password: Optional[str] = None
+    first_name: str
+    last_name: str
+    phone: str
+    gender: str
+    street: str
+    postcode: str
+    city: str
+    country: str
+    region: int  # ID för region
+    day_of_birth: Optional[date] = None
+    personnr_lastnr: Optional[str] = None
 
 class UserPostSchema(Schema):
     """
