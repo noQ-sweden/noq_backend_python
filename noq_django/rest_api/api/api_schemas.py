@@ -256,6 +256,3 @@ class UserShelterStayCountSchema(Schema):
     last_name: str
     user_stay_counts: List[UserStaySummarySchema]
 
-
-class ShelterStayCountSchema(Schema):
-    stay_counts: List[UserShelterStayCountSchema]

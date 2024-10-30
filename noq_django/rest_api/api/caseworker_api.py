@@ -43,7 +43,7 @@ from .api_schemas import (
     BookingUpdateSchema,
     ProductSchemaWithPlacesLeft,
     UserStaySummarySchema,
-    UserShelterStayCountSchema
+    UserShelterStayCountSchema,
 )
 
 
@@ -230,6 +230,68 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
         }
 
         return response_data
+
+    except ValueError as ve:
+        return JsonResponse({'detail': "Something went wrong"}, status=400)
+
+    except Exception as e:
+        return JsonResponse({'detail': "An internal error occurred. Please try again later."}, status=500)
+
+
+@router.get("/guests/nights/count/{start_date}/{end_date}", response=List[UserShelterStayCountSchema], tags=["caseworker-statistics"])
+def get_shelter_stay_count(request, start_date: str, end_date: str, page: int = 1, per_page: int = 20):
+    try:
+        start_date = date.fromisoformat(start_date)
+        end_date = date.fromisoformat(end_date)
+
+        bookings = Booking.objects.filter(
+            start_date__gte=start_date, end_date__lte=end_date).select_related('user', 'user__user', 'product__host')
+
+        # Group data by user in a dictionary
+        user_data = {}
+        for booking in bookings:
+            client = booking.user
+            user_id = client.user.id
+            host = booking.product.host
+            host_data = {
+                'id': host.id,
+                'name': host.name,
+                'street': host.street,
+                'postcode': host.postcode,
+                'city': host.city,
+                'region': {
+                    'id': host.region.id,
+                    'name': host.region.name
+                },
+            }
+
+            # Calculate total nights
+            total_nights = (min(booking.end_date, end_date) - max(booking.start_date, start_date)).days
+
+            # Initialize user data if not present
+            if user_id not in user_data:
+                user_data[user_id] = {
+                    "user_id": user_id,
+                    "first_name": client.first_name,
+                    "last_name": client.last_name,
+                    "user_stay_counts": []
+                }
+
+            # Append each stay summary for the user
+            user_data[user_id]["user_stay_counts"].append({
+                "total_nights": total_nights,
+                "start_date": booking.start_date,
+                "end_date": booking.end_date,
+                "host": host_data
+            })
+
+        # Convert the grouped dictionary to a list for pagination
+        grouped_data = list(user_data.values())
+
+        paginator = Paginator(grouped_data, per_page)
+        user_stay_counts_page = paginator.get_page(page)
+
+        return user_stay_counts_page.object_list
 
     except ValueError as ve:
         return JsonResponse({'detail': "Something went wrong"}, status=400)
