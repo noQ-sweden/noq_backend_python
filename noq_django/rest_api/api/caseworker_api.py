@@ -1,16 +1,17 @@
 from django.db.models import Q
 from ninja import NinjaAPI, Schema, ModelSchema, Router
 from ninja.errors import HttpError
+from ninja.responses import Response
 from django.db import transaction
 from datetime import datetime, timedelta, date
 from django.http import JsonResponse
 from backend.auth import group_auth
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
-
+from django.contrib.auth.models import User, Group
 from typing import List, Dict, Optional
 from django.shortcuts import get_object_or_404
-
+from django.db import transaction, IntegrityError
 from backend.models import (
     Client,
     Host,
@@ -44,6 +45,7 @@ from .api_schemas import (
     ProductSchemaWithPlacesLeft,
     UserStaySummarySchema,
     UserShelterStayCountSchema,
+    UserInfoSchema
 )
 
 
@@ -166,16 +168,23 @@ def get_available_places_all(request):
     # Return the full list of available products across all hosts
     return available_products
 
-@router.get("/guests/nights/count/{user_id}/{start_date}/{end_date}", response=UserShelterStayCountSchema, tags=["caseworker-statistics"])
+
+@router.get("/guests/nights/count/{user_id}/{start_date}/{end_date}", response={400: dict, 200: UserShelterStayCountSchema}, tags=["caseworker-statistics"])
 def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date: str, page: int = 1, per_page: int = 20):
     try:
+
+        client = Client.objects.get(user=User.objects.filter(id=user_id).first())
+
+        if not client:
+            return JsonResponse( {"error": "Användare finns inte."}, status=400)
+        
         start_date = date.fromisoformat(start_date)
         end_date = date.fromisoformat(end_date)
 
         user = User.objects.get(id=user_id)
 
         user_bookings = Booking.objects.filter(
-            user_id=user_id,
+            user_id=client,
             start_date__lte=end_date,
             end_date__gte=start_date
         ).select_related(
@@ -298,3 +307,182 @@ def get_shelter_stay_count(request, start_date: str, end_date: str, page: int = 
 
     except Exception as e:
         return JsonResponse({'detail': "An internal error occurred. Please try again later."}, status=500)
+
+
+"""
+Get information about a user with user ID
+"""
+@router.get("/user/{user_id}", response=UserInfoSchema, tags=["caseworker-user-management"])
+def get_user_information(request, user_id: int):
+
+    user = get_object_or_404(User, id=user_id)  
+    
+    client = get_object_or_404(Client, user=user)  
+    
+    user_data = UserInfoSchema(
+        first_name=client.first_name,
+        last_name=client.last_name,
+        email=client.email,
+        username=user.username,
+        phone=client.phone,
+        gender=client.gender,
+        street=client.street,
+        postcode=client.postcode,
+        city=client.city,
+        region=client.region.id if client.region else None, 
+        country=client.country,
+        day_of_birth=client.day_of_birth.isoformat() if client.day_of_birth else None,
+        personnr_lastnr=client.personnr_lastnr
+    )
+
+    return user_data
+
+
+"""
+Register a new user and client in the system.
+"""
+@router.post("/register", response={201: dict, 400: dict}, tags=["caseworker-user-management"])
+def register_user(request, user_data: UserInfoSchema):
+
+    if not user_data.email or not user_data.email.strip():
+        return 400, {"error": "e-post måste anges och får inte vara tom."}
+
+    if not user_data.password or not user_data.password.strip():
+        return 400, {"error": "Lösenord måste anges och får inte vara tomt."}
+    
+    if not user_data.day_of_birth:
+        return 400, {"error": "Födelsedag måste anges med korrekt format, xxxx-xx-xx"}
+    
+    if not user_data.region:
+        return 400, {"error": "Region måste anges."}
+    
+    if Client.objects.filter(email=user_data.email).exists():
+        return 400, {"error": "Användare med denna e-postadress finns redan."}
+
+    try:
+        # för att säkerställa att antingen allt lyckas eller rullas tillbaka om något misslyckas.
+        with transaction.atomic():  
+
+            region_obj = Region.objects.filter(id=user_data.region).first()
+            if not region_obj:
+                raise ValueError("Regionen finns inte i databasen.")
+
+            userClient = User.objects.create_user(
+                email=user_data.email,
+                username=user_data.email,
+                password=user_data.password,
+                first_name=user_data.first_name,
+                last_name=user_data.last_name
+            )
+
+            group_obj, created = Group.objects.get_or_create(name="user")
+            userClient.groups.add(group_obj)
+
+            user = Client(
+                user=userClient,
+                first_name=user_data.first_name,
+                last_name=user_data.last_name,
+                region=region_obj,
+                phone=user_data.phone,
+                email=user_data.email,
+                gender=user_data.gender, 
+                street=user_data.street,
+                postcode=user_data.postcode,  
+                city=user_data.city,
+                country=user_data.country,
+                day_of_birth=user_data.day_of_birth,
+                personnr_lastnr=user_data.personnr_lastnr or "",
+            )
+
+            user.save()
+
+    except IntegrityError as e:
+         # Om något går fel under transaktionen, rulla tillbaka allt
+        return 400, {"error": "Något gick fel: En användare eller klient kunde inte skapas."}
+    except ValueError as e:
+        return 400, {"error": "Något gick fel."}
+    except Exception as e:
+        return 400, {"error": "Något gick fel."}
+
+    return 201, {"success": "Användare registrerad!", "user_id": userClient.id}
+
+
+"""
+Deletes a user from the system using their ID. 
+The function verifies the user's existence and group membership before proceeding with the deletion.
+"""
+@router.delete("/delete/user/{id}", response={200: dict, 400: dict, 500: dict}, tags=["caseworker-user-management"])
+def delete_user(request, id: int):
+    try:
+        user = User.objects.filter(id=id).first()
+
+        if not user:
+            return JsonResponse( {"error": "Användare finns inte."}, status=400)
+
+        if not user.groups.filter(name="user").exists():
+            return 400, {"error": "Användaren tillhör inte gruppen 'user'."}
+
+        user.delete()
+        
+        return 200, {"message": "Användaren har tagits bort."}
+
+    except Exception as e:        
+        return 500, {"error": "Ett internt fel inträffade, vänligen försök igen senare."}
+
+
+"""
+Updates the user and client information based on the provided payload. 
+This function checks if the user belongs to the 'user' group and updates their details accordingly.
+"""
+@router.put("/update/user/{user_id}", response={200: UserInfoSchema, 400: dict, 404: dict}, tags=["caseworker-user-management"])
+def update_user(request, user_id: int, payload: UserInfoSchema):
+    try:
+        user = User.objects.filter(id=user_id).first()
+
+        if not user:
+            return JsonResponse({"error": "Användare finns inte."}, status=404)
+
+        if not user.groups.filter(name="user").exists():
+            return JsonResponse({"error": "Användaren tillhör inte gruppen 'user'."}, status=400)
+
+        try:
+            client = Client.objects.get(user=user)
+        except Client.DoesNotExist:
+            return JsonResponse({"error": "Kunden som är kopplad till användaren finns inte."}, status=404)
+
+        # Mapping of payload fields to the corresponding model fields
+        updates = {
+            'email': payload.email,
+            'first_name': payload.first_name,
+            'last_name': payload.last_name,
+            'phone': payload.phone,
+            'gender': payload.gender,
+            'street': payload.street,
+            'postcode': payload.postcode,
+            'city': payload.city,
+            'country': payload.country,
+            'region_id': payload.region,
+            'day_of_birth': payload.day_of_birth,
+            'personnr_lastnr': payload.personnr_lastnr
+        }
+
+        # Using transaction.atomic to ensure all updates happen in a single transaction
+        with transaction.atomic():
+            # Update fields if they have changed
+            for field, value in updates.items():
+                if value is not None:
+                    if hasattr(client, field) and getattr(client, field) != value:
+                        setattr(client, field, value)
+
+                    # Also update the corresponding user field if it exists
+                    if field in ['email', 'first_name', 'last_name']:
+                        setattr(user, field, value)
+
+            # Save Changes
+            user.save()
+            client.save()
+
+        return JsonResponse(payload.dict(), status=200)
+
+    except Exception as e:
+        return JsonResponse({"error": "Ett internt fel inträffade, vänligen försök igen senare."}, status=400)
