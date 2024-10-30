@@ -271,9 +271,9 @@ class Booking(models.Model):
             
         # Get existing bookings that overlap, excluding the current booking being updated
         existing_bookings = Booking.objects.filter(
-        user=self.user,
-        start_date__lt=self.end_date,
-        end_date__gt=self.start_date,
+            user=self.user,
+            start_date__lt=self.end_date,
+            end_date__gt=self.start_date,
         ).exclude(id=self.id)  # Exclude the current booking
 
         # If there are overlapping bookings, raise a ValidationError
