@@ -5,6 +5,7 @@ from django.db import transaction
 from datetime import datetime, timedelta, date
 from django.http import JsonResponse
 from backend.auth import group_auth
+from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 
 from typing import List, Dict, Optional
@@ -165,11 +166,13 @@ def get_available_places_all(request):
     # Return the full list of available products across all hosts
     return available_products
 
-@router.get("/guests/nights/count/{user_id}/{start_date}/{end_date}", response=UserShelterStayCountSchema, tags=["caseworker-user-shelter-stay"])
+@router.get("/guests/nights/count/{user_id}/{start_date}/{end_date}", response=UserShelterStayCountSchema, tags=["caseworker-statistics"])
 def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date: str, page: int = 1, per_page: int = 20):
     try:
         start_date = date.fromisoformat(start_date)
         end_date = date.fromisoformat(end_date)
+
+        user = User.objects.get(id=user_id)
 
         user_bookings = Booking.objects.filter(
             user_id=user_id,
@@ -179,7 +182,8 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
             'product__host__region'
         ).only(
             'start_date', 'end_date', 'product__host__id', 'product__host__name',
-            'product__host__street', 'product__host__postcode', 'product__host__city', 'product__host__region__id', 'product__host__region__name'
+            'product__host__street', 'product__host__postcode', 'product__host__city', 'product__host__region__id',
+            'product__host__region__name'
         )
 
         paginator = Paginator(user_bookings, per_page)
@@ -217,6 +221,8 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
 
         response_data = {
             "user_id": user_id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
             "total_nights": total_nights,
             "user_stay_counts": user_stay_counts,
             "total_pages": paginator.num_pages,

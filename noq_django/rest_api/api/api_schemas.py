@@ -252,5 +252,10 @@ class UserStaySummarySchema(Schema):
 
 class UserShelterStayCountSchema(Schema):
     user_id: int
+    first_name: str
+    last_name: str
     user_stay_counts: List[UserStaySummarySchema]
-    
+
+
+class ShelterStayCountSchema(Schema):
+    stay_counts: List[UserShelterStayCountSchema]
