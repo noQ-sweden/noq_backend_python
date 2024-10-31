@@ -268,6 +268,20 @@ class Booking(models.Model):
                 ("Har redan en bokning samma dag!"),
                 code="already_booked",
             )
+            
+        # Get existing bookings that overlap, excluding the current booking being updated
+        existing_bookings = Booking.objects.filter(
+            user=self.user,
+            start_date__lt=self.end_date,
+            end_date__gt=self.start_date,
+        ).exclude(id=self.id)  # Exclude the current booking
+
+        # If there are overlapping bookings, raise a ValidationError
+        if existing_bookings.exists():
+            raise ValidationError(
+                ("You already have a booking that overlaps with these dates."),
+                code="overlapping_booking",
+            )
 
         # Check if there is free places available for the booking period
         # - Booking count is only valid if booking has status pending

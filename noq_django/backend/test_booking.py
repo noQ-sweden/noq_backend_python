@@ -287,6 +287,54 @@ class test_Booking(TestCase):
         assert availability is not None
         self.assertEqual(availability.places_left, 0)
 
+    def test_prevent_overlapping_bookings(self):
+            # Choose product of type B (The five rooms)
+                product = Product.objects.get(name = "ProductB")
+            # Test1: Validate that overlapping bookings trigger a ValidationError.
+            # booking1 is set to start today and end in two days. 
+            # booking2 is scheduled to start one day after booking1 begins and ends two days later.
+            # Since booking2's start date falls within the duration of booking1, 
+            # attempting to save booking2 should raise a ValidationError due to the overlap.
+                booking1 = Booking()
+                booking1.start_date = datetime.now().date()
+                booking1.end_date = booking1.start_date + timedelta(days=2)
+                booking1.product = product
+                booking1.user = Client.objects.get(id=1)
+                booking1.status = BookingStatus.objects.get(id=State.PENDING)
+                booking1.save()
+
+                booking2 = Booking()
+                booking2.start_date = datetime.now().date() + timedelta(days=1)
+                booking2.end_date = booking2.start_date + timedelta(days=2)
+                booking2.product = product
+                booking2.user = Client.objects.get(id=1)
+                booking2.status = BookingStatus.objects.get(id=State.PENDING)
+
+                with self.assertRaises(ValidationError):
+                    booking2.save()
+            # Test2: Verify that a new booking entirely within an existing booking raises a ValidationError.
+            # booking3 starts in three days and lasts for four days. 
+            # booking4 is set to start just one day after booking3 begins and ends two days after it starts(before the end booking 3). 
+            # Since booking4's dates fall entirely within the duration of booking3, 
+            # trying to save booking4 should raise a ValidationError due to the overlap.        
+                booking3 = Booking()
+                booking3.start_date = datetime.now().date() + timedelta(days=3)
+                booking3.end_date = booking3.start_date + timedelta(days=4)
+                booking3.product = product
+                booking3.user = Client.objects.get(id=1)
+                booking3.status = BookingStatus.objects.get(id=State.PENDING)
+                booking3.save()
+
+                booking4 = Booking()
+                booking4.start_date = datetime.now().date() + timedelta(days=4)
+                booking4.end_date = booking4.start_date + timedelta(days=2)
+                booking4.product = product
+                booking4.user = Client.objects.get(id=1)
+                booking4.status = BookingStatus.objects.get(id=State.PENDING)
+
+                with self.assertRaises(ValidationError):
+                    booking4.save()   
+
     def create_five_bookings(self, test_date, product):
         '''
         Make 5 bookings in different timespans.
