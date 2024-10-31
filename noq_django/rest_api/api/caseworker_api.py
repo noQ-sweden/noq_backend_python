@@ -6,6 +6,7 @@ from django.db import transaction
 from datetime import datetime, timedelta, date
 from django.http import JsonResponse
 from backend.auth import group_auth
+from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.contrib.auth.models import User, Group
 from typing import List, Dict, Optional
@@ -167,7 +168,8 @@ def get_available_places_all(request):
     # Return the full list of available products across all hosts
     return available_products
 
-@router.get("/guests/nights/count/{user_id}/{start_date}/{end_date}", response={400: dict, 200: UserShelterStayCountSchema}, tags=["caseworker-user-shelter-stay"])
+
+@router.get("/guests/nights/count/{user_id}/{start_date}/{end_date}", response={400: dict, 200: UserShelterStayCountSchema}, tags=["caseworker-statistics"])
 def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date: str, page: int = 1, per_page: int = 20):
     try:
 
@@ -179,6 +181,8 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
         start_date = date.fromisoformat(start_date)
         end_date = date.fromisoformat(end_date)
 
+        user = User.objects.get(id=user_id)
+
         user_bookings = Booking.objects.filter(
             user_id=client,
             start_date__lte=end_date,
@@ -187,7 +191,8 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
             'product__host__region'
         ).only(
             'start_date', 'end_date', 'product__host__id', 'product__host__name',
-            'product__host__street', 'product__host__postcode', 'product__host__city', 'product__host__region__id', 'product__host__region__name'
+            'product__host__street', 'product__host__postcode', 'product__host__city', 'product__host__region__id',
+            'product__host__region__name'
         )
 
         paginator = Paginator(user_bookings, per_page)
@@ -225,6 +230,8 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
 
         response_data = {
             "user_id": user_id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
             "total_nights": total_nights,
             "user_stay_counts": user_stay_counts,
             "total_pages": paginator.num_pages,
@@ -239,10 +246,73 @@ def get_user_shelter_stay_count(request, user_id: int, start_date: str, end_date
     except Exception as e:
         return JsonResponse({'detail': "An internal error occurred. Please try again later."}, status=500)
 
+
+@router.get("/guests/nights/count/{start_date}/{end_date}", response=List[UserShelterStayCountSchema], tags=["caseworker-statistics"])
+def get_shelter_stay_count(request, start_date: str, end_date: str, page: int = 1, per_page: int = 20):
+    try:
+        start_date = date.fromisoformat(start_date)
+        end_date = date.fromisoformat(end_date)
+
+        bookings = Booking.objects.filter(
+            start_date__gte=start_date, end_date__lte=end_date).select_related('user', 'user__user', 'product__host')
+
+        # Group data by user in a dictionary
+        user_data = {}
+        for booking in bookings:
+            client = booking.user
+            user_id = client.user.id
+            host = booking.product.host
+            host_data = {
+                'id': host.id,
+                'name': host.name,
+                'street': host.street,
+                'postcode': host.postcode,
+                'city': host.city,
+                'region': {
+                    'id': host.region.id,
+                    'name': host.region.name
+                },
+            }
+
+            # Calculate total nights
+            total_nights = (min(booking.end_date, end_date) - max(booking.start_date, start_date)).days
+
+            # Initialize user data if not present
+            if user_id not in user_data:
+                user_data[user_id] = {
+                    "user_id": user_id,
+                    "first_name": client.first_name,
+                    "last_name": client.last_name,
+                    "user_stay_counts": []
+                }
+
+            # Append each stay summary for the user
+            user_data[user_id]["user_stay_counts"].append({
+                "total_nights": total_nights,
+                "start_date": booking.start_date,
+                "end_date": booking.end_date,
+                "host": host_data
+            })
+
+        # Convert the grouped dictionary to a list for pagination
+        grouped_data = list(user_data.values())
+
+        paginator = Paginator(grouped_data, per_page)
+        user_stay_counts_page = paginator.get_page(page)
+
+        return user_stay_counts_page.object_list
+
+    except ValueError as ve:
+        return JsonResponse({'detail': "Something went wrong"}, status=400)
+
+    except Exception as e:
+        return JsonResponse({'detail': "An internal error occurred. Please try again later."}, status=500)
+
+
 """
 Get information about a user with user ID
 """
-@router.get("/user/{user_id}", response=UserInfoSchema, tags=["caseworker-CRUD-user"])
+@router.get("/user/{user_id}", response=UserInfoSchema, tags=["caseworker-user-management"])
 def get_user_information(request, user_id: int):
 
     user = get_object_or_404(User, id=user_id)  
@@ -271,7 +341,7 @@ def get_user_information(request, user_id: int):
 """
 Register a new user and client in the system.
 """
-@router.post("/register", response={201: dict, 400: dict}, tags=["caseworker-CRUD-user"])
+@router.post("/register", response={201: dict, 400: dict}, tags=["caseworker-user-management"])
 def register_user(request, user_data: UserInfoSchema):
 
     if not user_data.email or not user_data.email.strip():
@@ -341,7 +411,7 @@ def register_user(request, user_data: UserInfoSchema):
 Deletes a user from the system using their ID. 
 The function verifies the user's existence and group membership before proceeding with the deletion.
 """
-@router.delete("/delete/user/{id}", response={200: dict, 400: dict, 500: dict}, tags=["caseworker-CRUD-user"])
+@router.delete("/delete/user/{id}", response={200: dict, 400: dict, 500: dict}, tags=["caseworker-user-management"])
 def delete_user(request, id: int):
     try:
         user = User.objects.filter(id=id).first()
@@ -359,11 +429,12 @@ def delete_user(request, id: int):
     except Exception as e:        
         return 500, {"error": "Ett internt fel inträffade, vänligen försök igen senare."}
 
+
 """
 Updates the user and client information based on the provided payload. 
 This function checks if the user belongs to the 'user' group and updates their details accordingly.
 """
-@router.put("/update/user/{user_id}", response={200: UserInfoSchema, 400: dict, 404: dict}, tags=["caseworker-CRUD-user"])
+@router.put("/update/user/{user_id}", response={200: UserInfoSchema, 400: dict, 404: dict}, tags=["caseworker-user-management"])
 def update_user(request, user_id: int, payload: UserInfoSchema):
     try:
         user = User.objects.filter(id=user_id).first()
