@@ -155,7 +155,15 @@ def get_pending_bookings(request, limiter: Optional[
     int] = None):  # Limiter example /pending?limiter=10 for 10 results, empty returns all
     host = Host.objects.get(users=request.user)
     status_list = ['pending', 'accepted', 'advised_against']
-    bookings = Booking.objects.filter(product__host=host, status__description__in=status_list)
+    
+    # Get current date
+    current_date = timezone.now().date()
+
+    bookings = Booking.objects.filter(
+        product__host=host,
+        status__description__in=status_list,
+        start_date__gte=current_date
+    )
 
     if limiter is not None and limiter > 0:
         return bookings[:limiter]
