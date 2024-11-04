@@ -58,9 +58,16 @@ def get_host_data(request):
 def count_bookings(request):
     host = Host.objects.get(users=request.user)
 
+    # Get current date
+    current_date = timezone.now().date()
+
+    # Count only bookings that have a start date today or in the future
     pending_count = Booking.objects.filter(
         product__host=host,
-        status__description__in=['pending', 'advised_against', 'accepted']).count()
+        status__description__in=['pending', 'advised_against', 'accepted'],
+        start_date__gte=current_date  # Only count bookings with start dates today or in the future
+    ).count()
+    
     arrivals_count = Booking.objects.filter(
         product__host=host,
         start_date=date.today()
