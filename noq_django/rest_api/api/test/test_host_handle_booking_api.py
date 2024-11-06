@@ -40,13 +40,11 @@ class TestHostHandleBookingApi(TestCase):
 
     
     def delete_bookings(self):
-        print("Deleting all bookings...")
         Booking.objects.all().delete()
         
     
     def delete_users(self):
         # Delete the host_user created for the tests
-        print("Deleting all users")
         users = User.objects.all().delete()
 
 
@@ -180,6 +178,9 @@ class TestHostHandleBookingApi(TestCase):
                 status=BookingStatus.objects.get(id=State.PENDING)
             )
         ])
+        # Check the number of pending bookings in the database
+        pending_bookings_count = Booking.objects.filter(status=State.PENDING).count()
+        self.assertEqual(pending_bookings_count, 6)
 
         # Call the API to retrieve pending bookings
         response = self.client.get("/api/host/pending")
