@@ -38,9 +38,15 @@ class TestHostHandleBookingApi(TestCase):
         self.client.login(username=self.host_name, password=self.password)
         print(self.client)
 
-
+    
+    def delete_bookings(self):
+        print("Deleting all bookings...")
+        Booking.objects.all().delete()
+        
+    
     def delete_users(self):
         # Delete the host_user created for the tests
+        print("Deleting all users")
         users = User.objects.all().delete()
 
 
@@ -101,9 +107,13 @@ class TestHostHandleBookingApi(TestCase):
                 )
                 booking_status.save()
 
-        # Create pending bookings
-        # 1 product x 4 guests = 4 bookings
+        # Create host and user association (only need to do this once)
         host = Host.objects.get(name="Host 1")
+        host_user = User.objects.get(username="user.host@test.nu")
+        host.users.add(host_user)
+        host.save()
+
+        # Create pending bookings
         host_products = Product.objects.filter(host=host)
         clients = Client.objects.all()
         start_date = datetime.now()
@@ -124,11 +134,6 @@ class TestHostHandleBookingApi(TestCase):
 
 
     def test_batch_accept_bookings(self):
-        # Connect host_user and host
-        host = Host.objects.get(name="Host 1")
-        host_user = User.objects.get(username="user.host@test.nu")
-        host.users.add(host_user)
-        host.save()
 
         # There should be 4 pending bookings to start with
         bookings = Booking.objects.filter(status=State.PENDING).all()
@@ -156,8 +161,37 @@ class TestHostHandleBookingApi(TestCase):
         parsed_response = json.loads(response.content)
         self.assertEqual(len(parsed_response), 0)
 
+    def test_pending_bookings_exclude_past_start_date(self):
+
+        # Create one booking with a past start date
+        Booking.objects.bulk_create([
+            Booking(
+                start_date=datetime.now().date() - timedelta(days=1),  # Past start date
+                end_date=datetime.now().date() + timedelta(days=1),
+                product=Product.objects.get(name="room"),
+                user=Client.objects.first(),
+                status=BookingStatus.objects.get(id=State.PENDING)
+            ),
+            Booking(
+                start_date=datetime.now().date() + timedelta(days=1),  # Future start date
+                end_date=datetime.now().date() + timedelta(days=2),
+                product=Product.objects.get(name="room"),
+                user=Client.objects.last(),
+                status=BookingStatus.objects.get(id=State.PENDING)
+            )
+        ])
+
+        # Call the API to retrieve pending bookings
+        response = self.client.get("/api/host/pending")
+        self.assertEqual(response.status_code, 200)
+
+        # Parse response and verify that only the future booking is included
+        bookings = json.loads(response.content)
+        self.assertEqual(len(bookings), 5)  # Only 5 bookings should be returned (The 4 bookings created in the set up function plus the one booking that has a future start date)
+        
 
     def tearDown(self):
         # After the tests delete all data generated for the tests
+        self.delete_bookings()        
         self.delete_products()
         self.delete_users()
