@@ -82,6 +82,9 @@ class UserPostSchema(Schema):
     unokod: str = None
 
 
+class UserIDSchema(Schema):
+    id: int
+
 class HostSchema(ModelSchema):
     """
 
@@ -177,6 +180,7 @@ class BookingPostSchema(Schema):
     start_date: date
     end_date: date
     product_id: int
+    user_id: Optional[int] = None
 
 
 class BookingUpdateSchema(Schema):
