@@ -102,12 +102,19 @@ def add_hosts(nbr: int) -> int:
             continue
 
         host = Host(
-            name=host_name, street=faker.street_address(), city=stad, region=region_obj
+            name=host_name,
+            street=faker.street_address(),
+            city=stad,
+            region=region_obj,
+            website=faker.url(),
+            is_drugtolerant=random.choice([True, False]),
+            max_days_per_booking=random.randint(1, 30),
+        
         )
 
         host.save()
 
-        new_user = make_user(group="host", is_test_user=is_test_user)
+        new_user = make_user(group="host", is_test_user=is_test_user, first_name=faker.first_name(), last_name=faker.last_name())
         host.users.add(new_user)
 
         if is_test_user: is_test_user = False

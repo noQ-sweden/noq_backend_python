@@ -108,6 +108,11 @@ class Host(models.Model):
     region = models.ForeignKey(
         Region, on_delete=models.CASCADE, null=False, blank=False
     )
+# New fields
+    website = models.CharField(max_length=255, null=True, blank=True)
+    is_drugtolerant = models.BooleanField(default=False)
+    max_days_per_booking = models.IntegerField(default=0)
+
     blocked_clients = models.ManyToManyField(Client, blank=True)
 
     # Adding a many-to-many relationship with User
@@ -195,7 +200,6 @@ class Booking(models.Model):
     def ready(self):
         from . import signals
 
-    # return count of accepted, pending and checked_in bookings
     def calc_available(self):
         bookings_per_day = self.bookings_count_per_date()
         for date in bookings_per_day:
@@ -217,9 +221,20 @@ class Booking(models.Model):
                 product_available.save()
 
     def save(self, *args, **kwargs):
+        # Calculate the duration of the booking
+        booking_duration = (self.end_date - self.start_date).days
+
+        # Retrieve the max_days_per_booking value from the associated Host
+        max_days_per_booking = self.product.host.max_days_per_booking
+
+        # Check if the booking duration exceeds the allowed maximum days
+        if booking_duration > max_days_per_booking:
+            raise ValidationError(
+                f"Booking duration of {booking_duration} days exceeds the maximum allowed {max_days_per_booking} days for this host."
+            )
 
         # Check that the booked date is not in the past
-        if str(self.start_date) < str(datetime.today().date()):
+        if str(self.start_date) < str(datetime.today().date()) and self.status.id != State.COMPLETED:
             raise ValidationError(
                 ("Fel: Bokningen börjar före dagens datum!"),
                 code="Date error",
@@ -252,6 +267,20 @@ class Booking(models.Model):
             raise ValidationError(
                 ("Har redan en bokning samma dag!"),
                 code="already_booked",
+            )
+
+        # Get existing bookings that overlap, excluding the current booking being updated
+        existing_bookings = Booking.objects.filter(
+            user=self.user,
+            start_date__lt=self.end_date,
+            end_date__gt=self.start_date,
+        ).exclude(id=self.id)  # Exclude the current booking
+
+        # If there are overlapping bookings, raise a ValidationError
+        if existing_bookings.exists():
+            raise ValidationError(
+                ("You already have a booking that overlaps with these dates."),
+                code="overlapping_booking",
             )
 
         # Check if there is free places available for the booking period

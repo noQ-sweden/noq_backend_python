@@ -1,6 +1,7 @@
 from datetime import datetime
 from django_q.models import Schedule
 
+
 def delete_entries(): #rensa tidigare schemaläggningar från databasen om det finns några
     jobs = Schedule.objects.all()
     if len(jobs) != 0:
