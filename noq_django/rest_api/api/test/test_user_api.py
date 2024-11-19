@@ -179,6 +179,35 @@ class TestProductsApi(TestCase):
         self.assertEqual(
             params['bookings_per_date'][f"{start_date + timedelta(days=4):%Y-%m-%d}"], 0)
 
+    def test_delete_reserved_booking(self):
+        # Step 1: Create a booking for the test user
+        start_date = datetime.now().date()
+        end_date = start_date + timedelta(days=3)
+        product = Product.objects.get(total_places=1)
+        # Since only the first user is logged in the list of the two users, the booking will belong to the first user
+        client = Client.objects.get(
+            user=User.objects.get(username=self.t_data.usernames[0])) 
+
+        booking = Booking(
+            start_date=start_date,
+            end_date=end_date,
+            product=product,
+            user=client,
+            status=BookingStatus.objects.get(id=State.RESERVED)
+        )
+        booking.save()
+        
+        # Step 2: Perform DELETE request on the booking
+        url = f"/api/user/bookings/{booking.id}"
+        response = self.t_data.test_client.delete(url)
+
+        # Step 3: Verify the response
+        self.assertEqual(response.status_code, 200)
+
+        # Step 4: Confirm the booking no longer exists in the database
+        with self.assertRaises(Booking.DoesNotExist):
+            Booking.objects.get(id=booking.id)
+
 
     def tearDown(self):
         # After the tests delete all data generated for the tests
