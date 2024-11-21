@@ -29,4 +29,6 @@ urlpatterns = [
     path('sleeping_spaces/update/<int:pk>/', views.update_sleeping_space, name='update_sleeping_space'),
     path('sleeping_spaces/delete/<int:pk>/', views.delete_sleeping_space, name='delete_sleeping_space'),
     path('bookings/daily/', views.daily_bookings_view, name='daily_bookings_view'),
+    path('host/<int:host_id>/', views.host_bookings_view, name='host_bookings')
+
 ]

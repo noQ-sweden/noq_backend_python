@@ -13,6 +13,8 @@ from .forms import ProductForm
 import json
 from urllib.parse import urlencode
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+
 
 
         
@@ -262,7 +264,7 @@ def invoice_create(request):
         'message_type': message_type,
     })
 
-
+@login_required(login_url='/login/')
 def host_bookings_view(request, host_id):
     debug(request, "host_bookings")
     # Not sure if we have a host login get so I just added the admin login instead
