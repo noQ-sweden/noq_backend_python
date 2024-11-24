@@ -46,13 +46,13 @@ router = Router(auth=lambda request: group_auth(request, "volunteer"))
 
 def send_confirmation_to_guest(email, booking):
     message = f"""
-    Dear {booking.user.first_name} {booking.user.last_name},
-    
-    Your booking for {booking.product.name} has been confirmed.
-    Start Date: {booking.start_date}
-    End Date: {booking.end_date}
+    Hej {booking.user.first_name} {booking.user.last_name},
 
-    Thank you!
+    Din bokning för {booking.product.name} har bekräftats.
+    Startdatum: {booking.start_date}
+    Slutdatum: {booking.end_date}
+
+    Tack så mycket!
     """
     send_mail(
         subject="Booking Confirmation",

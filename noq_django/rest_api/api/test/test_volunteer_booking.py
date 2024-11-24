@@ -39,7 +39,7 @@ class TestVolunteerApi(TestCase):
             email=self.CLIENT_EMAIL,
             region=self.region,
             user=self.volunteer_user,
-            gender="M"  # Add gender here (e.g., "M" or "F")
+            gender="M"  # Add gender here (e.g., "M" or "K")
     )
 
     def test_request_booking(self):
