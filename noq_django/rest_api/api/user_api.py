@@ -108,21 +108,43 @@ def list_bookings(request):
 
     return bookings
 
+
+@router.get("/bookings/confirm/{booking_id}", response={200: str, 404: str}, tags=["user-booking"])
+def list_bookings(request, booking_id: int):
+    try:
+        # Get the booking object, raise an exception if it doesn't exist
+        booking = Booking.objects.get(id=booking_id)
+    except Booking.DoesNotExist:
+        raise HttpError(404, "Booking not found.")
+
+    # Ensure that the current user is the owner of the booking
+    user = Client.objects.get(user=request.user)
+    if booking.user != user:
+        raise HttpError(403, "You are not authorized to confirm this booking.")
+
+    try:
+        booking.status = BookingStatus.objects.get(description='confirmed')
+        booking.save()
+        return 200, "Booking confirmed successfully."
+    except BookingStatus.DoesNotExist:
+        raise HttpError(404, detail="Not able to confirm booking.")
+
+
 @router.delete("/bookings/{booking_id}", response={200: str, 404: str}, tags=["user-booking"])
 def delete_booking(request, booking_id: int):
     try:
         # Get the booking object, raise an exception if it doesn't exist
         booking = Booking.objects.get(id=booking_id)
     except Booking.DoesNotExist:
-        raise HttpError(404, "Booking not found")
+        raise HttpError(404, "Booking not found.")
     
     # Ensure that the current user is the owner of the booking
     user = Client.objects.get(user=request.user)
     if booking.user != user:
-        raise HttpError(403, "You are not authorized to delete this booking")
+        raise HttpError(403, "You are not authorized to delete this booking.")
     
     # Delete the booking
     booking.delete()
     
     # Return a success message
-    return 200, "Booking deleted successfully"
+    return 200, "Booking deleted successfully."
