@@ -91,15 +91,14 @@ def request_booking(request, booking_data: BookingPostSchema):
             raise HttpError(200, json.dumps(e.params))
 
     return booking
-    
-@router.get("/bookings", response=List[BookingSchema], tags=["user-booking"])
-def list_bookings(request):
 
-    user = Client.objects.get(user=request.user)
+
+def getBookings (user):
+    client = Client.objects.get(user=user)
     status_list = ['completed', 'checked_in']
     # List of bookings for the user
     bookings = (Booking.objects.filter(
-        user=user
+        user=client
     ).exclude(
         end_date__lt=timezone.now().date()
     ).exclude(
@@ -108,8 +107,13 @@ def list_bookings(request):
 
     return bookings
 
+@router.get("/bookings", response=List[BookingSchema], tags=["user-booking"])
+def list_bookings(request):
 
-@router.get("/bookings/confirm/{booking_id}", response={200: str, 404: str}, tags=["user-booking"])
+    return getBookings(request.user)
+
+
+@router.get("/bookings/confirm/{booking_id}", response=List[BookingSchema], tags=["user-booking"])
 def list_bookings(request, booking_id: int):
     try:
         # Get the booking object, raise an exception if it doesn't exist
@@ -125,7 +129,7 @@ def list_bookings(request, booking_id: int):
     try:
         booking.status = BookingStatus.objects.get(description='confirmed')
         booking.save()
-        return 200, "Booking confirmed successfully."
+        return getBookings(request.user)
     except BookingStatus.DoesNotExist:
         raise HttpError(404, detail="Not able to confirm booking.")
 
