@@ -1,7 +1,0 @@
-{
-  "editor.defaultFormatter": "ms-python.black-formatter",
-  "python.testing.pytestArgs": ["."],
-  "python.testing.unittestEnabled": true,
-  "python.testing.pytestEnabled": false,
-  "python.testing.unittestArgs": ["-v", "-s", "./noq_django", "-p", "test*.py"]
-}
