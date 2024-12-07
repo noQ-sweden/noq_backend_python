@@ -16,6 +16,7 @@ from backend.models import (
     Booking,
     BookingStatus,
     Available,
+    User,
 )
 from .api_schemas import (
     RegionSchema,
@@ -31,6 +32,7 @@ from .api_schemas import (
     AvailableSchema,
     AvailableProductsSchema,
     ClientSchema,
+    VolunteerCreateClientPostSchema,
 )
 
 router = Router(auth=lambda request: group_auth(request, "volunteer"))  #request defineras vid call, gruppnamnet är statiskt
@@ -92,34 +94,30 @@ def list_guests(request):
     return {"status": "success"}, 200
 
 
-@router.post("/guest/create", response=BookingSchema, tags=["Volunteer"])
-def request_booking(request, booking_data: BookingPostSchema): #user data
+@router.post("/guest/create", response=ClientSchema, tags=["Volunteer"])
+def create_client(request, client_data: VolunteerCreateClientPostSchema):
+    count = Client.objects.filter(unokod=client_data.uno).count()
+    if count > 0:
+        raise HttpError(409, "Client with the unocode exists already.")
+
     try:
-        product = Product.objects.get(id=booking_data.product_id)
+        user = User()
+        user.username = client_data.uno
+        user.save()
 
-        if not product.bookable:
-            raise HttpError(422, "This product is not bookable.")
+        new_client = Client()
+        new_client.user = User.objects.get(username=client_data.uno)
+        new_client.first_name = client_data.first_name
+        new_client.last_name = client_data.last_name
+        new_client.unokod = client_data.uno
+        new_client.gender = client_data.gender
+        new_client.region = Region.objects.get(name=client_data.region)
 
-        Available.objects.filter(product=product)
-    except Available.DoesNotExist:
-        raise HttpError(404, "Product is not available")
-    except Product.DoesNotExist:
-        raise HttpError(404, "Product does not exist")
-
-    user = Client.objects.get(user=request.user)
-    booking = Booking()
-    booking.start_date = booking_data.start_date
-    booking.end_date = booking_data.end_date
-    booking.product = product
-    booking.user = user
-    booking.status = BookingStatus.objects.get(description="pending")
-    try:
-        booking.save()
+        new_client.save()
     except Exception as e:
-        if e.code == "full":
-            raise HttpError(200, json.dumps(e.params))
+        raise HttpError(400, "Not able to create client.")
 
-    return booking
+    return new_client
 
 
 @router.post("/booking/request", response=BookingSchema, tags=["Volunteer"])

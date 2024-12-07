@@ -210,6 +210,20 @@ class VolunteerBookingPostSchema(Schema):
     product_id: int
     uno: str
 
+
+class VolunteerCreateClientPostSchema(Schema):
+    """
+    For creating a Client
+
+    """
+
+    first_name: str
+    last_name: str
+    uno: str
+    gender: str
+    region: str
+
+
 class BookingUpdateSchema(Schema):
     booking_id: int
 
