@@ -354,6 +354,16 @@ def product_update(request, product_id: int, payload: ProductSchema):
 @router.delete("/products/{product_id}", response=dict, tags=["Products"])
 def product_delete(request, product_id: int):
     product = get_object_or_404(Product, id=product_id)
+    # Manually delete related Booking and Available objects before deleting the Product
+    # Delete all Bookings related to the product
+    bookings = Booking.objects.filter(product=product)
+    bookings.delete()
+
+    # Delete all Available records related to the product
+    availabilities = Available.objects.filter(product=product)
+    availabilities.delete()
+
+    # Now it's safe to delete the product itself
     product.delete()
     return {"message": "Product deleted successfully"}
 
