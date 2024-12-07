@@ -177,10 +177,6 @@ class TestProductsApi(TestCase):
         availability_exists = Available.objects.filter(product_id=product.id).exists()
         self.assertFalse(availability_exists)  # Availability should no longer exist
 
-        availability_exists = Available.objects.filter(product_id=product.id).exists()
-        self.assertFalse(availability_exists)  # Availability should no longer exist
-
-
 
     def tearDown(self):
         # After the tests delete all data generated for the tests
