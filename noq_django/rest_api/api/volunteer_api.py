@@ -174,18 +174,18 @@ def confirm_booking(request, booking_id: int):
     user = booking.user
     print(user.__dict__)
 
-    # Check if the guest has contact information
-    # TODO: handle nicely, should not return error.
-    #if not user.email:
-    #    raise HttpError(404, "Guest contact information is not available.")
-
-    # Send confirmation
-    # TODO: Handle nicely, see comment above
-    #send_confirmation_to_guest(user.email, booking)
-
-    # Optionally update booking status to reflect confirmation
+    # Update booking status to reflect confirmation
     booking.status = BookingStatus.objects.get(description="confirmed")
-    booking.save()
+
+    try:
+        booking.save()
+    except Exception as e:
+        raise HttpError(400, json.dumps(e.params))
+
+    # Check if the guest has contact information
+    if user.email:
+        # Send confirmation
+        send_confirmation_to_guest(user.email, booking)
 
     return booking
 
