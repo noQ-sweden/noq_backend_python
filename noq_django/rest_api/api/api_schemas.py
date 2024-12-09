@@ -17,6 +17,25 @@ from datetime import date, timedelta, datetime
 
 date_string: str
 
+
+class ClientSchema(ModelSchema):
+    """
+
+    Region
+
+    Exempelvis Stockholm City och Farsta
+
+    Varje Host tillhör en Region
+    """
+
+    class Meta:
+        model = Client
+        exclude =\
+            ["user", "gender", "street", "postcode", "city", "country",
+             "phone", "email", "day_of_birth", "personnr_lastnr",
+             "region", "requirements", "last_edit", "flag"]
+
+
 class RegionSchema(ModelSchema):
     """
 
@@ -84,6 +103,7 @@ class UserPostSchema(Schema):
 
 class UserIDSchema(Schema):
     id: int
+
 
 class HostSchema(ModelSchema):
     """
@@ -183,9 +203,34 @@ class BookingPostSchema(Schema):
     user_id: Optional[int] = None
 
 
+class VolunteerBookingPostSchema(Schema):
+    """
+    Booking för att boka en Product
+
+    """
+
+    user_id: int
+    start_date: date
+    end_date: date
+    product_id: int
+    uno: str
+
+
+class VolunteerCreateClientPostSchema(Schema):
+    """
+    For creating a Client
+
+    """
+
+    first_name: str
+    last_name: str
+    uno: str
+    gender: str
+    region: str
+
+
 class BookingUpdateSchema(Schema):
     booking_id: int
-
 
 
 class BookingUpdateSchema(Schema):

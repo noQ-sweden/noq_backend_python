@@ -435,7 +435,7 @@ class VolunteerProfile(models.Model):
 class VolunteerHostAssignment(models.Model):
     volunteer = models.ForeignKey(VolunteerProfile, on_delete=models.CASCADE, related_name="host_assignments")
     host = models.ForeignKey('Host', on_delete=models.CASCADE)
-    active = models.BooleanField(default=True)  
+    active = models.BooleanField(default=True)
     start_date = models.DateField(verbose_name="Startdatum")
     end_date = models.DateField(null=True, verbose_name="Slutdatum")
 
