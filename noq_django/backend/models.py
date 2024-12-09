@@ -411,3 +411,39 @@ class SleepingSpace(models.Model):
 
     def __str__(self):
         return f"{self.bed_type} ({self.status})"
+
+
+class VolunteerProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    availability = models.CharField(max_length=50)
+    skills = models.TextField(blank=True)
+    preferred_regions = models.ManyToManyField('Region')
+
+    def reassign_to_host(self, new_host):
+        start_date = models.DateField(verbose_name="Startdatum")
+        VolunteerHostAssignment.objects.create(
+            volunteer=self,
+            host=new_host,
+            active=True,
+            start_date=start_date
+        )
+
+    def __str__(self):
+        return f"{self.user.username} - Volunteer Profile"
+
+
+class VolunteerHostAssignment(models.Model):
+    volunteer = models.ForeignKey(VolunteerProfile, on_delete=models.CASCADE, related_name="host_assignments")
+    host = models.ForeignKey('Host', on_delete=models.CASCADE)
+    active = models.BooleanField(default=True)
+    start_date = models.DateField(verbose_name="Startdatum")
+    end_date = models.DateField(null=True, verbose_name="Slutdatum")
+
+    def deactivate(self, end_date=None):
+        """Mark this assignment as inactive and set the end date."""
+        self.active = False
+        self.end_date = end_date
+        self.save()
+
+    def __str__(self):
+        return f"{self.volunteer.user.username} assigned to {self.host.name} - {'Active' if self.active else 'Inactive'}"
