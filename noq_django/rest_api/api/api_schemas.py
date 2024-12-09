@@ -202,6 +202,7 @@ class BookingPostSchema(Schema):
     product_id: int
     user_id: Optional[int] = None
 
+
 class VolunteerBookingPostSchema(Schema):
     """
     Booking för att boka en Product
@@ -230,7 +231,6 @@ class VolunteerCreateClientPostSchema(Schema):
 
 class BookingUpdateSchema(Schema):
     booking_id: int
-
 
 
 class BookingUpdateSchema(Schema):

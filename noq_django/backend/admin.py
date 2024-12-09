@@ -1,7 +1,7 @@
 from typing import Any
 from django.contrib import admin
 from django.contrib.auth.models import User, Group
-from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus, SleepingSpace
+from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus, SleepingSpace, VolunteerProfile, VolunteerHostAssignment
 
 # Register the models.
 admin.site.register(Region)
@@ -119,3 +119,30 @@ class InvoiceStatusAdmin(admin.ModelAdmin):
     list_display = ('name',)
     ordering = ('name',)
     search_fields = ('name',)
+
+
+class VolunteerHostAssignmentInline(admin.TabularInline):
+    model = VolunteerHostAssignment
+    extra = 1  # Show one empty form by default for adding new assignments
+    fields = ('host', 'active', 'start_date', 'end_date')  # Fields to display in the inline
+
+
+@admin.register(VolunteerProfile)
+class VolunteerProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'availability', 'skills', 'display_active_hosts', 'display_preferred_regions')
+    search_fields = ('user__username', 'availability', 'skills')
+    list_filter = ('availability',)
+    filter_horizontal = ('preferred_regions',)
+    inlines = [VolunteerHostAssignmentInline]  # Display assignment history in the profile admin page
+
+    def display_active_hosts(self, obj):
+        # Show all active hosts
+        active_host_assignments = VolunteerHostAssignment.objects.filter(volunteer=obj, active=True)
+        return ", ".join([assignment.host.name for assignment in active_host_assignments]) if active_host_assignments else "No active hosts"
+
+    display_active_hosts.short_description = 'Active Hosts'
+
+    def display_preferred_regions(self, obj):
+        return ", ".join([region.name for region in obj.preferred_regions.all()])
+
+    display_preferred_regions.short_description = 'Preferred Regions'

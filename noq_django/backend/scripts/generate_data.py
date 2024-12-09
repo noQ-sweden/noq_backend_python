@@ -1,5 +1,7 @@
 import random
+from random import choice, sample
 from datetime import datetime, timedelta
+from django.utils import timezone
 from icecream import ic
 from faker import Faker
 from django.contrib.auth.models import User, Group
@@ -8,7 +10,7 @@ from django.conf import settings
 
 from .delete_all_data import reset_all_data
 
-from backend.models import Host, Client, Product, Region, Booking, BookingStatus, State
+from backend.models import Host, Client, Product, Region, Booking, BookingStatus, State, VolunteerProfile, VolunteerHostAssignment
 
 
 def get_regioner():
@@ -117,7 +119,7 @@ def add_hosts(nbr: int) -> int:
 
         host.save()
 
-        new_user = make_user(group="host", is_test_user=is_test_user)
+        new_user = make_user(group="host", is_test_user=is_test_user, first_name="Test" if is_test_user else faker.first_name(), last_name="Host" if is_test_user else faker.last_name())
         host.users.add(new_user)
 
         if is_test_user: is_test_user = False
@@ -164,6 +166,95 @@ def add_caseworkers(nbr: int) -> int:
 
     return host_updated
 
+def add_volunteers(nbr: int) -> int:
+    from random import choice, sample
+    faker = Faker()
+    print("\n---- VOLUNTEERS ----")
+    volunteers_created = 0  
+
+    availability_options = ["Weekdays", "Weekends", "Weekends-Evenings", "Weekends-Mornings", "Weekdays-Evenings", "Weekdays-Mornings"]
+    skills_options = [
+        "First aid", "Event coordination", "Fundraising", "Public speaking",
+        "Data entry", "Teaching", "Translation", "Social media management"
+    ]
+
+    all_regions = list(Region.objects.all())
+    all_hosts = list(Host.objects.all())
+
+    # Check if the test volunteer user already exists
+    test_user = User.objects.filter(username="user.volunteer@test.nu").first()
+    
+    if not test_user:
+        # Create the test user if it doesn't exist
+        test_user = make_user(
+            group="volunteer",
+            is_test_user=True,
+            first_name="Test",
+            last_name="Volunteer"
+        )
+        # Only create a VolunteerProfile if it doesn't already exist
+        if not VolunteerProfile.objects.filter(user=test_user).exists():
+            profile = VolunteerProfile.objects.create(
+                user=test_user,
+                availability=choice(availability_options),
+                skills=", ".join(sample(skills_options, 2))
+            )
+            preferred_regions = sample(all_regions, choice([1, 2, 3]))
+            profile.preferred_regions.set(preferred_regions)
+            profile.save()
+
+            # Assign an active host to the test volunteer
+            assigned_host = choice(all_hosts)
+            VolunteerHostAssignment.objects.create(
+                volunteer=profile,
+                host=assigned_host,
+                active=True,
+                start_date=timezone.now().date()
+            )
+
+        volunteers_created += 1
+
+    # Calculate remaining volunteers to create
+    additional_users_needed = nbr - volunteers_created
+    for _ in range(additional_users_needed):
+        # Generate random first and last names
+        first_name = faker.first_name()
+        last_name = faker.last_name()
+
+        # Create a unique volunteer user
+        volunteer_user = make_user(
+            group="volunteer",
+            is_test_user=False,
+            first_name=first_name,
+            last_name=last_name
+        )
+
+        if not VolunteerProfile.objects.filter(user=volunteer_user).exists():
+            profile = VolunteerProfile.objects.create(
+                user=volunteer_user,
+                availability=choice(availability_options),
+                skills=", ".join(sample(skills_options, 2))
+            )
+
+            preferred_regions = sample(all_regions, choice([1, 2, 3]))
+            profile.preferred_regions.set(preferred_regions)
+            profile.save()
+
+            # Assign an active host to the volunteer
+            assigned_host = choice(all_hosts)
+            VolunteerHostAssignment.objects.create(
+                volunteer=profile,
+                host=assigned_host,
+                active=True,
+                start_date=timezone.now().date()
+            )
+
+            volunteers_created += 1
+
+        print(f"Volunteer user created or updated: {volunteer_user.username}")
+
+    print(f"\nTotal volunteers created: {volunteers_created}")
+    return volunteers_created
 
 def add_users(nbr: int):
     faker = Faker("sv_SE")
@@ -360,6 +451,7 @@ def run(*args):
     add_region(5)
     add_hosts(10)
     add_caseworkers(1)
+    add_volunteers(2)
     add_products(6)
     add_users(16)
 

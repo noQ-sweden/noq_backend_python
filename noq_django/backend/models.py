@@ -446,4 +446,4 @@ class VolunteerHostAssignment(models.Model):
         self.save()
 
     def __str__(self):
-        return f"{self.volunteer.user.username} assigned to {self.host.name} - {'Active' if self.active else 'Inactive'}"
+        return f"{self.volunteer.user.username} assigned to {self.host.name} - {'Active' if self.active else 'Inactive'}" 

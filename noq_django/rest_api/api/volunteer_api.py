@@ -21,6 +21,7 @@ from backend.models import (
     Available,
     VolunteerProfile,
     VolunteerHostAssignment,
+    User,
 )
 
 from .api_schemas import (
@@ -38,6 +39,7 @@ from .api_schemas import (
     ProductSchemaWithPlacesLeft,
     UserIDSchema,
     ClientSchema,
+    VolunteerCreateClientPostSchema,
 )
 
 router = Router(auth=lambda request: group_auth(request, "volunteer"))
@@ -58,7 +60,7 @@ def send_confirmation_to_guest(email, booking):
     send_mail(
         subject="Booking Confirmation",
         message=message,
-        from_email="noreply@yourdomain.com",  # not sure what our domain is :) will need to be updated
+        from_email="noreply@yourdomain.com", #not sure what our domain is :) will need to be updated
         recipient_list=[email],
         fail_silently=False,
     )
@@ -159,33 +161,6 @@ def request_booking(request, booking_data: BookingPostSchema):
     return booking
 
 
-@router.patch("/confirm_booking/{booking_id}", response=BookingSchema, tags=["Volunteer"])
-def confirm_volunteer_booking(request, booking_id: int):
-    # Retrieve the booking and validate its existence
-    booking = get_object_or_404(Booking, id=booking_id)
-
-    # Ensure booking status allows for confirmation (if you want a condition)
-    if booking.status.description != "pending":
-        raise HttpError(400, "Only pending bookings can be confirmed.")
-
-    # Retrieve the user associated with the booking
-    user = booking.user
-    print(user.__dict__)
-
-    # Check if the guest has contact information
-    if not user.email:
-        raise HttpError(404, "Guest contact information is not available.")
-
-    # Send confirmation
-    send_confirmation_to_guest(user.email, booking)
-
-    # Optionally update booking status to reflect confirmation
-    booking.status = BookingStatus.objects.get(description="confirmed")
-    booking.save()
-
-    return booking
-
-
 @router.patch("/booking/confirm/{booking_id}", response=BookingSchema, tags=["Volunteer"])
 def confirm_booking(request, booking_id: int):
     # Retrieve the booking and validate its existence
@@ -245,9 +220,35 @@ def search_guest(
 def list_guests(request):
     return {"status": "success"}, 200
 
-# based on if we want to filter volunteer + associated with host and show only those records.
-""""
-@router.get("/available/{selected_date}", response=List[AvailableProductsSchema], tags=["Volunteer"])
+
+@router.post("/guest/create", response=ClientSchema, tags=["Volunteer"])
+def create_client(request, client_data: VolunteerCreateClientPostSchema):
+    count = Client.objects.filter(unokod=client_data.uno).count()
+    if count > 0:
+        raise HttpError(409, "Client with the unocode exists already.")
+
+    try:
+        user = User()
+        user.username = client_data.uno
+        user.save()
+
+        new_client = Client()
+        new_client.user = User.objects.get(username=client_data.uno)
+        new_client.first_name = client_data.first_name
+        new_client.last_name = client_data.last_name
+        new_client.unokod = client_data.uno
+        new_client.gender = client_data.gender
+        new_client.region = Region.objects.get(name=client_data.region)
+
+        new_client.save()
+    except Exception as e:
+        raise HttpError(400, "Not able to create client.")
+
+    return new_client
+
+#based on if we want to filter volunteer + associated with host and show only those records.
+"""
+@router.get("/available/{selected_date}", response=List[AvailableProductsSchema], tags=["volunteer-booking"])
 def list_available(request, selected_date: str):
     try:
         selected_date = models.DateField().to_python(selected_date)
