@@ -2,8 +2,9 @@ import sys
 sys.path.append("....backend") # Adds folder where backend is to python modules path.
 import json
 from django.test import TestCase
-from backend.models import Host, Client, Product, Region
+from backend.models import (Host, Client, Product, Region, Available, Booking, State, BookingStatus)
 from .test_data import TestData
+from datetime import datetime, timedelta
 
 class TestProductsApi(TestCase):
     t_data = None
@@ -123,17 +124,58 @@ class TestProductsApi(TestCase):
 
 
     def test_delete_product(self):
-        product = Product.objects.all().first()
-        id = product.id
+        # Clean up existing data
+        Booking.objects.all().delete()
+        Available.objects.all().delete()
+      
+        product = self.t_data.products[0]  # Use the first product from the TestData
 
-        url = "/api/host/products/" + str(product.id)
-        # data should be product_id, not sure how to use parameter
-        response = self.t_data.test_client.delete(url, product_id=id)
+        # Step 2: Create bookings and availability for the product
+        client = Client.objects.create(
+            first_name="Test Client", gender="K", user=self.t_data.users[0], region=self.t_data.region
+        )
+        booking_status = BookingStatus.objects.get(id=State.PENDING)
 
+        # Create a booking linked to the product
+        booking = Booking.objects.create(
+            product=product,
+            user=client,
+            status=booking_status,
+            start_date=datetime.now().date(),
+            end_date=datetime.now().date() + timedelta(days=1),
+        )
+        
+        # Create availability for the product
+        availability = Available.objects.create(
+            product=product,
+            available_date=datetime.now().date(),
+            places_left=product.total_places -1,  # Assuming 1 place is booked
+        )
+
+        # Ensure the product has bookings and availability
+        self.assertEqual(Booking.objects.count(), 1)
+
+        #self.assertEqual(Available.objects.filter(product=product).count(), 1)
+        availability = Available.objects.filter(product=product).first()
+        self.assertEqual(availability.places_left, 1)
+
+        # Step 3: Perform the DELETE request to delete the product
+        url = f"/api/host/products/{product.id}"
+        response = self.t_data.test_client.delete(url)
+
+        # Step 4: Verify the response status is 200 (OK)
         self.assertEqual(response.status_code, 200)
 
-        product = Product.objects.all().first()
-        self.assertNotEqual(product.id, id)
+        # Step 5: Ensure the product is deleted
+        product_exists = Product.objects.filter(id=product.id).exists()
+        self.assertFalse(product_exists)  # Product should no longer exist
+
+        # Step 6: Ensure that the related bookings and availability are also affected
+        booking_exists = Booking.objects.filter(product_id=product.id).exists()
+        self.assertFalse(booking_exists)  # Booking should no longer exist
+
+        availability_exists = Available.objects.filter(product_id=product.id).exists()
+        self.assertFalse(availability_exists)  # Availability should no longer exist
 
 
     def tearDown(self):
