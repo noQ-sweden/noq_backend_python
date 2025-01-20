@@ -16,6 +16,11 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^http:\/\/localhost:*([0-9]+)?$",
 ]
 
+# För att säkerställa att session- och CSRF-cookies används för alla subdomäner under .noqapp.se
+SESSION_COOKIE_DOMAIN = '.noqapp.se'
+CSRF_COOKIE_DOMAIN = '.noqapp.se'
+
+
 CORS_ALLOW_CREDENTIALS = True
 
 
