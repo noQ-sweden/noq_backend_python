@@ -20,6 +20,13 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 SESSION_COOKIE_DOMAIN = '.noqapp.se'
 CSRF_COOKIE_DOMAIN = '.noqapp.se'
 
+# Django Cookie Secure Settings
+SESSION_COOKIE_SECURE = False  # Använd True för https
+CSRF_COOKIE_SECURE = False  # Använd True för https
+
+SESSION_COOKIE_SAMESITE = 'None'  # Tillåt att session-cookies skickas över subdomäner
+CSRF_COOKIE_SAMESITE = 'None'    # Tillåt att CSRF-cookies skickas över subdomäner
+
 
 CORS_ALLOW_CREDENTIALS = True
 
