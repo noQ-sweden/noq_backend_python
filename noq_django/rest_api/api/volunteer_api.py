@@ -198,18 +198,23 @@ def search_guest(
     request,
     first_name: Optional[str] = "",
     last_name: Optional[str] = "",
-    unocode: Optional[str] = ""):
+    uno: Optional[str] = None,):
 
 
     # Normalize input by converting it to lowercase
     search_first_name = first_name.strip().lower() if first_name else ""
     search_last_name = last_name.strip().lower() if last_name else ""
-    search_unocode = str(unocode).strip() if unocode else ""
+    search_unocode = str(uno).strip().lower() if uno else ""
 
     print("🟡 Normalized Input:", search_first_name, search_last_name, search_unocode)
 
+    # Debugging: Check what is being received
+    if uno is None:
+        print("🚨 WARNING: unocode is None before processing!")
+
     # Check if both fields are empty
     if not (search_first_name or search_last_name or search_unocode):
+        print("🚨 ERROR: All parameters are empty!")
         raise HttpError(400, "Either first name, last name or unocode must be provided for the search.")
 
 
@@ -217,7 +222,7 @@ def search_guest(
 
     # Debugging: Show all stored names (before normalization)
     # all_db_names = [client.first_name for client in clients]
-    # print("📌 All DB Names Before Normalization:", all_db_names)
+    # print("All DB Names Before Normalization:", all_db_names)
 
     matching_clients = []
 
@@ -225,7 +230,7 @@ def search_guest(
         # Normalize database values for comparison
         db_first_name = unidecode(client.first_name.strip().lower()) if client.first_name else ""
         db_last_name = unidecode(client.last_name.strip().lower()) if client.last_name else ""
-        db_unocode = str(client.unokod).strip() if client.unokod else ""
+        db_unocode = str(client.unokod).strip().lower() if client.unokod else ""
 
         # Debugging print
         print(f"🔍 Checking {client.first_name}: DB='{db_first_name}', Search='{search_first_name}'")
