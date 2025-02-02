@@ -12,7 +12,6 @@ import json
 from django.shortcuts import get_object_or_404
 from ninja.security import django_auth, django_auth_superuser, HttpBearer
 from datetime import date
-from unidecode import unidecode # For removing accents from strings
 from backend.models import (
     Client,
     Host,
@@ -206,36 +205,25 @@ def search_guest(
     search_last_name = last_name.strip().lower() if last_name else ""
     search_unocode = str(uno).strip().lower() if uno else ""
 
-    print("🟡 Normalized Input:", search_first_name, search_last_name, search_unocode)
-
     # Debugging: Check what is being received
     if uno is None:
-        print("🚨 WARNING: unocode is None before processing!")
+        print("WARNING: unocode is None before processing!")
 
     # Check if both fields are empty
     if not (search_first_name or search_last_name or search_unocode):
-        print("🚨 ERROR: All parameters are empty!")
+        print("ERROR: All parameters are empty!")
         raise HttpError(400, "Either first name, last name or unocode must be provided for the search.")
 
 
     clients = Client.objects.all()
 
-    # Debugging: Show all stored names (before normalization)
-    # all_db_names = [client.first_name for client in clients]
-    # print("All DB Names Before Normalization:", all_db_names)
-
     matching_clients = []
 
     for client in clients:
         # Normalize database values for comparison
-        db_first_name = unidecode(client.first_name.strip().lower()) if client.first_name else ""
-        db_last_name = unidecode(client.last_name.strip().lower()) if client.last_name else ""
+        client.first_name.strip().lower() if client.first_name else ""
+        client.last_name.strip().lower() if client.last_name else ""
         db_unocode = str(client.unokod).strip().lower() if client.unokod else ""
-
-        # Debugging print
-        print(f"🔍 Checking {client.first_name}: DB='{db_first_name}', Search='{search_first_name}'")
-        print(f"🔍 Checking {client.last_name}: DB='{db_last_name}', Search='{search_last_name}'")
-        print(f"🔍 Checking Unokod: DB='{db_unocode}', Search='{search_unocode}'")
 
 
         # check if the normalized first name matches the input
@@ -245,9 +233,6 @@ def search_guest(
             (search_unocode and search_unocode == db_unocode)
         ):
             matching_clients.append(client)
-
-    # Debugging: Show all matching names
-    print("✅ Final Matching Clients:", [client.first_name for client in matching_clients])
 
     
     return [
