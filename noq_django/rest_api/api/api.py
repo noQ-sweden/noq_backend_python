@@ -1,6 +1,10 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from ninja import NinjaAPI
 from backend.models import (Host)
+from ninja.responses import Response
+from django.http import JsonResponse
+
 
 from .api_schemas import (
     LoginPostSchema,
@@ -33,6 +37,41 @@ documentation = """
     /objects/id DELETE  tar bort ett objekt, med metodnamn object_delete(id)
 
 """
+
+
+@login_required
+@api.get("/self/auth/", response=LoginSchema, tags=["Login"])
+def get(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"login_status": False, "message": "User not authenticated"}, status=401)
+
+    user_groups = [g.name for g in request.user.groups.all()]
+    host = None
+
+    if "host" in user_groups:
+        try:
+            host = Host.objects.get(users=request.user)
+        except Host.DoesNotExist:
+            pass
+
+    return LoginSchema(
+        login_status=True,
+        message="Login Successful",
+        groups=user_groups,
+        host=host,
+        first_name=request.user.first_name,
+        last_name=request.user.last_name 
+    )
+    
+
+@login_required
+@api.get("/logout/", tags=["Login"])
+def logout_user(request):
+    logout(request)
+    response =  JsonResponse({"login_status": False, "message": "Logout Successful"}, status=200)
+    response.delete_cookie("sessionid")
+    return response
+
 
 
 @api.post("/login/", response=LoginSchema, tags=["Login"])
