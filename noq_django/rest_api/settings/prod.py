@@ -4,20 +4,19 @@ import os
 SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = False
 
-SERVER_IP = os.environ.get('ALLOWED_HOSTS')
+SERVER_IPS = os.environ.get('ALLOWED_HOSTS',"").split(",")
+
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", ] + SERVER_IPS
 
 CORS_ALLOWED_ORIGINS = [ 
-    f'http://{SERVER_IP}',
+    f'http://{ip}' for ip in SERVER_IPS 
 ]
 
 CORS_ALLOWED_ORIGIN_REGEXES = [
-    # match localhost with any port
     r"^http:\/\/localhost:*([0-9]+)?$",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", SERVER_IP]
 
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
