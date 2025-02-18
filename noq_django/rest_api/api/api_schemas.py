@@ -173,6 +173,11 @@ class ProductSchema(Schema):
 class ProductSchemaWithPlacesLeft(ProductSchema):
     places_left: int
 
+class AvailableDateSchema(Schema):
+    available_date: date
+
+class ProductSchemaWithDates(ProductSchema):
+    available_dates: List[AvailableDateSchema]
 
 class StatusSchema(Schema):
     description: str
@@ -258,6 +263,10 @@ class AvailablePerDateSchema(Schema):
 class AvailableProductsSchema(Schema):
     host: HostSchema
     products: List[ProductSchemaWithPlacesLeft]
+
+class AvailableHostProductsSchema(Schema):
+    host: HostSchema
+    products: List[ProductSchemaWithDates]
 
 class BookingCounterSchema(Schema):
     pending_count: int
