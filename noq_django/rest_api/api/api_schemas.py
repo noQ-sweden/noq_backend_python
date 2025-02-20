@@ -36,6 +36,14 @@ class ClientSchema(ModelSchema):
              "region", "requirements", "last_edit", "flag"]
 
 
+class SimplifiedClientSchema(Schema):
+    id: int
+    first_name: str
+    last_name: str
+    unokod: str
+    region_name: Optional[str] = None
+
+
 class RegionSchema(ModelSchema):
     """
 

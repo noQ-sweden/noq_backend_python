@@ -3,6 +3,7 @@ from ninja.errors import HttpError
 from typing import Optional
 from django.db import models
 from django.db.models import Q
+from django.db.models.functions import Lower
 from django.core.mail import send_mail
 from django.utils import timezone
 from backend.auth import group_auth
@@ -40,6 +41,7 @@ from .api_schemas import (
     UserIDSchema,
     ClientSchema,
     VolunteerCreateClientPostSchema,
+    SimplifiedClientSchema,
 )
 
 router = Router(auth=lambda request: group_auth(request, "volunteer"))
@@ -190,35 +192,77 @@ def confirm_booking(request, booking_id: int):
     return booking
 
 
-@router.get("/guest/search", response=List[ClientSchema], tags=["Volunteer"])
+@router.get("/guest/search", response=List[SimplifiedClientSchema], tags=["Volunteer"])
 def search_guest(
     request,
     first_name: Optional[str] = "",
     last_name: Optional[str] = "",
-    unocode: Optional[str] = ""):
+    uno: Optional[str] = None,):
+
+
+    # Normalize input by converting it to lowercase
+    search_first_name = first_name.strip().lower() if first_name else ""
+    search_last_name = last_name.strip().lower() if last_name else ""
+    search_unocode = str(uno).strip().lower() if uno else ""
+
+    # Debugging: Check what is being received
+    if uno is None:
+        print("WARNING: unocode is None before processing!")
 
     # Check if both fields are empty
-    if not first_name.strip() and not last_name.strip() and not unocode.strip():
+    if not (search_first_name or search_last_name or search_unocode):
+        print("ERROR: All parameters are empty!")
         raise HttpError(400, "Either first name, last name or unocode must be provided for the search.")
 
-    # Search for users by first and last name and unocode, case-insensitive
-    query = Q()
-    if first_name:
-        query |= Q(first_name__icontains=first_name)
-    if last_name:
-        query |= Q(last_name__icontains=last_name)
-    if unocode:
-        query |= Q(unokod__icontains=unocode)
 
-    # Filter the clients only if query is not empty
-    clients = Client.objects.filter(query) if query else Client.objects.none()
+    clients = Client.objects.all()
 
-    return clients
+    matching_clients = []
+
+    for client in clients:
+        # Normalize database values for comparison
+        client.first_name.strip().lower() if client.first_name else ""
+        client.last_name.strip().lower() if client.last_name else ""
+        db_unocode = str(client.unokod).strip().lower() if client.unokod else ""
 
 
-@router.get("/guest/list", tags=["Volunteer"])
+        # check if the normalized first name matches the input
+        if(
+            (search_first_name and search_first_name == client.first_name.strip().lower()) or
+            (search_last_name and search_last_name == client.last_name.strip().lower()) or
+            (search_unocode and search_unocode == db_unocode)
+        ):
+            matching_clients.append(client)
+
+    
+    return [
+        {
+            "id": client.id,
+            "first_name": client.first_name,
+            "last_name": client.last_name,
+            "unokod": client.unokod,
+            "region_name": client.region.name if client.region else None
+        }
+        for client in matching_clients
+    ]
+
+
+@router.get("/guest/list", response=List[SimplifiedClientSchema], tags=["Volunteer"])
 def list_guests(request):
-    return {"status": "success"}, 200
+    # Fetch clients and include related fields for optimization
+    clients = Client.objects.select_related("region").all()
+
+    # Format response manually
+    return [
+        {
+            "id": client.id,
+            "first_name": client.first_name,
+            "last_name": client.last_name,
+            "unokod": client.unokod,
+            "region_name": client.region.name if client.region else None,  # Handle optional region
+        }
+        for client in clients
+    ]
 
 
 @router.post("/guest/create", response=ClientSchema, tags=["Volunteer"])
