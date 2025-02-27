@@ -24,6 +24,10 @@ from .api_schemas import (
     BookingPostSchema,
     AvailableSchema,
     AvailableProductsSchema,
+    ProductSchemaWithPlacesLeft,
+    AvailableHostProductsSchema,
+    ProductSchemaWithDates,
+    AvailableDateSchema,
 )
 
 from backend.auth import group_auth
@@ -61,6 +65,41 @@ def list_available(request, selected_date: str):
             hostproduct_dict[product.host] = [product]
 
     return [{"host": host, "products": products} for host, products in hostproduct_dict.items()]
+
+@router.get("/available_host/{host_id}", response=List[AvailableHostProductsSchema], tags=["user-booking"])
+def list_available_by_host(request, host_id: int):
+    """
+    Get all available products for a given host along with the dates they are available.
+    """
+    host = get_object_or_404(Host, id=host_id)
+
+    # Fetch all available products and their availability dates
+    available_entries = Available.objects.filter(product__host_id=host_id).select_related("product")
+
+    if not available_entries.exists():
+        raise HttpError(404, "No available products found for this host.")
+
+    # Organizing products by their availability dates
+    product_dict = {}
+    for entry in available_entries:
+        product = entry.product
+
+        if product.id not in product_dict:
+            product_dict[product.id] = ProductSchemaWithDates(
+                id=product.id,
+                name=product.name,
+                description=product.description,
+                total_places=product.total_places,
+                host=HostSchema.from_orm(product.host),
+                type=product.type,
+                available_dates=[]
+            )
+
+        product_dict[product.id].available_dates.append(AvailableDateSchema(available_date=entry.available_date))
+
+    return [{"host": HostSchema.from_orm(host), "products": list(product_dict.values())}]
+
+
 
 @router.post("/request_booking", response=BookingSchema, tags=["user-booking"])
 def request_booking(request, booking_data: BookingPostSchema):
