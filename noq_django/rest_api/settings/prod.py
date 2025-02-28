@@ -41,3 +41,7 @@ MEDIA_URL = '/static/media/'
 
 MEDIA_ROOT = '/vol/web/media'
 STATIC_ROOT = '/vol/web/static'
+
+# Ensure Django allows streaming responses
+
+SECURE_CONTENT_TYPE_NOSNIFF = True

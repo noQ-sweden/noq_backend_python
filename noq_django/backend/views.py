@@ -8,7 +8,7 @@ from . import forms
 from . import tables
 from .models import SleepingSpace
 from .forms import SleepingSpaceForm
-from .models import Product
+from .models import Product, Booking
 from .forms import ProductForm
 import json
 from urllib.parse import urlencode
@@ -16,8 +16,13 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 
 
+from django.http import StreamingHttpResponse
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+import time
 
-        
+
+
 def main_view(request):
     debug(request, "main_view", "main.html")
     header = "NoQ - startsida"
@@ -178,6 +183,35 @@ def book_room_view(request, available_id):
                     "datum": available.available_date,
                 },
             )
+        
+
+# SSE CODE
+
+def booking_status_stream():
+    """Function to send booking updates as SSE."""
+    while True:
+        bookings = Booking.objects.select_related("user", "status").all()
+        booking_status = [
+            {
+                "id": booking.id,
+                "status": booking.status.description,
+                "user": f"{booking.user.first_name} {booking.user.last_name}",
+                "start_date": booking.start_date.strftime("%Y-%m-%d"),
+                "end_date": booking.end_date.strftime("%Y-%m-%d") if booking.end_date else None,
+            }
+            for booking in bookings
+        ]
+
+        yield f"data: {json.dumps(booking_status)}\n\n"
+        time.sleep(2)  
+
+
+def sse_booking_updates(request):
+    """View to stream booking status updates to clients."""
+    response = StreamingHttpResponse(booking_status_stream(), content_type="text/event-stream")
+    response['Catche-Control'] = 'no-cache'
+    response['Connection'] = 'keep-alive'
+    return response
 
 
 def manual_user_registration(request):
