@@ -206,7 +206,7 @@ def booking_status_stream(user_id):
         time.sleep(2)  
 
 @login_required
-def sse_booking_updates(request):
+def sse_booking_updates_view(request):
     """View to stream booking status updates for the authenticated user."""
     user_id = request.user.id  
     response = StreamingHttpResponse(booking_status_stream(user_id), content_type="text/event-stream")
