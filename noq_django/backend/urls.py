@@ -32,6 +32,6 @@ urlpatterns = [
     path('host/<int:host_id>/', views.host_bookings_view, name='host_bookings'),
 
     
-    path('sse/booking-updates/', views.sse_booking_updates, name='sse-booking-updates'),
+    path('sse/booking_updates/', views.sse_booking_updates, name='sse_booking_updates'),
 
 ]

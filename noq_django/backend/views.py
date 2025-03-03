@@ -187,10 +187,10 @@ def book_room_view(request, available_id):
 
 # SSE CODE
 
-def booking_status_stream():
-    """Function to send booking updates as SSE."""
+def booking_status_stream(user_id):
+    """Function to send booking updates as SSE for a specific user."""
     while True:
-        bookings = Booking.objects.select_related("user", "status").all()
+        bookings = Booking.objects.select_related("user", "status").filter(user_id=user_id)
         booking_status = [
             {
                 "id": booking.id,
@@ -205,11 +205,12 @@ def booking_status_stream():
         yield f"data: {json.dumps(booking_status)}\n\n"
         time.sleep(2)  
 
-
+@login_required
 def sse_booking_updates(request):
-    """View to stream booking status updates to clients."""
-    response = StreamingHttpResponse(booking_status_stream(), content_type="text/event-stream")
-    response['Catche-Control'] = 'no-cache'
+    """View to stream booking status updates for the authenticated user."""
+    user_id = request.user.id  
+    response = StreamingHttpResponse(booking_status_stream(user_id), content_type="text/event-stream")
+    response['Cache-Control'] = 'no-cache'
     response['Connection'] = 'keep-alive'
     return response
 
