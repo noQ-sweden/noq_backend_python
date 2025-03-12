@@ -148,6 +148,9 @@ class SSEBookingStatusTestCase(TestCase):
             product=product  
         )
 
+
+
+
         # Authenticate the user
         client = Client()
         client.login(username="john_doe", password="testpassword123")
