@@ -189,31 +189,37 @@ def book_room_view(request, available_id):
 
 def booking_status_stream(user_id):
     """Function to send booking updates as SSE for a specific user."""
-    while True:
-        bookings = Booking.objects.select_related("user", "status").filter(user_id=user_id)
-        booking_status = [
-            {
-                "id": booking.id,
-                "status": booking.status.description,
-                "user": f"{booking.user.first_name} {booking.user.last_name}",
-                "start_date": booking.start_date.strftime("%Y-%m-%d"),
-                "end_date": booking.end_date.strftime("%Y-%m-%d") if booking.end_date else None,
-            }
-            for booking in bookings
-        ]
-
-        yield f"data: {json.dumps(booking_status)}\n\n"
-        time.sleep(2)  
+    try:
+        while True:
+            bookings = Booking.objects.select_related("user", "status").filter(user_id=user_id)
+            booking_status = [
+                {
+                    "id": booking.id,
+                    "status": booking.status.description,
+                    "user": f"{booking.user.first_name} {booking.user.last_name}",
+                    "start_date": booking.start_date.strftime("%Y-%m-%d"),
+                    "end_date": booking.end_date.strftime("%Y-%m-%d") if booking.end_date else None,
+                }
+                for booking in bookings
+            ]
+            yield f"data: {json.dumps(booking_status)}\n\n"
+            time.sleep(2)
+    except GeneratorExit:
+        # Handle client disconnection cleanup here
+        print(f"Connection closed for user {user_id}")
+        
 
 @login_required
 def sse_booking_updates_view(request):
     """View to stream booking status updates for the authenticated user."""
+    if not request.user.is_authenticated:
+        return HttpResponse(status=403)  
+
     user_id = request.user.id  
     response = StreamingHttpResponse(booking_status_stream(user_id), content_type="text/event-stream")
     response['Cache-Control'] = 'no-cache'
     response['Connection'] = 'keep-alive'
     return response
-
 
 def manual_user_registration(request):
     if request.method == 'POST':
