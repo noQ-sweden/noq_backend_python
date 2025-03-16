@@ -90,9 +90,9 @@ class SSEBookingStatusTestCase(TestCase):
         booking_data = json.loads(data_part)
 
         # Verify the booking content matches the database
-        self.assertEqual(booking_data[0]['status'], 'Pending')
-        self.assertEqual(booking_data[0]['user'], 'John Doe')
-        self.assertEqual(booking_data[0]['start_date'], future_start_date.strftime('%Y-%m-%d'))  
+        self.assertEqual(booking_data['status'], 'Pending')
+        self.assertEqual(booking_data['user'], 'John Doe')
+        self.assertEqual(booking_data['start_date'], future_start_date.strftime('%Y-%m-%d'))  
 
     def test_booking_status_change_triggers_sse_update(self):
         """Test that when the booking status changes, the SSE updates."""
@@ -170,8 +170,8 @@ class SSEBookingStatusTestCase(TestCase):
         updated_data = json.loads(data_part)
 
         # Verify the booking status has changed
-        self.assertEqual(updated_data[0]['status'], 'Confirmed')
-        self.assertEqual(updated_data[0]['user'], 'John Doe')
+        self.assertEqual(updated_data['status'], 'Confirmed')
+        self.assertEqual(updated_data['user'], 'John Doe')
 
     def test_unauthorized_user_cannot_access_sse(self):
         """Test that an unauthorized user cannot access the SSE."""
