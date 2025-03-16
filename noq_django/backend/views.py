@@ -18,6 +18,7 @@ from django.contrib.auth.decorators import login_required
 
 from django.http import StreamingHttpResponse
 from django.db.models.signals import post_save
+from django.core.cache import cache
 from django.dispatch import receiver
 import time
 
@@ -188,22 +189,21 @@ def book_room_view(request, available_id):
 # SSE CODE
 
 def booking_status_stream(user_id):
+    """SSE listens for updates stored in cache (via signal)."""
+    cache_key = f"booking_update_{user_id}"
+    last_sent_data = None
+
     """Function to send booking updates as SSE for a specific user."""
     try:
         while True:
-            bookings = Booking.objects.select_related("user", "status").filter(user__user_id=user_id)
-            booking_status = [
-                {
-                    "id": booking.id,
-                    "status": booking.status.description,
-                    "user": f"{booking.user.first_name} {booking.user.last_name}",
-                    "start_date": booking.start_date.strftime("%Y-%m-%d"),
-                    "end_date": booking.end_date.strftime("%Y-%m-%d") if booking.end_date else None,
-                }
-                for booking in bookings
-            ]
-            yield f"data: {json.dumps(booking_status)}\n\n"
-            time.sleep(2)
+            updated_booking = cache.get(cache_key)  # Check for new updates
+
+            if updated_booking and updated_booking != last_sent_data:
+                yield f"data: {json.dumps(updated_booking)}\n\n"
+                last_sent_data = updated_booking  # Track last sent data
+                cache.delete(cache_key)  # Clear cache after sending
+
+            time.sleep(1)  # Prevent excessive CPU usage
     except GeneratorExit:
         # Handle client disconnection cleanup here
         print(f"Connection closed for user {user_id}")
