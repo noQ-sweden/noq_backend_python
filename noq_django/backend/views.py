@@ -191,7 +191,7 @@ def booking_status_stream(user_id):
     """Function to send booking updates as SSE for a specific user."""
     try:
         while True:
-            bookings = Booking.objects.select_related("user", "status").filter(user_id=user_id)
+            bookings = Booking.objects.select_related("user", "status").filter(user__user_id=user_id)
             booking_status = [
                 {
                     "id": booking.id,
