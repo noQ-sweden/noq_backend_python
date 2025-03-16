@@ -218,8 +218,9 @@ def sse_booking_updates_view(request):
     user_id = request.user.id  
     response = StreamingHttpResponse(booking_status_stream(user_id), content_type="text/event-stream")
     response['Cache-Control'] = 'no-cache'
-    response['Connection'] = 'keep-alive'
+    response['X-Accel-Buffering'] = 'no'  # Disable buffering if using a reverse proxy
     return response
+
 
 def manual_user_registration(request):
     if request.method == 'POST':
