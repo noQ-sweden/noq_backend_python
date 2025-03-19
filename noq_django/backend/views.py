@@ -198,10 +198,15 @@ def booking_status_stream(user_id):
         while True:
             updated_booking = cache.get(cache_key)  # Check for new updates
 
+           
+
             if updated_booking and updated_booking != last_sent_data:
+               
                 yield f"data: {json.dumps(updated_booking)}\n\n"
                 last_sent_data = updated_booking  # Track last sent data
-                cache.delete(cache_key)  # Clear cache after sending
+                cache.delete(cache_key)
+                
+                break  #break the loop after sending data to avoid infinte loop
 
             time.sleep(1)  # Prevent excessive CPU usage
     except GeneratorExit:
