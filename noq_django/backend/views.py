@@ -215,7 +215,7 @@ def booking_status_stream(user_id):
         
 
 @login_required
-def sse_booking_updates_view(request):
+def sse_booking_updates_view(request, user_id):
     """View to stream booking status updates for the authenticated user."""
     if not request.user.is_authenticated:
         return HttpResponse(status=403)  

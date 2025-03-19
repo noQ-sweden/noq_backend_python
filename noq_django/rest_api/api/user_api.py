@@ -31,6 +31,7 @@ from backend.auth import group_auth
 from typing import List
 import json
 from django.shortcuts import get_object_or_404
+from django.http import StreamingHttpResponse
 from ninja.security import django_auth, django_auth_superuser, HttpBearer
 from datetime import date
 
@@ -152,3 +153,28 @@ def delete_booking(request, booking_id: int):
     
     # Return a success message
     return 200, "Booking deleted successfully."
+
+
+@router.get("/sse/booking_updates/{user_id}", tags=["user-booking"], auth=django_auth)
+def sse_booking_updates(request, user_id: int):
+    """
+    SSE endpoint for booking updates, available only to authenticated users.
+    """
+    def event_stream():
+        last_status = None  # Track last known status to avoid sending unnecessary updates.
+
+        while True:
+            # Get the bookings for the user, ordered by the most recent updates
+            bookings = Booking.objects.filter(client_id=user_id).order_by('-created_at')[:5]
+            
+            for booking in bookings:
+                # Check if the booking's status has changed since the last check
+                if booking.status != last_status:
+                    # Send status update to the client if the status has changed
+                    yield f"data: {json.dumps(BookingSchema.from_orm(booking).dict())}\n\n"
+                    last_status = booking.status  # Update the tracked status
+
+            # If no updates, wait for 10 seconds before checking again.
+            yield "retry: 10000\n"
+    
+    return StreamingHttpResponse(event_stream(), content_type="text/event-stream")

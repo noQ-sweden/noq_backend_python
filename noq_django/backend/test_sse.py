@@ -24,7 +24,8 @@ class TestSSEBookingUpdates(TestCase):
         mock_cache_get.return_value = test_booking_data  # Just return test data
 
         # Get the URL for the SSE view
-        url = reverse('sse_booking_updates')  
+        user_id = 59
+        url = reverse('sse_booking_updates', kwargs={'user_id': user_id})  
 
         # Simulate making the request to the SSE endpoint
         response = self.client.get(url, **{"HTTP_ACCEPT": "text/event-stream"})
