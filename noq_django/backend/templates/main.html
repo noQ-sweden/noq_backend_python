@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if booking %}
+  <h1>Bokningsbekräftelse</h1>
+  <div style="margin-bottom: 20px;"></div>
+  <div style="margin-bottom: 20px;"></div>
+{% endif %}
+{% if header %}
+  <h2>{{header}}</h2>
+  <div style="margin-bottom: 20px;"></div>
+{% endif %}
+
+{% if message %}
+  <p>{{message}}</p>
+  <div style="margin-bottom: 20px;"></div>
+{% endif %}
+
+{% if booking %}
+  <h2>{{booking}}</h2>
+  <div style="margin-bottom: 20px;"></div>
+  <p>Boendet öppnar kl 19:00</p>
+  <p>Välkommen {{user.first_name}} den {{datum}}!</p>
+  {% endif %}
+
+
+{% endblock %}
