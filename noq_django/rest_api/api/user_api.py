@@ -73,7 +73,7 @@ def list_available_by_host(request, host_id: int):
     'places_left' represents how many entries exist for today only.
     """
     host = get_object_or_404(Host, id=host_id)
-    today = date(2024, 11, 12) 
+    today = date.today()
 
     available_entries = Available.objects.filter(product__host_id=host_id).select_related("product")
 
