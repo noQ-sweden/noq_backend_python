@@ -70,19 +70,25 @@ def list_available(request, selected_date: str):
 def list_available_by_host(request, host_id: int):
     """
     Get all available products for a given host along with the dates they are available.
+    'places_left' represents how many entries exist for today only.
     """
     host = get_object_or_404(Host, id=host_id)
+    today = date(2024, 11, 12) 
 
-    # Fetch all available products and their availability dates
     available_entries = Available.objects.filter(product__host_id=host_id).select_related("product")
 
     if not available_entries.exists():
         raise HttpError(404, "No available products found for this host.")
 
-    # Organizing products by their availability dates
     product_dict = {}
+    today_count = {}
+
     for entry in available_entries:
         product = entry.product
+
+        # Count how many times this product is available today
+        if entry.available_date == today:
+            today_count[product.id] = today_count.get(product.id, 0) + 1
 
         if product.id not in product_dict:
             product_dict[product.id] = ProductSchemaWithDates(
@@ -90,12 +96,19 @@ def list_available_by_host(request, host_id: int):
                 name=product.name,
                 description=product.description,
                 total_places=product.total_places,
+                places_left=0,
                 host=HostSchema.from_orm(product.host),
                 type=product.type,
                 available_dates=[]
             )
 
-        product_dict[product.id].available_dates.append(AvailableDateSchema(available_date=entry.available_date))
+        product_dict[product.id].available_dates.append(
+            AvailableDateSchema(available_date=entry.available_date)
+        )
+
+    # Set places_left to just today's count
+    for product_id, product_data in product_dict.items():
+        product_data.places_left = today_count.get(product_id, 0)
 
     return [{"host": HostSchema.from_orm(host), "products": list(product_dict.values())}]
 
