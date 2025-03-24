@@ -213,6 +213,8 @@ class TestProductsApi(TestCase):
         """
         Ensure the API returns all available products for a given host along with their available dates.
         """
+        today = datetime.now().date()
+
         # Step 1: Create a host
         region = Region.objects.create(name="Test Region")
         host = Host.objects.create(name="Test Host", region=region, street="Test Street", city="Test City")
@@ -222,8 +224,11 @@ class TestProductsApi(TestCase):
         product2 = Product.objects.create(name="Room B", description="Double room", total_places=4, host=host, type="room")
 
         # Step 3: Create available entries (dates when products are available)
-        available1 = Available.objects.create(product=product1, available_date=datetime.now().date() + timedelta(days=1))
-        available2 = Available.objects.create(product=product2, available_date=datetime.now().date() + timedelta(days=2))
+        Available.objects.create(product=product1, available_date=today)
+        future_date1 = today + timedelta(days=1)
+        future_date2 = today + timedelta(days=2)
+        Available.objects.create(product=product1, available_date=future_date1)
+        Available.objects.create(product=product2, available_date=future_date2)
 
         # Step 4: Make a GET request to fetch available products for the host
         url = f"/api/user/available_host/{host.id}"
@@ -242,15 +247,32 @@ class TestProductsApi(TestCase):
         # Step 8: Verify the products and their availability dates
         self.assertEqual(len(data[0]["products"]), 2)  # Ensure 2 products are returned
 
-        # Check Product 1
-        self.assertEqual(data[0]["products"][0]["id"], product1.id)
-        self.assertEqual(data[0]["products"][0]["name"], "Room A")
-        self.assertEqual(data[0]["products"][0]["available_dates"], [{"available_date": str(available1.available_date)}])
+        products = {p["id"]: p for p in data[0]["products"]}
+        #ensure expected product data
+        expected_products = {
+            product1.id: {
+                "name": "Room A",
+                "places_left": 1,
+                "available_dates": [
+                    {"available_date": str(today)},
+                    {"available_date": str(future_date1)},
+                ],
+            },
+            product2.id: {
+                "name": "Room B",
+                "places_left": 0,
+                "available_dates": [
+                    {"available_date": str(future_date2)},
+                ],
+            },
+        }
 
-        # Check Product 2
-        self.assertEqual(data[0]["products"][1]["id"], product2.id)
-        self.assertEqual(data[0]["products"][1]["name"], "Room B")
-        self.assertEqual(data[0]["products"][1]["available_dates"], [{"available_date": str(available2.available_date)}])
+        # Loop through and assert each product
+        for product_id, expected in expected_products.items():
+            product_data = products[product_id]
+            self.assertEqual(product_data["name"], expected["name"])
+            self.assertEqual(product_data["places_left"], expected["places_left"])
+            self.assertCountEqual(product_data["available_dates"], expected["available_dates"])
 
 
 
