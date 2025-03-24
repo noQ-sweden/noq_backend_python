@@ -185,6 +185,7 @@ class AvailableDateSchema(Schema):
     available_date: date
 
 class ProductSchemaWithDates(ProductSchema):
+    places_left: int
     available_dates: List[AvailableDateSchema]
 
 class StatusSchema(Schema):
