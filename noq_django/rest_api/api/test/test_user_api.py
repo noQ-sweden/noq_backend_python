@@ -245,11 +245,13 @@ class TestProductsApi(TestCase):
         # Check Product 1
         self.assertEqual(data[0]["products"][0]["id"], product1.id)
         self.assertEqual(data[0]["products"][0]["name"], "Room A")
+        self.assertEqual(data[0]["products"][0]["places_left"], 1)
         self.assertEqual(data[0]["products"][0]["available_dates"], [{"available_date": str(available1.available_date)}])
 
         # Check Product 2
         self.assertEqual(data[0]["products"][1]["id"], product2.id)
         self.assertEqual(data[0]["products"][1]["name"], "Room B")
+        self.assertEqual(data[0]["products"][1]["places_left"], 0)
         self.assertEqual(data[0]["products"][1]["available_dates"], [{"available_date": str(available2.available_date)}])
 
 
