@@ -222,6 +222,7 @@ class TestProductsApi(TestCase):
         product2 = Product.objects.create(name="Room B", description="Double room", total_places=4, host=host, type="room")
 
         # Step 3: Create available entries (dates when products are available)
+        Available.objects.create(product=product1, available_date=datetime.now().date())
         available1 = Available.objects.create(product=product1, available_date=datetime.now().date() + timedelta(days=1))
         available2 = Available.objects.create(product=product2, available_date=datetime.now().date() + timedelta(days=2))
 
