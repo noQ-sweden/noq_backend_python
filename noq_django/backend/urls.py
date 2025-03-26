@@ -1,16 +1,6 @@
 from django.urls import path
 from . import views
 
-# from views import book_room_view
-
-# Django documentation
-
-#   1. urlpatterns  nedan
-#   2. views.py     view
-#
-#   3. tables.py
-#   4. html-template
-
 urlpatterns = [
     path("", views.main_view, name="main_view"),
     path("search", views.search_view, name="search_view"),
@@ -29,6 +19,9 @@ urlpatterns = [
     path('sleeping_spaces/update/<int:pk>/', views.update_sleeping_space, name='update_sleeping_space'),
     path('sleeping_spaces/delete/<int:pk>/', views.delete_sleeping_space, name='delete_sleeping_space'),
     path('bookings/daily/', views.daily_bookings_view, name='daily_bookings_view'),
-    path('host/<int:host_id>/', views.host_bookings_view, name='host_bookings')
+    path('host/<int:host_id>/', views.host_bookings_view, name='host_bookings'),
+
+    
+    path('sse/booking_updates/<int:user_id>/', views.sse_booking_updates_view, name='sse_booking_updates'),
 
 ]
