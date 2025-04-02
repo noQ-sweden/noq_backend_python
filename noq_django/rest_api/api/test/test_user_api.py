@@ -11,6 +11,12 @@ from unittest.mock import patch
 from django.urls import reverse
 from .test_data import TestData
 
+from django.core.cache import cache
+
+from unittest.mock import patch
+
+
+
 # New Test Class for Login functionality
 class TestUserApi(TestCase):
     def setUp(self):
@@ -218,12 +224,7 @@ class TestProductsApi(TestCase):
         self.t_data.delete_products()
 
  
-from django.core.cache import cache
-from django.test import TestCase
-from unittest.mock import patch
-from django.urls import reverse
-import json
-from datetime import datetime, timedelta
+
 
 class TestSSEApi(TestCase):
     t_data = None
