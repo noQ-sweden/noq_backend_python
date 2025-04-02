@@ -12,6 +12,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "noqbackend.pythonanywhere.com"]
 
+
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
@@ -22,3 +23,7 @@ DATABASES = {
         "NAME": BASE_DIR / "noq.sqlite3",
     }
 }
+
+# Ensure Django allows streaming responses
+
+SECURE_CONTENT_TYPE_NOSNIFF = True

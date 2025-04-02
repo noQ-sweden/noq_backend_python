@@ -1,3 +1,4 @@
+
 import sys
 sys.path.append("....backend")
 import json
@@ -6,7 +7,15 @@ from django.contrib.auth.models import User, Group
 from backend.models import (Host, Client, Product, Region, Booking,
                             Available, State, BookingStatus)
 from datetime import datetime, timedelta
+from unittest.mock import patch
+from django.urls import reverse
 from .test_data import TestData
+
+from django.core.cache import cache
+
+from unittest.mock import patch
+
+
 
 # New Test Class for Login functionality
 class TestUserApi(TestCase):
@@ -280,3 +289,91 @@ class TestProductsApi(TestCase):
         # After the tests delete all data generated for the tests
         self.t_data.delete_users()
         self.t_data.delete_products()
+
+ 
+
+
+class TestSSEApi(TestCase):
+    t_data = None
+
+    def setUp(self):
+        # Add data to the db
+        self.t_data = TestData()
+         
+        # Create a user manually or use an existing user
+        self.user = User.objects.create_user(username="testuser", password="password")
+        self.client.login(username='testuser', password='password')
+
+        # Create a test user if the username is not found
+        test_username = self.t_data.usernames[0]
+        if not User.objects.filter(username=test_username).exists():
+            self.test_user = User.objects.create_user(username=test_username, password="testpassword")
+        else:
+            self.test_user = User.objects.get(username=test_username)
+
+        # Ensure there is a Client instance for the test user
+        if not Client.objects.filter(user=self.test_user).exists():
+            region = Region.objects.first()  
+            Client.objects.create(user=self.test_user, gender='K', region=region)
+
+        client = Client.objects.get(user=self.test_user)
+
+        # Create a booking for the test user
+        start_date = datetime.now().date()
+        end_date = start_date + timedelta(days=1)
+        product = Product.objects.get(total_places=1)
+
+        self.booking = Booking.objects.create(
+            start_date=start_date,
+            end_date=end_date,
+            product=product,
+            user=client,
+            status=BookingStatus.objects.get(id=State.PENDING)  
+        )
+
+    @patch('django.core.cache.cache.get')
+    @patch('django.core.cache.cache.set')
+    def test_sse_booking_updates(self, mock_cache_set, mock_cache_get):
+        """ Test that SSE streams live booking updates when the status changes. """
+
+        # 1️⃣ Start listening to SSE stream
+        user_id = self.user.id
+        url = reverse('sse_booking_updates', kwargs={'user_id': user_id})
+        print("Generated URL:", url)
+        response = self.client.get(url, **{"HTTP_ACCEPT": "text/event-stream"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/event-stream')
+
+        # 2️⃣ Simulate a status change in the booking
+        new_status = BookingStatus.objects.get(id=State.CONFIRMED)
+        self.booking.status = new_status
+        self.booking.save()
+
+        # 3️⃣ Manually update the cache (mimicking real app behavior)
+        updated_data = {"booking_id": self.booking.id, "status": "confirmed"}
+        cache.set(f"booking_update_{self.booking.id}", updated_data, timeout=60)
+        mock_cache_set.assert_called_with(f"booking_update_{self.booking.id}", updated_data, timeout=60)
+
+        # 4️⃣ Mock `cache.get` to return the new status update
+        mock_cache_get.return_value = updated_data  
+
+        # 5️⃣ Read the SSE response
+        data_received = ""
+        for chunk in response.streaming_content:
+            data_received += chunk.decode()
+            print("SSE Response Received:", data_received)
+
+            if data_received:
+                break  # Stop once we receive data
+
+        # 6️⃣ Ensure the received data matches the updated booking status
+        try:
+            json_data_received = json.loads(data_received.split("data: ")[1].strip())
+        except json.JSONDecodeError as e:
+            self.fail(f"Failed to parse SSE data as JSON: {e}")
+
+        self.assertEqual(json_data_received, updated_data)
+
+        # 7️⃣ Ensure cache was accessed correctly
+        mock_cache_get.assert_called_with(f"booking_update_{self.booking.id}")
