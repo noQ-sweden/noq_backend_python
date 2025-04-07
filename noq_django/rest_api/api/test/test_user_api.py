@@ -8,6 +8,42 @@ from backend.models import (Host, Client, Product, Region, Booking,
 from datetime import datetime, timedelta
 from .test_data import TestData
 
+class TestUserRegistrationApi(TestCase):
+    def setUp(self):
+        self.region = Region.objects.create(name="Test Region")
+        Group.objects.get_or_create(name="user")
+
+    def test_registration_user(self):
+        # Prepare test data
+        data = {
+            "email": "testuser1234123@example.com",
+            "password": "SecurePass123!",
+            "first_name": "Test",
+            "last_name": "User"
+        }
+        url = "/api/register/"
+
+        # Send POST request with headers
+        response = self.client.post(
+            url,
+            data,
+            content_type="application/json",
+            **{"HTTP_X-User-Role": "user"}
+        )
+
+        # Check response status
+        self.assertEqual(response.status_code, 201)
+
+        # Check that the User was created
+        self.assertTrue(User.objects.filter(email=data["email"]).exists())
+        user = User.objects.get(email=data["email"])
+
+        # Verify the user belongs to the "user" group
+        self.assertTrue(user.groups.filter(name="user").exists())
+
+        # Check that the Client record was created
+        self.assertTrue(Client.objects.filter(email=data["email"]).exists())
+
 # New Test Class for Login functionality
 class TestUserApi(TestCase):
     def setUp(self):
