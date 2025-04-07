@@ -42,7 +42,7 @@ class TestVolunteerRegistrationApi(TestCase):
         self.assertTrue(User.objects.filter(email=data["email"]).exists())
         user = User.objects.get(email=data["email"])
 
-        # Verify the user belongs to the "user" group
+        # Verify the user belongs to the "volunteer" group
         self.assertTrue(user.groups.filter(name="volunteer").exists())
 
         # Check that the Client record was created
