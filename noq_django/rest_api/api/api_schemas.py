@@ -108,6 +108,11 @@ class UserPostSchema(Schema):
     region_id: int
     unokod: str = None
 
+class UserRegistrationSchema(Schema):
+    email: str
+    password: str
+    first_name: str
+    last_name: str
 
 class UserIDSchema(Schema):
     id: int
