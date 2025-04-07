@@ -140,7 +140,6 @@ class TestVolunteerApi(TestCase):
 
     def tearDown(self):
         # Clean up all test data after each test
-        self.t_data.delete_users()
         Booking.objects.all().delete()
         Product.objects.all().delete()
         Client.objects.all().delete()
