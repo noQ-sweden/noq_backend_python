@@ -380,7 +380,9 @@ def delete_sleeping_space(request, pk):
 
 def resource_list(request):
     resources = Resource.objects.all()
+    
     if request.GET.get('open_now'):
+        # Filter resources that are currently open
         resources = [r for r in resources if r.is_open_now()]
 
     return render(request, 'resource_list.html', {'resources': resources})

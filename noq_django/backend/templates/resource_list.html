@@ -9,5 +9,9 @@
 <ul>
     {% for resource in resources %}
         <li>{{ resource.name }}: {{ resource.opening_time }} - {{ resource.closing_time }}</li>
+    {% empty %}
+        <li>No resources available.</li>
     {% endfor %}
 </ul>
+
+
