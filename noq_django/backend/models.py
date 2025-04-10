@@ -447,3 +447,20 @@ class VolunteerHostAssignment(models.Model):
 
     def __str__(self):
         return f"{self.volunteer.user.username} assigned to {self.host.name} - {'Active' if self.active else 'Inactive'}" 
+
+class Activity(models.Model):
+    title= models.CharField(max_length=255)
+    description = models.TextField()
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    is_approved = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.title
+class VolunteerActivity(models.Model):
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    volunteer = models.ForeignKey(User, on_delete=models.CASCADE)
+    registered_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('activity', 'volunteer')

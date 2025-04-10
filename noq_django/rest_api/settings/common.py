@@ -16,13 +16,25 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+# CORS config
 CORS_ALLOW_HEADERS = [
     'Accept',
     'Accept-Encoding',
     'Authorization',
     'Content-Type',
     'Cookie',
+    'cache-control',
+    'pragma',
 ]
+
+from corsheaders.defaults import default_headers
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "cache-control",
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
+#CORS_ALLOW_HEADERS = ['*']#hibát ad ami miatt BE nem tud kommunikálni
 
 # Application definition
 
@@ -35,6 +47,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_extensions",
+    "django_q",
     "crispy_forms",
     "corsheaders",
     "crispy_bootstrap4",
@@ -43,9 +56,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
