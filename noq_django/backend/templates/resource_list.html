@@ -1,0 +1,13 @@
+<form method="get">
+    <label>
+        <input type="checkbox" name="open_now" {% if request.GET.open_now %}checked{% endif %}>
+        Open Now
+    </label>
+    <button type="submit">Filter</button>
+</form>
+
+<ul>
+    {% for resource in resources %}
+        <li>{{ resource.name }}: {{ resource.opening_time }} - {{ resource.closing_time }}</li>
+    {% endfor %}
+</ul>

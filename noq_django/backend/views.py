@@ -14,6 +14,7 @@ import json
 from urllib.parse import urlencode
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
+from .models import Resource
 
 
 
@@ -376,3 +377,10 @@ def delete_sleeping_space(request, pk):
         sleeping_space.delete()
         return redirect('list_sleeping_spaces')
     return render(request, 'sleeping_space_confirm_delete.html', {'sleeping_space': sleeping_space})
+
+def resource_list(request):
+    resources = Resource.objects.all()
+    if request.GET.get('open_now'):
+        resources = [r for r in resources if r.is_open_now()]
+
+    return render(request, 'resource_list.html', {'resources': resources})

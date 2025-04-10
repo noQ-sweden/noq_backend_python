@@ -10,7 +10,7 @@ from django.conf import settings
 
 from .delete_all_data import reset_all_data
 
-from backend.models import Host, Client, Product, Region, Booking, BookingStatus, State, VolunteerProfile, VolunteerHostAssignment
+from backend.models import Host, Client, Product, Region, Booking, BookingStatus, State, VolunteerProfile, VolunteerHostAssignment, Resource
 
 
 def get_regioner():
@@ -428,6 +428,24 @@ def add_products(nbr: int = 3):
         )
 
 
+def generate_resources(n=20):
+    faker = Faker()
+    for _ in range(n):
+        name = faker.company()
+        opening_time = faker.time_object()
+        closing_time = faker.time_object()
+        if opening_time > closing_time:
+            opening_time, closing_time = closing_time, opening_time
+
+        Resource.objects.create(
+            name=name,
+            opening_time=opening_time,
+            closing_time=closing_time
+        )
+
+    print(f"{n} resources created.")
+
+
 def run(*args):
     docs = """
     generate test data
@@ -457,3 +475,5 @@ def run(*args):
 
     add_booking_statuses()
     add_product_bookings(40, 7, v2_arg)
+
+    generate_resources(20)
