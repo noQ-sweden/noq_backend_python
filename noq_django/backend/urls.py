@@ -1,5 +1,7 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
+from .views_volunteer_task import VolunteerTaskViewSet
+from rest_framework.routers import DefaultRouter
 
 # from views import book_room_view
 
@@ -10,6 +12,9 @@ from . import views
 #
 #   3. tables.py
 #   4. html-template
+
+router = DefaultRouter()
+router.register(r'volunteer-tasks', VolunteerTaskViewSet, basename='volunteer-tasks')
 
 urlpatterns = [
     path("", views.main_view, name="main_view"),
@@ -29,6 +34,7 @@ urlpatterns = [
     path('sleeping_spaces/update/<int:pk>/', views.update_sleeping_space, name='update_sleeping_space'),
     path('sleeping_spaces/delete/<int:pk>/', views.delete_sleeping_space, name='delete_sleeping_space'),
     path('bookings/daily/', views.daily_bookings_view, name='daily_bookings_view'),
-    path('host/<int:host_id>/', views.host_bookings_view, name='host_bookings')
+    path('host/<int:host_id>/', views.host_bookings_view, name='host_bookings'),
+    path('api/', include(router.urls)),
 
 ]
