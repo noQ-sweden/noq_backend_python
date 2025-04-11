@@ -1,9 +1,8 @@
-<form method="get">
+<form method="get" id="open-now-form">
     <label>
-        <input type="checkbox" name="open_now" {% if request.GET.open_now %}checked{% endif %}>
-        Open Now
+        <input type="checkbox" name="open_now" {% if request.GET.open_now %}checked{% endif %} onchange="this.form.submit()">
+        <strong>Open right now</strong>
     </label>
-    <button type="submit">Filter</button>
 </form>
 
 <ul>
