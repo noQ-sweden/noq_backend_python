@@ -150,6 +150,31 @@ class VolunteerProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Resource)
 class ResourceAdmin(admin.ModelAdmin):
-    list_display = ('name', 'opening_time', 'closing_time', 'is_open_now')
+    list_display = (
+        'name',
+        'opening_time',
+        'closing_time',
+        'is_open_now',
+        'address',
+        'phone',
+        'email',
+        'target_group',
+        'other',
+        'applies_to',
+        
+    )
     list_filter = ('opening_time', 'closing_time')
-    search_fields = ('name',)
+    fields = (
+        'name',
+        'opening_time',
+        'closing_time',
+        'address',
+        'phone',
+        'email',
+        'target_group',
+        'other',
+        'applies_to',
+    )
+
+
+

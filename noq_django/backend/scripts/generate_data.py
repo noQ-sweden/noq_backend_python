@@ -430,6 +430,14 @@ def add_products(nbr: int = 3):
 
 def generate_resources(n=20):
     faker = Faker()
+    applies_to_options = [["studies"], ["employment"], ["studies", "employment"]]
+    target_groups = [
+        "Children - under 18 years old",
+        "Youth 18-25",
+        "Adults 25+",
+        "All ages",
+    ]
+
     for _ in range(n):
         name = faker.company()
         opening_time = faker.time_object()
@@ -440,11 +448,16 @@ def generate_resources(n=20):
         Resource.objects.create(
             name=name,
             opening_time=opening_time,
-            closing_time=closing_time
+            closing_time=closing_time,
+            address=faker.address(),
+            phone=faker.phone_number(),
+            email=faker.email(),
+            target_group=random.choice(target_groups),
+            other=faker.sentence(),
+            applies_to=random.choice(applies_to_options)
         )
 
     print(f"{n} resources created.")
-
 
 def run(*args):
     docs = """
