@@ -7,68 +7,76 @@
 
 <h2 style="font-weight: bold; font-size: 28px;">Search</h2>
 
-<div style="border: 1px solid #ccc; width: fit-content; margin-bottom: 20px;">
-    <div style="background-color: #e9d8f4; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-weight: bold; font-size: 18px;">Opening hours</span>
-          <!-- close button placeholder -->
+<!-- Flex container for layout -->
+<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px;">
+
+    <!-- Right Column: Filters -->
+    <div style="min-width: 280px;">
+
+        <!-- Opening Hours Filter -->
+        <div style="border: 1px solid #ccc; margin-bottom: 20px;">
+            <div style="background-color: #e9d8f4; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: bold; font-size: 18px;">Opening hours</span>
+            </div>
+            <div style="padding: 10px;">
+                <form method="get" id="open-now-form">
+                    <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 16px; border: 2px solid #b80060; padding: 6px; width: fit-content;">
+                        <input type="checkbox" name="open_now" {% if request.GET.open_now %}checked{% endif %} onchange="this.form.submit()">
+                        <span style="text-decoration: underline;">Open right now</span>
+                    </label>
+
+                    <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 16px; border: 2px solid #b80060; padding: 6px; width: fit-content; margin-top: 10px;">
+                        <input type="checkbox" name="eu_citizen" {% if eu_citizen %}checked{% endif %} onchange="this.form.submit()">
+                        <span style="text-decoration: underline;">Show only EU-based resources</span>
+                    </label>
+                </form>
+            </div>
+        </div>
+
+        <!-- Age Group Filter -->
+        <div style="border: 1px solid #ccc; margin-bottom: 20px;">
+            <div style="background-color: #e9d8f4; padding: 10px;">
+                <span style="font-weight: bold; font-size: 18px;">Age group</span>
+            </div>
+            <div style="padding: 10px;">
+                <form method="get" id="age-group-form">
+                    <label style="display: block; margin-bottom: 5px;">
+                        <input type="checkbox" name="target_group" value="Children - under 18 years old"
+                            {% if 'Children - under 18 years old' in target_group_filter %}checked{% endif %}
+                            onchange="this.form.submit()">
+                        Children - under 18 years old
+                    </label>
+                    <label style="display: block;">
+                        <input type="checkbox" name="target_group" value="Adults 25+"
+                            {% if 'Adults 25+' in target_group_filter %}checked{% endif %}
+                            onchange="this.form.submit()">
+                        Adult - over 18 years old
+                    </label>
+                </form>
+            </div>
+        </div>
+
     </div>
 
-    <div style="padding: 10px;">
-        <form method="get" id="open-now-form">
-            <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 16px; border: 2px solid #b80060; padding: 6px; width: fit-content;">
-                <input type="checkbox" name="open_now" {% if request.GET.open_now %}checked{% endif %} onchange="this.form.submit()">
-                <span style="text-decoration: underline;">Open right now</span>
-            </label>
-
-
-            <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 16px; border: 2px solid #b80060; padding: 6px; width: fit-content;">
-                <input type="checkbox" name="eu_citizen" {% if eu_citizen %}checked{% endif %} onchange="this.form.submit()">
-                
-                <span style="text-decoration: underline;">Show only EU-based resources</span>
-            </label>
-             
-        </form>
+    <!-- Left Column: Resource List -->
+    <div style="flex: 1;">
+        <ul style="list-style-type: disc; padding-left: 20px;">
+            {% for resource in resources %}
+                <li style="margin-bottom: 20px;">
+                    <strong>{{ resource.name }}</strong><br>
+                    🕒 {{ resource.opening_time|time:"H:i" }} - {{ resource.closing_time|time:"H:i" }}<br>
+                    📍 <strong>Address:</strong> {{ resource.address }}<br>
+                    📧 <strong>Email:</strong> <a href="mailto:{{ resource.email }}">{{ resource.email }}</a><br>
+                    📞 <strong>Phone:</strong> {{ resource.phone }}<br>
+                    🎯 <strong>Target Group:</strong> {{ resource.target_group }}<br>
+                    📝 <strong>Other:</strong> {{ resource.other }}<br>
+                    📚 <strong>Applies To:</strong> {{ resource.applies_to|join:", " }}
+                </li>
+                <hr>
+            {% empty %}
+                <li>No resources available.</li>
+            {% endfor %}
+        </ul>
     </div>
+
 </div>
-<div style="border: 1px solid #ccc; width: fit-content; margin-bottom: 20px;">
-    <div style="background-color: #e9d8f4; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-weight: bold; font-size: 18px;">Age group</span>
-    </div>
-    <div style="padding: 10px;">
-        <form method="get" id="age-group-form">
-            <label style="display: block; margin-bottom: 5px;">
-                <input type="checkbox" name="target_group" value="Children - under 18 years old"
-                    {% if 'Children - under 18 years old' in target_group_filter %}checked{% endif %}
-                    onchange="this.form.submit()">
-                Children - under 18 years old
-            </label>
-            <label style="display: block;">
-                <input type="checkbox" name="target_group" value="Adults 25+"
-                    {% if 'Adults 25+' in target_group_filter %}checked{% endif %}
-                    onchange="this.form.submit()">
-                Adult - over 18 years old
-            </label>
-        </form>
-    </div>
-</div>
-
-<ul>
-    {% for resource in resources %}
-    <li>
-        <strong>{{ resource.name }}</strong><br>
-        🕒 {{ resource.opening_time|time:"H:i" }} - {{ resource.closing_time|time:"H:i" }}<br>
-        📍 <strong>Address:</strong> {{ resource.address }}<br>
-        📧 <strong>Email:</strong> <a href="mailto:{{ resource.email }}">{{ resource.email }}</a><br>
-        📞 <strong>Phone:</strong> {{ resource.phone }}<br>
-        🎯 <strong>Target Group:</strong> {{ resource.target_group }}<br>
-        📝 <strong>Other:</strong> {{ resource.other }}<br>
-        📚 <strong>Applies To:</strong> {{ resource.applies_to|join:", " }}
-    </li>
-        <hr>
-    {% empty %}
-        <li>No resources available.</li>
-    {% endfor %}
-    </ul>
-
-
-
