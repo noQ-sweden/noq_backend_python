@@ -1,0 +1,113 @@
+@startuml
+
+!define primary_key(x) <b><color:blue>x</color></b>
+!define foreign_key(x) <color:green>x</color>
+
+
+entity Region {
+    primary_key(id) : UUID
+    name : VARCHAR
+}
+
+entity User {
+    primary_key(id) : UUID
+    date_joined : datetime
+    email: EmailField
+    first_name : VARCHAR
+    last_name : VARCHAR
+    is_active : BOOLEAN
+    is_staff : BOOLEAN
+    is_superuser : BOOLEAN
+    last_login : datetime
+    password : VARCHAR
+    username : VARCHAR
+}
+
+entity Group {
+    primary_key(id) : UUID
+    name : VARCHAR
+}
+
+entity UserGroup {
+    primary_key(id) : UUID
+    description : VARCHAR
+}
+
+entity Host {
+    primary_key(id) : UUID
+    foreign_key(region_id) : UUID
+    name : VARCHAR
+    street : VARCHAR
+    postcode : VARCHAR
+    city : VARCHAR
+}
+
+entity Client {
+    primary_key(id) : UUID
+    foreign_key(region) : UUID
+    foreign_key(user) : UUID
+    foreign_key(requirements) : UUID
+    city : VARCHAR
+    country : VARCHAR
+    day_of_birth : VARCHAR
+    email : VARCHAR
+    first_name : VARCHAR
+    flag : BOOL
+    gender : VARCHAR
+    last_edit : date
+    last_name : VARCHAR
+    personnr_lastnr : VARCHAR
+    phone : VARCHAR
+    postcode : VARCHAR
+    street : VARCHAR
+    unokod : VARCHAR
+}
+
+entity Product {
+    primary_key(id) : UUID
+    foreign_key(host) : UUID
+    foreign_key(requirements) : UUID
+    bookable : BOOL
+    description : VARCHAR
+    name : VARCHAR
+    room_location : VARCHAR
+    total_places : INTEGER
+    type : VARCHAR
+}
+
+note right of Product
+    Type =
+        ROOM_LOCATIONS = [
+            ('Sovsal', 'Sovsal'),
+            ('Dubbelrum', 'Dubbelrum'),
+            ('Eget rum', 'Eget rum'),
+        ] ???
+end note
+
+entity Booking {
+    primary_key(id) : UUID
+    foreign_key(product) : UUID
+    foreign_key(status) : UUID
+    foreign_key(user) : UUID
+    booking_time : TIMESTAMP
+    end_date : DATE
+    start_date : DATE
+}
+
+entity BookingStatus {
+    primary_key(id) : UUID
+    description : VARCHAR
+}
+
+User }o--|| UserGroup
+Group }o--|| UserGroup
+Client ||--|| User : one to one
+Organization ||--o{ Host : "has many"
+Host ||--o{ Product : "has many"
+Region ||--o{ Host : "has many"
+Region ||--o{ Client : "has many"
+Client ||--o{ Booking : "has many"
+Booking ||--|| BookingStatus : "Booking State"
+Booking ||--o{ Product : "Has one"
+
+@enduml
