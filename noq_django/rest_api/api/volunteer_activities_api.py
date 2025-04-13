@@ -9,36 +9,13 @@ from django.db.models import Q
 
 router = Router()
 
-#---- API SCHEMAS ----#
-class ActivitySchema(ModelSchema):
-    is_signed_up: bool = False
-
-    class Config:
-        model = Activity
-        model_fields = ["id", "title", "description", "start_time", "end_time", "is_approved"]
-
-class VolunteerActivitySchema(ModelSchema):
-    activity: int
-    volunteer: int
-    registered_at: datetime
-
-    class Config:
-        model = VolunteerActivity
-        model_fields = ["activity", "volunteer", "registered_at"]
-
-class VolunteerActivityCreateSchema(ModelSchema):
-    activity: int
-
-    class Config:
-        model = VolunteerActivity
-        model_fields = ["activity"]
-
 #---- API ENDPOINTS ----#
 @router.post("/signup/{activity_id}", tags=["Volunteer"])
 def volunteer_activityes_signup(request, activity_id: int):
     user = request.user
     try:
-        activity = Activity.objects.get(id=activity_id, is_approved=True)
+        #activity = Activity.objects.get(id=activity_id, is_approved=True)
+        activity = get_object_or_404(Activity, id=activity_id, is_approved=True)
         va, created = VolunteerActivity.objects.get_or_create(activity=activity, volunteer=user)
         if not created:
             return {"message": "You are already signed up for this activity."}
