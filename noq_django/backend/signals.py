@@ -14,7 +14,7 @@ def delete_booking_signal(sender, instance, **kwargs):
 @receiver(post_save, sender=Booking)
 def notify_booking_update(sender, instance, **kwargs):
     """Signal fires when a booking's status changes, stores the update in cache."""
-    cache_key = f"booking_update_{instance.user.user_id}"
+    cache_key = f"booking_update_{instance.id}"
     updated_booking = {
         "id": instance.id,
         "status": instance.status.description,

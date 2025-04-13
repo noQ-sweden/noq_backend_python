@@ -2,6 +2,7 @@
 import sys
 sys.path.append("....backend")
 import json
+import time
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
 from backend.models import (Host, Client, Product, Region, Booking,
@@ -236,8 +237,23 @@ class TestSSEApi(TestCase):
         self.test_user = User.objects.create_user(username="clientuser", password="testpassword")
         client = Client.objects.create(user=self.test_user, gender='K', region=region)
 
+        self.region = Region.objects.create(name="Malmö")
+
+        # Create host
+        host = Host.objects.create(
+            name="Host A",
+            street="Bennets Väg 9",
+            postcode="21367",
+            city="Malmö",
+            region_id=self.region.id
+        )
+
         # Create a product with 1 available spot
-        self.product = Product.objects.create(name="Test Product", total_places=1)
+        self.product = Product.objects.create(
+            name="Test Product",
+            total_places=1,
+            host_id=host.id,
+        )
 
         # Create booking
         self.booking = Booking.objects.create(
@@ -265,11 +281,16 @@ class TestSSEApi(TestCase):
 
         # Wait for signal to update the cache
         cache_key = f"booking_update_{self.booking.id}"
-        cached_data = None
-        for _ in range(10):
+        timeout = 2  # seconds
+        start_time = time.time()
+
+        while time.time() - start_time < timeout:
             cached_data = cache.get(cache_key)
             if cached_data:
                 break
+            time.sleep(0.1)  # Add a small delay to avoid busy-waiting
+        else:
+            self.fail("Cache was not updated by signal within the timeout period.")
 
         self.assertIsNotNone(cached_data, "Cache was not updated by signal.")
         self.assertEqual(cached_data["status"], "confirmed")
