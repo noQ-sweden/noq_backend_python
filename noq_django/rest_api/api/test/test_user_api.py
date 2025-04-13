@@ -1,12 +1,22 @@
+
 import sys
 sys.path.append("....backend")
 import json
+import time
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
 from backend.models import (Host, Client, Product, Region, Booking,
                             Available, State, BookingStatus)
 from datetime import datetime, timedelta
+from unittest.mock import patch
+from django.urls import reverse
 from .test_data import TestData
+
+from django.core.cache import cache
+
+
+
+
 
 # New Test Class for Login functionality
 class TestUserApi(TestCase):
@@ -280,3 +290,88 @@ class TestProductsApi(TestCase):
         # After the tests delete all data generated for the tests
         self.t_data.delete_users()
         self.t_data.delete_products()
+
+ 
+
+class TestSSEApi(TestCase):
+    def setUp(self):
+        # Set up test data
+        self.user = User.objects.create_user(username="testuser", password="password")
+        self.client.login(username='testuser', password='password')
+
+        # Create region and client
+        region = Region.objects.first() or Region.objects.create(name="Test Region")
+        self.test_user = User.objects.create_user(username="clientuser", password="testpassword")
+        client = Client.objects.create(user=self.test_user, gender='K', region=region)
+
+        self.region = Region.objects.create(name="Malmö")
+
+        # Create host
+        host = Host.objects.create(
+            name="Host A",
+            street="Bennets Väg 9",
+            postcode="21367",
+            city="Malmö",
+            region_id=self.region.id
+        )
+
+        # Create a product with 1 available spot
+        self.product = Product.objects.create(
+            name="Test Product",
+            total_places=1,
+            host_id=host.id,
+        )
+
+        # Create booking
+        self.booking = Booking.objects.create(
+            start_date=datetime.now().date(),
+            end_date=datetime.now().date() + timedelta(days=1),
+            product=self.product,
+            user=client,
+            status=BookingStatus.objects.get(id=State.PENDING)
+        )
+
+    def test_sse_booking_updates(self):
+        """ Test that SSE streams live booking updates when the status changes. """
+
+        user_id = self.user.id
+        url = reverse('sse_booking_updates', kwargs={'user_id': user_id})
+        response = self.client.get(url, **{"HTTP_ACCEPT": "text/event-stream"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/event-stream')
+
+        # Trigger status change (which should invoke signal to update cache)
+        new_status = BookingStatus.objects.get(id=State.CONFIRMED)
+        self.booking.status = new_status
+        self.booking.save()
+
+        # Wait for signal to update the cache
+        cache_key = f"booking_update_{self.booking.id}"
+        timeout = 2  # seconds
+        start_time = time.time()
+
+        while time.time() - start_time < timeout:
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                break
+            time.sleep(0.1)  # Add a small delay to avoid busy-waiting
+        else:
+            self.fail("Cache was not updated by signal within the timeout period.")
+
+        self.assertIsNotNone(cached_data, "Cache was not updated by signal.")
+        self.assertEqual(cached_data["status"], "confirmed")
+
+        # Simulate receiving from the SSE stream
+        data_received = ""
+        for chunk in response.streaming_content:
+            data_received += chunk.decode()
+            if "data: " in data_received:
+                break
+
+        try:
+            json_data_received = json.loads(data_received.split("data: ")[1].strip())
+        except json.JSONDecodeError as e:
+            self.fail(f"Failed to parse SSE data as JSON: {e}")
+
+        self.assertEqual(json_data_received, cached_data)

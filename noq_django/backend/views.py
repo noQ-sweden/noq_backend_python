@@ -8,7 +8,7 @@ from . import forms
 from . import tables
 from .models import SleepingSpace
 from .forms import SleepingSpaceForm
-from .models import Product
+from .models import Product, Booking
 from .forms import ProductForm
 import json
 from urllib.parse import urlencode
@@ -16,8 +16,14 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 
 
+from django.http import StreamingHttpResponse
+from django.db.models.signals import post_save
+from django.core.cache import cache
+from django.dispatch import receiver
+import time
 
-        
+
+
 def main_view(request):
     debug(request, "main_view", "main.html")
     header = "NoQ - startsida"
@@ -178,6 +184,47 @@ def book_room_view(request, available_id):
                     "datum": available.available_date,
                 },
             )
+        
+
+# SSE CODE
+
+def booking_status_stream(user_id):
+    """SSE listens for updates stored in cache (via signal)."""
+    cache_key = f"booking_update_{user_id}"
+    last_sent_data = None
+
+    """Function to send booking updates as SSE for a specific user."""
+    try:
+        while True:
+            updated_booking = cache.get(cache_key)  # Check for new updates
+
+           
+
+            if updated_booking and updated_booking != last_sent_data:
+               
+                yield f"data: {json.dumps(updated_booking)}\n\n"
+                last_sent_data = updated_booking  # Track last sent data
+                cache.delete(cache_key)
+                
+                break  #break the loop after sending data to avoid infinte loop
+
+            time.sleep(1)  # Prevent excessive CPU usage
+    except GeneratorExit:
+        # Handle client disconnection cleanup here
+        print(f"Connection closed for user {user_id}")
+        
+
+@login_required
+def sse_booking_updates_view(request, user_id):
+    """View to stream booking status updates for the authenticated user."""
+    if not request.user.is_authenticated:
+        return HttpResponse(status=403)  
+
+    user_id = request.user.id  
+    response = StreamingHttpResponse(booking_status_stream(user_id), content_type="text/event-stream")
+    response['Cache-Control'] = 'no-cache'
+    response['X-Accel-Buffering'] = 'no'  # Disable buffering if using a reverse proxy
+    return response
 
 
 def manual_user_registration(request):
