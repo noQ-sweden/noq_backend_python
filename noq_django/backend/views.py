@@ -14,6 +14,7 @@ import json
 from urllib.parse import urlencode
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
+from .models import Resource
 
 
 
@@ -376,3 +377,36 @@ def delete_sleeping_space(request, pk):
         sleeping_space.delete()
         return redirect('list_sleeping_spaces')
     return render(request, 'sleeping_space_confirm_delete.html', {'sleeping_space': sleeping_space})
+
+
+
+
+EU_COUNTRIES = [
+    "Sweden", "Germany", "France", "Spain", "Italy", "Finland", "Denmark", "Poland",
+    "Austria", "Netherlands", "Belgium", "Ireland", "Portugal", "Czech", "Greece",
+    "Slovakia", "Slovenia", "Lithuania", "Latvia", "Estonia", "Hungary", "Croatia",
+    "Luxembourg", "Bulgaria", "Romania", "Cyprus", "Malta","Browntown"
+]
+def resource_list(request):
+    resources = Resource.objects.all()
+    
+    if request.GET.get('open_now'):
+        # Filter resources that are currently open
+        resources = [r for r in resources if r.is_open_now()]
+
+    if request.GET.get('eu_citizen'):
+        resources = [
+            r for r in resources 
+            if any(country.lower() in r.address.lower() for country in EU_COUNTRIES)
+        ]
+
+    age_filter = request.GET.getlist('target_group')
+    if age_filter:
+        resources = [r for r in resources if r.target_group in age_filter]
+
+    return render(request, 'resource_list.html', {
+        'resources': resources,
+        'open_now': request.GET.get('open_now'),
+        'eu_citizen': request.GET.get('eu_citizen'),
+        'target_group_filter': age_filter,  # 👈 This line is important!
+    })

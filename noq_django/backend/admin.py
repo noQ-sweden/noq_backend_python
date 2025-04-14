@@ -1,7 +1,7 @@
 from typing import Any
 from django.contrib import admin
 from django.contrib.auth.models import User, Group
-from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus, SleepingSpace, VolunteerProfile, VolunteerHostAssignment
+from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus, SleepingSpace, VolunteerProfile, VolunteerHostAssignment, Resource
 
 # Register the models.
 admin.site.register(Region)
@@ -146,3 +146,35 @@ class VolunteerProfileAdmin(admin.ModelAdmin):
         return ", ".join([region.name for region in obj.preferred_regions.all()])
 
     display_preferred_regions.short_description = 'Preferred Regions'
+
+
+@admin.register(Resource)
+class ResourceAdmin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'opening_time',
+        'closing_time',
+        'is_open_now',
+        'address',
+        'phone',
+        'email',
+        'target_group',
+        'other',
+        'applies_to',
+        
+    )
+    list_filter = ('opening_time', 'closing_time')
+    fields = (
+        'name',
+        'opening_time',
+        'closing_time',
+        'address',
+        'phone',
+        'email',
+        'target_group',
+        'other',
+        'applies_to',
+    )
+
+
+
