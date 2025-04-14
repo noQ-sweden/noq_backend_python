@@ -14,27 +14,50 @@
     <div style="min-width: 280px;">
 
         <!-- Opening Hours Filter -->
-        <div style="border: 1px solid #ccc; margin-bottom: 20px;">
-            <div style="background-color: #e9d8f4; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: bold; font-size: 18px;">Opening hours</span>
-            </div>
+         
+             
+
+             
             <div style="padding: 10px;">
                 <form method="get" id="open-now-form">
-                    <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 16px; border: 2px solid #b80060; padding: 6px; width: fit-content;">
-                        <input type="checkbox" name="open_now" {% if request.GET.open_now %}checked{% endif %} onchange="this.form.submit()">
-                        <span style="text-decoration: underline;">Open right now</span>
-                    </label>
-
-                    <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 16px; border: 2px solid #b80060; padding: 6px; width: fit-content; margin-top: 10px;">
-                        <input type="checkbox" name="eu_citizen" {% if eu_citizen %}checked{% endif %} onchange="this.form.submit()">
-                        <span style="text-decoration: underline;">Show only EU-based resources</span>
-                    </label>
-                </form>
+                    <div style="background-color: #e9d8f4; padding: 10px;">
+                <span style="font-weight: bold; font-size: 18px;">Opening Hour</span>
             </div>
-        </div>
+                    <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 16px;  padding: 6px; width: fit-content;">
+                        <input type="checkbox" name="open_now" {% if request.GET.open_now %}checked{% endif %} onchange="this.form.submit()">
+                        Open right now 
+                    </label>
+                    <div style="background-color: #e9d8f4; padding: 10px;">
+                <span style="font-weight: bold; font-size: 18px;">EU</span>
+            </div>
+
+                    <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 16px;  padding: 6px; width: fit-content; margin-top: 10px;">
+                        <input type="checkbox" name="eu_citizen" {% if eu_citizen %}checked{% endif %} onchange="this.form.submit()">
+                         Show only EU-based resources 
+                    </label>
+                    <div style="background-color: #e9d8f4; padding: 10px;">
+                <span style="font-weight: bold; font-size: 18px;">Age group</span>
+            </div>
+                    <label style="display: block; margin-bottom: 5px;">
+                        <input type="checkbox" name="target_group" value="Children - under 18 years old"
+                            {% if 'Children - under 18 years old' in target_group_filter %}checked{% endif %}
+                            onchange="this.form.submit()">
+                        Children - under 18 years old
+                    </label>
+                    <label style="display: block;">
+                        <input type="checkbox" name="target_group" value="Adults 25+"
+                            {% if 'Adults 25+' in target_group_filter %}checked{% endif %}
+                            onchange="this.form.submit()">
+                        Adult - over 18 years old
+                    </label>
+                    
+                </form>
+                
+            </div>
+        
 
         <!-- Age Group Filter -->
-        <div style="border: 1px solid #ccc; margin-bottom: 20px;">
+        <!-- <div style="border: 1px solid #ccc; margin-bottom: 20px;">
             <div style="background-color: #e9d8f4; padding: 10px;">
                 <span style="font-weight: bold; font-size: 18px;">Age group</span>
             </div>
@@ -54,7 +77,7 @@
                     </label>
                 </form>
             </div>
-        </div>
+        </div> -->
 
     </div>
 
