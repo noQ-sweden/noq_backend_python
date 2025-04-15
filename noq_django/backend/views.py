@@ -398,57 +398,87 @@ def resource_list(request):
     eu_citizen = request.GET.get("eu_citizen")
     target_group_filter = request.GET.getlist("target_group")
     applies_to_filter = request.GET.getlist("applies_to")
-     
 
     resources = Resource.objects.all()
 
+    # Handle search logic
     if search_query:
+        search_lower = search_query.lower()
+
+        group_map = {
+            "adult - over 18 years old": ["Adult - over 18 years old", "Youth 18-25", "Women only"],
+            "adult": ["Adult - over 18 years old", "Youth 18-25", "Women only"],
+            "youth": ["Youth 18-25", "Women only"],
+            "women": ["Women only"],
+            "children": ["Children - under 18 years old"],
+            "under 18": ["Children - under 18 years old"],
+            "kids": ["Children - under 18 years old"],
+            "all ages": ["Adult - over 18 years old", "Youth 18-25", "Women only", "Children - under 18 years old"]
+        }
+
+        matched_groups = set()
+        for keyword, groups in group_map.items():
+            if keyword in search_lower:
+                matched_groups.update(groups)
+
         resources = resources.filter(
             Q(name__icontains=search_query)
             | Q(address__icontains=search_query)
             | Q(email__icontains=search_query)
-            | Q(target_group__icontains=search_query)
             | Q(other__icontains=search_query)
             | Q(applies_to__icontains=search_query)
+            | Q(target_group__in=matched_groups)
         )
 
+    # EU filter
     if eu_citizen:
         resources = [
-            r for r in resources 
+            r for r in resources
             if any(country.lower() in r.address.lower() for country in EU_COUNTRIES)
         ]
 
+    # Applies to filter
     if applies_to_filter:
         resources = [
-            r for r in resources 
+            r for r in resources
             if any(tag in r.applies_to for tag in applies_to_filter)
         ]
 
+    # Open now filter
     if open_now:
         resources = [r for r in resources if r.is_open_now()]
 
+    # Target group filter
     def matches_target_group(group):
         group_map = {
-            "Adults 25+": ["Adults 25+", "Youth 18-25", "Women only"],
-            "Youth 18-25": ["Youth 18-25", "Women only"],
-            "Children - under 18 years old": ["Children - under 18 years old"],
-            "Women only": ["Women only"],
+            "adults 25+": ["Adults 25+", "Women only"],
+            "youth 18-25": ["Youth 18-25", "Women only"],
+            "women only": ["Women only"],
+            "children - under 18 years old": ["Children - under 18 years old"],
+            "all ages": ["Adult - over 18 years old", "Youth 18-25", "Women only", "Children - under 18 years old"]
         }
 
-        if "All ages" in target_group_filter:
+        normalized_group = group.strip().lower()
+        normalized_filters = [f.strip().lower() for f in target_group_filter]
+
+        # If both adults and children selected or 'all ages', show everything
+        if (
+            "adults 25+" in normalized_filters and
+            "children - under 18 years old" in normalized_filters
+        ) or "all ages" in normalized_filters:
             return True
 
-        # Flatten all matched groups from selected filters
+
         expanded_groups = set()
-        for filter_group in target_group_filter:
-            expanded_groups.update(group_map.get(filter_group, [filter_group]))
+        for f in normalized_filters:
+            expanded_groups.update(g.lower() for g in group_map.get(f, [f]))
 
-        return group in expanded_groups
+        return normalized_group in expanded_groups
 
-# Apply only if there's a target group filter
     if target_group_filter:
-      resources = [r for r in resources if matches_target_group(r.target_group)]
+        resources = [r for r in resources if matches_target_group(r.target_group)]
 
+    # Sorting
     if sort in ['name', '-name']:
         reverse = sort.startswith('-')
         resources = sorted(resources, key=lambda r: getattr(r, 'name').lower(), reverse=reverse)
@@ -462,8 +492,6 @@ def resource_list(request):
         "target_group_filter": target_group_filter,
         "applies_to_filter": applies_to_filter,
         "applies_to_options": APPLIES_TO_OPTIONS,
-        
-
     }
 
-    return render(request, "resource_list.html", context)
+    return render(request, "resource_list.html", context)     
