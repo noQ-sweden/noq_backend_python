@@ -15,6 +15,7 @@ from urllib.parse import urlencode
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from .models import Resource
+from django.db.models import Q
 
 
 
@@ -389,7 +390,33 @@ EU_COUNTRIES = [
 ]
 def resource_list(request):
     resources = Resource.objects.all()
-    
+     # Filter for applies to group 
+    applies_to_filter = request.GET.getlist("applies_to")
+
+    if applies_to_filter:
+        resources = [
+            resource for resource in resources
+            if any(area in resource.applies_to for area in applies_to_filter)
+        ]
+
+    # Get all unique problem areas from applies_to field
+    all_applies_to = sorted(set(
+        item
+        for resource in resources
+        for item in resource.applies_to
+    ))
+
+    # Get all unique problem areas from applies_to field
+    all_applies_to = sorted(set(
+        item
+        for resource in resources
+        for item in resource.applies_to
+    ))
+    all_applies_to = sorted(set(
+    item
+    for resource in Resource.objects.exclude(applies_to=None)
+    for item in resource.applies_to ))
+
     if request.GET.get('open_now'):
         # Filter resources that are currently open
         resources = [r for r in resources if r.is_open_now()]
@@ -403,6 +430,7 @@ def resource_list(request):
     age_filter = request.GET.getlist('target_group')
     if age_filter:
         resources = [r for r in resources if r.target_group in age_filter]
+
     # Sorting functionality in alphabetical order
         # Sorting (alphabetical only)
     sort_key = request.GET.get('sort')
@@ -418,5 +446,7 @@ def resource_list(request):
         'open_now': request.GET.get('open_now'),
         'eu_citizen': request.GET.get('eu_citizen'),
         'target_group_filter': age_filter,  # 👈 This line is important!
+        'all_applies_to':all_applies_to,
+        'applies_to_filter':applies_to_filter,
         'sort': sort_key,
     })

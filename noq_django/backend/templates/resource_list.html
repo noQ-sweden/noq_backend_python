@@ -22,25 +22,25 @@
     {% for tg in target_group_filter %}
       <input type="hidden" name="target_group" value="{{ tg }}">
     {% endfor %}
+    {% for val in applies_to_filter %}
+    <input type="hidden" name="applies_to" value="{{ val }}">
+    {% endfor %}
   </form>
   
   <form method="get">
-    <input type="text" name="search" placeholder="Search resources..." value="{{ search }}">
-    <button type="submit">Find</button>
+    {% comment %} <input type="text" name="search" placeholder="Search resources..." value="{{ search }}">
+    <button type="submit">Find</button> {% endcomment %}
     
-<h2 style="font-weight: bold; font-size: 28px;">Search</h2>
+    <h2 style="font-weight: bold; font-size: 28px;">Search</h2>
 
 <!-- Flex container for layout -->
-<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px;">
 
     <!-- Right Column: Filters -->
     <div style="min-width: 280px;">
 
         <!-- Opening Hours Filter -->
-         
-             
-
-             
+                                
             <div style="padding: 10px;">
                 <form method="get" id="open-now-form">
                     <div style="background-color: #e9d8f4; padding: 10px;">
@@ -73,6 +73,18 @@
                             onchange="this.form.submit()">
                         Adult - over 18 years old
                     </label>
+                    <div style="background-color: #e9d8f4; padding: 10px; margin-top: 15px;">
+                        <span style="font-weight: bold; font-size: 18px;">Problem Area</span>
+                    </div>
+                    
+                    {% for area in all_applies_to %}
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="applies_to" value="{{ area }}"
+                                {% if area in applies_to_filter %}checked{% endif %}
+                                onchange="this.form.submit()">
+                            {{ area|capfirst }}
+                        </label>
+                    {% endfor %}
                     
                 </form>
                 
