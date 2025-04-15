@@ -430,7 +430,14 @@ def add_products(nbr: int = 3):
 
 def generate_resources(n=20):
     faker = Faker()
-    applies_to_options = [["studies"], ["employment"], ["studies", "employment"]]
+    applies_to_values = [
+    "Crime", "Abuse", "Prostitution", "Unaccompanied children",
+    "Mental illness", "New arrival", "Suicide", "Human trafficking",
+    "Disturbance", "Insecurity", "Vulnerability to violence",
+    "EU citizens", "Homelessness", "extra cold nights -7",
+    "Cooperation", "Healthcare care", "studies", "Employment",
+    "The subway", "Violence"
+]
     target_groups = [
         "Children - under 18 years old",
         "Youth 18-25",
@@ -454,7 +461,7 @@ def generate_resources(n=20):
             email=faker.email(),
             target_group=random.choice(target_groups),
             other=faker.sentence(),
-            applies_to=random.choice(applies_to_options)
+            applies_to=random.sample(applies_to_values, k=random.randint(1, 4))
         )
 
     print(f"{n} resources created.")

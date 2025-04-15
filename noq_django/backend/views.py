@@ -16,6 +16,7 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from .models import Resource
 from django.db.models import Q
+from .models import APPLIES_TO_OPTIONS
 
 
 
@@ -441,6 +442,7 @@ def resource_list(request):
         "eu_citizen": eu_citizen,
         "target_group_filter": target_group_filter,
         "applies_to_filter": applies_to_filter,
+        "applies_to_options": APPLIES_TO_OPTIONS,
         
 
     }

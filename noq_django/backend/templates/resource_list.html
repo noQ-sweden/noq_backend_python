@@ -88,20 +88,16 @@
             </form>
             <form method="get" id="applies-to-form">
                 <div style="background-color: #e9d8f4; padding: 10px;">
-                    <span style="font-weight: bold; font-size: 18px;">Applies To</span>
+                    <span style="font-weight: bold; font-size: 18px;">Problem Area</span>
                 </div>
-                <label style="display: block; margin-bottom: 5px;">
-                    <input type="checkbox" name="applies_to" value="studies"
-                        {% if 'studies' in applies_to_filter %}checked{% endif %}
-                        onchange="this.form.submit()">
-                    Studies
-                </label>
-                <label style="display: block;">
-                    <input type="checkbox" name="applies_to" value="employment"
-                        {% if 'employment' in applies_to_filter %}checked{% endif %}
-                        onchange="this.form.submit()">
-                    Employment
-                </label>
+                {% for tag in applies_to_options %}
+    <label style="display: block; margin-bottom: 5px;">
+        <input type="checkbox" name="applies_to" value="{{ tag }}"
+            {% if tag in applies_to_filter %}checked{% endif %}
+            onchange="this.form.submit()">
+        {{ tag }}
+    </label>
+{% endfor %}
 
                 <!-- Preserve filters -->
                 {% if search %}

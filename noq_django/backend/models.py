@@ -447,7 +447,15 @@ class VolunteerHostAssignment(models.Model):
 
     def __str__(self):
         return f"{self.volunteer.user.username} assigned to {self.host.name} - {'Active' if self.active else 'Inactive'}" 
-
+    
+APPLIES_TO_OPTIONS = [
+    "Crime", "Abuse", "Prostitution", "Unaccompanied children",
+    "Mental illness", "New arrival", "Suicide", "Human trafficking",
+    "Disturbance", "Insecurity", "Vulnerability to violence",
+    "EU citizens", "Homelessness", "extra cold nights -7",
+    "Cooperation", "Healthcare care", "studies", "Employment",
+    "The subway", "Violence"
+]
 class Resource(models.Model):
     name = models.CharField(max_length=100)
     opening_time = models.TimeField()
