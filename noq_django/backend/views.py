@@ -15,6 +15,8 @@ from urllib.parse import urlencode
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from .models import Resource
+from django.db.models import Q
+
 
 
 
@@ -385,38 +387,62 @@ EU_COUNTRIES = [
     "Sweden", "Germany", "France", "Spain", "Italy", "Finland", "Denmark", "Poland",
     "Austria", "Netherlands", "Belgium", "Ireland", "Portugal", "Czech", "Greece",
     "Slovakia", "Slovenia", "Lithuania", "Latvia", "Estonia", "Hungary", "Croatia",
-    "Luxembourg", "Bulgaria", "Romania", "Cyprus", "Malta","Browntown"
+    "Luxembourg", "Bulgaria", "Romania", "Cyprus", "Malta", "Browntown"
 ]
-def resource_list(request):
-    resources = Resource.objects.all()
-    
-    if request.GET.get('open_now'):
-        # Filter resources that are currently open
-        resources = [r for r in resources if r.is_open_now()]
 
-    if request.GET.get('eu_citizen'):
+def resource_list(request):
+    search_query = request.GET.get("search", "")
+    sort = request.GET.get("sort", "")
+    open_now = request.GET.get("open_now")
+    eu_citizen = request.GET.get("eu_citizen")
+    target_group_filter = request.GET.getlist("target_group")
+    applies_to_filter = request.GET.getlist("applies_to")
+     
+
+    resources = Resource.objects.all()
+
+    if search_query:
+        resources = resources.filter(
+            Q(name__icontains=search_query)
+            | Q(address__icontains=search_query)
+            | Q(email__icontains=search_query)
+            | Q(target_group__icontains=search_query)
+            | Q(other__icontains=search_query)
+            | Q(applies_to__icontains=search_query)
+        )
+
+    if eu_citizen:
         resources = [
             r for r in resources 
             if any(country.lower() in r.address.lower() for country in EU_COUNTRIES)
         ]
 
-    age_filter = request.GET.getlist('target_group')
-    if age_filter:
-        resources = [r for r in resources if r.target_group in age_filter]
-    # Sorting functionality in alphabetical order
-        # Sorting (alphabetical only)
-    sort_key = request.GET.get('sort')
-    if sort_key in ['name', '-name']:
-        if isinstance(resources, list):
-            reverse = sort_key.startswith('-')
-            resources.sort(key=lambda r: getattr(r, 'name').lower(), reverse=reverse)
-        else:
-            resources = resources.order_by(sort_key)
+    if applies_to_filter:
+        resources = [
+            r for r in resources 
+            if any(tag in r.applies_to for tag in applies_to_filter)
+        ]
 
-    return render(request, 'resource_list.html', {
-        'resources': resources,
-        'open_now': request.GET.get('open_now'),
-        'eu_citizen': request.GET.get('eu_citizen'),
-        'target_group_filter': age_filter,  # 👈 This line is important!
-        'sort': sort_key,
-    })
+    if open_now:
+        resources = [r for r in resources if r.is_open_now()]
+
+    if target_group_filter:
+        resources = [r for r in resources if r.target_group in target_group_filter]
+
+    if sort in ['name', '-name']:
+        reverse = sort.startswith('-')
+        resources = sorted(resources, key=lambda r: getattr(r, 'name').lower(), reverse=reverse)
+
+    context = {
+        "resources": resources,
+        "search": search_query,
+        "sort": sort,
+        "open_now": open_now,
+        "eu_citizen": eu_citizen,
+        "target_group_filter": target_group_filter,
+        "applies_to_filter": applies_to_filter,
+        
+
+    }
+
+    return render(request, "resource_list.html", context)
