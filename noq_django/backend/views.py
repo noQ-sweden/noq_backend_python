@@ -403,10 +403,20 @@ def resource_list(request):
     age_filter = request.GET.getlist('target_group')
     if age_filter:
         resources = [r for r in resources if r.target_group in age_filter]
+    # Sorting functionality in alphabetical order
+        # Sorting (alphabetical only)
+    sort_key = request.GET.get('sort')
+    if sort_key in ['name', '-name']:
+        if isinstance(resources, list):
+            reverse = sort_key.startswith('-')
+            resources.sort(key=lambda r: getattr(r, 'name').lower(), reverse=reverse)
+        else:
+            resources = resources.order_by(sort_key)
 
     return render(request, 'resource_list.html', {
         'resources': resources,
         'open_now': request.GET.get('open_now'),
         'eu_citizen': request.GET.get('eu_citizen'),
         'target_group_filter': age_filter,  # 👈 This line is important!
+        'sort': sort_key,
     })

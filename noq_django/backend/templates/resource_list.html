@@ -4,7 +4,30 @@
         <strong>Open right now</strong>
     </label>
 </form> -->
-
+<form method="get" class="sort-form">
+    <label for="sort">Sort by name:</label>
+    <select name="sort" id="sort" onchange="this.form.submit()">
+      <option value="">-- Choose --</option>
+      <option value="name" {% if sort == 'name' %}selected{% endif %}>A → Z</option>
+      <option value="-name" {% if sort == '-name' %}selected{% endif %}>Z → A</option>
+    </select>
+  
+    <!-- Preserve other filters -->
+    {% if open_now %}
+      <input type="hidden" name="open_now" value="{{ open_now }}">
+    {% endif %}
+    {% if eu_citizen %}
+      <input type="hidden" name="eu_citizen" value="{{ eu_citizen }}">
+    {% endif %}
+    {% for tg in target_group_filter %}
+      <input type="hidden" name="target_group" value="{{ tg }}">
+    {% endfor %}
+  </form>
+  
+  <form method="get">
+    <input type="text" name="search" placeholder="Search resources..." value="{{ search }}">
+    <button type="submit">Find</button>
+    
 <h2 style="font-weight: bold; font-size: 28px;">Search</h2>
 
 <!-- Flex container for layout -->
