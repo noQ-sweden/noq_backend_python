@@ -74,17 +74,35 @@
                     <span style="font-weight: bold; font-size: 18px;">Age group</span>
                 </div>
                 <label style="display: block; margin-bottom: 5px;">
-                    <input type="checkbox" name="target_group" value="Children - under 18 years old"
-                        {% if 'Children - under 18 years old' in target_group_filter %}checked{% endif %}
-                        onchange="this.form.submit()">
-                    Children - under 18 years old
-                </label>
-                <label style="display: block;">
-                    <input type="checkbox" name="target_group" value="Adults 25+"
-                        {% if 'Adults 25+' in target_group_filter %}checked{% endif %}
-                        onchange="this.form.submit()">
-                    Adult - over 18 years old
-                </label>
+    <input type="checkbox" name="target_group" value="All ages"
+        {% if 'All ages' in target_group_filter %}checked{% endif %}
+        onchange="this.form.submit()">
+    All ages
+</label>
+<label style="display: block; margin-bottom: 5px;">
+    <input type="checkbox" name="target_group" value="Youth 18-25"
+        {% if 'Youth 18-25' in target_group_filter %}checked{% endif %}
+        onchange="this.form.submit()">
+    Youth 18–25
+</label>
+<label style="display: block; margin-bottom: 5px;">
+    <input type="checkbox" name="target_group" value="Children - under 18 years old"
+        {% if 'Children - under 18 years old' in target_group_filter %}checked{% endif %}
+        onchange="this.form.submit()">
+    Children - under 18 years old
+</label>
+<label style="display: block;">
+    <input type="checkbox" name="target_group" value="Adults 25+"
+        {% if 'Adults 25+' in target_group_filter %}checked{% endif %}
+        onchange="this.form.submit()">
+    Adult - over 18 years old
+</label>
+<label style="display: block; margin-bottom: 5px;">
+    <input type="checkbox" name="target_group" value="Women only"
+        {% if 'Women only' in target_group_filter %}checked{% endif %}
+        onchange="this.form.submit()">
+    Women only
+</label>
             </form>
             <form method="get" id="applies-to-form">
                 <div style="background-color: #e9d8f4; padding: 10px;">

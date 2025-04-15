@@ -427,8 +427,27 @@ def resource_list(request):
     if open_now:
         resources = [r for r in resources if r.is_open_now()]
 
+    def matches_target_group(group):
+        group_map = {
+            "Adults 25+": ["Adults 25+", "Youth 18-25", "Women only"],
+            "Youth 18-25": ["Youth 18-25", "Women only"],
+            "Children - under 18 years old": ["Children - under 18 years old"],
+            "Women only": ["Women only"],
+        }
+
+        if "All ages" in target_group_filter:
+            return True
+
+        # Flatten all matched groups from selected filters
+        expanded_groups = set()
+        for filter_group in target_group_filter:
+            expanded_groups.update(group_map.get(filter_group, [filter_group]))
+
+        return group in expanded_groups
+
+# Apply only if there's a target group filter
     if target_group_filter:
-        resources = [r for r in resources if r.target_group in target_group_filter]
+      resources = [r for r in resources if matches_target_group(r.target_group)]
 
     if sort in ['name', '-name']:
         reverse = sort.startswith('-')
