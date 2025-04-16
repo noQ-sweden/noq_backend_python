@@ -404,7 +404,6 @@ def resource_list(request):
     # Handle search logic
     if search_query:
         search_lower = search_query.lower()
-
         group_map = {
             "adult - over 18 years old": ["Adult - over 18 years old", "Youth 18-25", "Women only","Adults 25+"],
             "adult": ["Adult - over 18 years old", "Youth 18-25", "Women only","Adults 25+"],
@@ -430,25 +429,7 @@ def resource_list(request):
             | Q(target_group__in=matched_groups)
         )
 
-    # EU filter
-    if eu_citizen:
-        resources = [
-            r for r in resources
-            if any(country.lower() in r.address.lower() for country in EU_COUNTRIES)
-        ]
-
-    # Applies to filter
-    if applies_to_filter:
-        resources = [
-            r for r in resources
-            if any(tag in r.applies_to for tag in applies_to_filter)
-        ]
-
-    # Open now filter
-    if open_now:
-        resources = [r for r in resources if r.is_open_now()]
-
-    # Target group filter
+    # Helper for target group matching
     def matches_target_group(group):
         group_map = {
             "adults 25+": ["Adults 25+"],
@@ -461,13 +442,11 @@ def resource_list(request):
         normalized_group = group.strip().lower()
         normalized_filters = [f.strip().lower() for f in target_group_filter]
 
-        # If both adults and children selected or 'all ages', show everything
         if (
             "adults 25+" in normalized_filters and
             "children - under 18 years old" in normalized_filters
         ) or "all ages" in normalized_filters:
             return True
-
 
         expanded_groups = set()
         for f in normalized_filters:
@@ -475,16 +454,27 @@ def resource_list(request):
 
         return normalized_group in expanded_groups
 
-    if target_group_filter:
-        resources = [r for r in resources if matches_target_group(r.target_group)]
+    # Apply filters after search
+    filtered_resources = []
 
-    # Sorting
+    for r in resources:
+        if eu_citizen and not any(country.lower() in r.address.lower() for country in EU_COUNTRIES):
+            continue
+        if applies_to_filter and not any(tag in r.applies_to for tag in applies_to_filter):
+            continue
+        if open_now and not r.is_open_now():
+            continue
+        if target_group_filter and not matches_target_group(r.target_group):
+            continue
+        filtered_resources.append(r)
+
+    # Apply sorting
     if sort in ['name', '-name']:
         reverse = sort.startswith('-')
-        resources = sorted(resources, key=lambda r: getattr(r, 'name').lower(), reverse=reverse)
+        filtered_resources = sorted(filtered_resources, key=lambda r: r.name.lower(), reverse=reverse)
 
     context = {
-        "resources": resources,
+        "resources": filtered_resources,
         "search": search_query,
         "sort": sort,
         "open_now": open_now,
@@ -494,4 +484,4 @@ def resource_list(request):
         "applies_to_options": APPLIES_TO_OPTIONS,
     }
 
-    return render(request, "resource_list.html", context)     
+    return render(request, "resource_list.html", context)
