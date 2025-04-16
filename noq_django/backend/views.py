@@ -406,14 +406,14 @@ def resource_list(request):
         search_lower = search_query.lower()
 
         group_map = {
-            "adult - over 18 years old": ["Adult - over 18 years old", "Youth 18-25", "Women only"],
-            "adult": ["Adult - over 18 years old", "Youth 18-25", "Women only"],
+            "adult - over 18 years old": ["Adult - over 18 years old", "Youth 18-25", "Women only","Adults 25+"],
+            "adult": ["Adult - over 18 years old", "Youth 18-25", "Women only","Adults 25+"],
             "youth": ["Youth 18-25", "Women only"],
             "women": ["Women only"],
             "children": ["Children - under 18 years old"],
             "under 18": ["Children - under 18 years old"],
             "kids": ["Children - under 18 years old"],
-            "all ages": ["Adult - over 18 years old", "Youth 18-25", "Women only", "Children - under 18 years old"]
+            "all ages": ["Adult - over 18 years old", "Youth 18-25", "Women only", "Children - under 18 years old","Adults 25+", "All ages"]
         }
 
         matched_groups = set()
