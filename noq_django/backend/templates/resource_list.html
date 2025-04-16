@@ -65,95 +65,97 @@
     {% for tg in target_group_filter %}
         <input type="hidden" name="target_group" value="{{ tg }}">
     {% endfor %}
-</form>
-        <!-- Opening Hours Filter -->
-        <div style="padding: 10px;">
-            <form method="get" id="open-now-form">
-                    {% if search %}
-                        <input type="hidden" name="search" value="{{ search }}">
-                    {% endif %}
-                    {% if sort %}
-                        <input type="hidden" name="sort" value="{{ sort }}">
-                    {% endif %}
-                <div style="background-color: #e9d8f4; padding: 10px;">
-                    <span style="font-weight: bold; font-size: 18px;">Opening Hour</span>
-                </div>
-                <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 16px; padding: 6px; width: fit-content;">
-                    <input type="checkbox" name="open_now" {% if request.GET.open_now %}checked{% endif %} onchange="this.form.submit()">
-                    Open right now 
-                </label>
-                 
-                <div style="background-color: #e9d8f4; padding: 10px;">
-                    <span style="font-weight: bold; font-size: 18px;">Age group</span>
-                </div>
-                <label style="display: block; margin-bottom: 5px;">
-    <input type="checkbox" name="target_group" value="All ages"
-        {% if 'All ages' in target_group_filter %}checked{% endif %}
-        onchange="this.form.submit()">
-    All ages
-</label>
-<label style="display: block; margin-bottom: 5px;">
-    <input type="checkbox" name="target_group" value="Youth 18-25"
-        {% if 'Youth 18-25' in target_group_filter %}checked{% endif %}
-        onchange="this.form.submit()">
-    Youth 18–25
-</label>
-<label style="display: block; margin-bottom: 5px;">
-    <input type="checkbox" name="target_group" value="Children - under 18 years old"
-        {% if 'Children - under 18 years old' in target_group_filter %}checked{% endif %}
-        onchange="this.form.submit()">
-    Children - under 18 years old
-</label>
-<label style="display: block;">
-    <input type="checkbox" name="target_group" value="Adults 25+"
-        {% if 'Adults 25+' in target_group_filter %}checked{% endif %}
-        onchange="this.form.submit()">
-    Adults 25+
-</label>
-<label style="display: block; margin-bottom: 5px;">
-    <input type="checkbox" name="target_group" value="Women only"
-        {% if 'Women only' in target_group_filter %}checked{% endif %}
-        onchange="this.form.submit()">
-    Women only
-</label>
-            </form>
-            <form method="get" id="applies-to-form">
-                {% if search %}
-    <input type="hidden" name="search" value="{{ search }}">
-{% endif %}
-                {% if sort %}
-                    <input type="hidden" name="sort" value="{{ sort }}">
-                {% endif %}
-                <div style="background-color: #e9d8f4; padding: 10px;">
-                    <span style="font-weight: bold; font-size: 18px;">Problem Area</span>
-                </div>
-                {% for tag in applies_to_options %}
-    <label style="display: block; margin-bottom: 5px;">
-        <input type="checkbox" name="applies_to" value="{{ tag }}"
-            {% if tag in applies_to_filter %}checked{% endif %}
-            onchange="this.form.submit()">
-        {{ tag }}
-    </label>
-{% endfor %}
+    {% for val in applies_to_filter %}
+    <input type="hidden" name="applies_to" value="{{ val }}">
+    {% endfor %}
+  </form>
+  
+  <form method="get">
+    {% comment %} <input type="text" name="search" placeholder="Search resources..." value="{{ search }}">
+    <button type="submit">Find</button> {% endcomment %}
+    
+    <h2 style="font-weight: bold; font-size: 28px;">Search</h2>
 
-                <!-- Preserve filters -->
-                {% if search %}
-                    <input type="hidden" name="search" value="{{ search }}">
-                {% endif %}
-                {% if sort %}
-                    <input type="hidden" name="sort" value="{{ sort }}">
-                {% endif %}
-                {% if open_now %}
-                    <input type="hidden" name="open_now" value="{{ open_now }}">
-                {% endif %}
-                {% if eu_citizen %}
-                    <input type="hidden" name="eu_citizen" value="{{ eu_citizen }}">
-                {% endif %}
-                {% for tg in target_group_filter %}
-                    <input type="hidden" name="target_group" value="{{ tg }}">
-                {% endfor %}
-            </form>
-        </div>
+<!-- Flex container for layout -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px;">
+
+    <!-- Right Column: Filters -->
+    <div style="min-width: 280px;">
+
+        <!-- Opening Hours Filter -->
+                                
+            <div style="padding: 10px;">
+                <form method="get" id="open-now-form">
+                    <div style="background-color: #e9d8f4; padding: 10px;">
+                <span style="font-weight: bold; font-size: 18px;">Opening Hour</span>
+            </div>
+                    <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 16px;  padding: 6px; width: fit-content;">
+                        <input type="checkbox" name="open_now" {% if request.GET.open_now %}checked{% endif %} onchange="this.form.submit()">
+                        Open right now 
+                    </label>
+                    <div style="background-color: #e9d8f4; padding: 10px;">
+                <span style="font-weight: bold; font-size: 18px;">EU</span>
+            </div>
+
+                    <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 16px;  padding: 6px; width: fit-content; margin-top: 10px;">
+                        <input type="checkbox" name="eu_citizen" {% if eu_citizen %}checked{% endif %} onchange="this.form.submit()">
+                         Show only EU-based resources 
+                    </label>
+                    <div style="background-color: #e9d8f4; padding: 10px;">
+                <span style="font-weight: bold; font-size: 18px;">Age group</span>
+            </div>
+                    <label style="display: block; margin-bottom: 5px;">
+                        <input type="checkbox" name="target_group" value="Children - under 18 years old"
+                            {% if 'Children - under 18 years old' in target_group_filter %}checked{% endif %}
+                            onchange="this.form.submit()">
+                        Children - under 18 years old
+                    </label>
+                    <label style="display: block;">
+                        <input type="checkbox" name="target_group" value="Adults 25+"
+                            {% if 'Adults 25+' in target_group_filter %}checked{% endif %}
+                            onchange="this.form.submit()">
+                        Adult - over 18 years old
+                    </label>
+                    <div style="background-color: #e9d8f4; padding: 10px; margin-top: 15px;">
+                        <span style="font-weight: bold; font-size: 18px;">Problem Area</span>
+                    </div>
+                    
+                    {% for area in all_applies_to %}
+                        <label style="display: block; margin-bottom: 5px;">
+                            <input type="checkbox" name="applies_to" value="{{ area }}"
+                                {% if area in applies_to_filter %}checked{% endif %}
+                                onchange="this.form.submit()">
+                            {{ area|capfirst }}
+                        </label>
+                    {% endfor %}
+                    
+                </form>
+                
+            </div>
+        
+
+        <!-- Age Group Filter -->
+        <!-- <div style="border: 1px solid #ccc; margin-bottom: 20px;">
+            <div style="background-color: #e9d8f4; padding: 10px;">
+                <span style="font-weight: bold; font-size: 18px;">Age group</span>
+            </div>
+            <div style="padding: 10px;">
+                <form method="get" id="age-group-form">
+                    <label style="display: block; margin-bottom: 5px;">
+                        <input type="checkbox" name="target_group" value="Children - under 18 years old"
+                            {% if 'Children - under 18 years old' in target_group_filter %}checked{% endif %}
+                            onchange="this.form.submit()">
+                        Children - under 18 years old
+                    </label>
+                    <label style="display: block;">
+                        <input type="checkbox" name="target_group" value="Adults 25+"
+                            {% if 'Adults 25+' in target_group_filter %}checked{% endif %}
+                            onchange="this.form.submit()">
+                        Adult - over 18 years old
+                    </label>
+                </form>
+            </div>
+        </div> -->
 
     </div>
 
