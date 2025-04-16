@@ -404,18 +404,37 @@ def resource_list(request):
     # Handle search logic
     if search_query:
         search_lower = search_query.lower()
+        matched_groups = set()
+
+        # Handle direct age input
+        import re
+        age_match = re.findall(r'\d+', search_lower)
+        if age_match:
+            age_numbers = [int(num) for num in age_match]
+            for age in age_numbers:
+                if age < 18:
+                    matched_groups.add("Children - under 18 years old")
+                elif 18 <= age <= 25:
+                    matched_groups.add("Youth 18-25")
+                elif age > 25:
+                    matched_groups.update( ["Adult - over 18 years old","Adults 25+"])
+
+        # Keyword-based mapping
         group_map = {
             "adult - over 18 years old": ["Adult - over 18 years old", "Youth 18-25", "Women only","Adults 25+"],
             "adult": ["Adult - over 18 years old", "Youth 18-25", "Women only","Adults 25+"],
-            "youth": ["Youth 18-25", "Women only"],
+            "youth": ["Youth 18-25"],
             "women": ["Women only"],
             "children": ["Children - under 18 years old"],
             "under 18": ["Children - under 18 years old"],
             "kids": ["Children - under 18 years old"],
-            "all ages": ["Adult - over 18 years old", "Youth 18-25", "Women only", "Children - under 18 years old","Adults 25+", "All ages"]
+            "all ages": ["Adult - over 18 years old", "Youth 18-25", "Women only", "Children - under 18 years old","Adults 25+", "All ages"],
+            # "ages": ["All ages"],
+            # "age": ["All ages"],
+            
+            
         }
 
-        matched_groups = set()
         for keyword, groups in group_map.items():
             if keyword in search_lower:
                 matched_groups.update(groups)
