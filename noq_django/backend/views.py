@@ -451,8 +451,8 @@ def resource_list(request):
     # Target group filter
     def matches_target_group(group):
         group_map = {
-            "adults 25+": ["Adults 25+", "Women only"],
-            "youth 18-25": ["Youth 18-25", "Women only"],
+            "adults 25+": ["Adults 25+"],
+            "youth 18-25": ["Youth 18-25"],
             "women only": ["Women only"],
             "children - under 18 years old": ["Children - under 18 years old"],
             "all ages": ["Adult - over 18 years old", "Youth 18-25", "Women only", "Children - under 18 years old"]
