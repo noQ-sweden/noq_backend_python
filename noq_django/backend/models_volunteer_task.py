@@ -8,7 +8,7 @@ class VolunteerTask(models.Model):
   activity = models.ForeignKey("backend.Activity", on_delete=models.CASCADE, related_name="volunteer_tasks")
   
   STATUS_CHOICES = [
-    ('pendig', 'Pending'),
+    ('pending', 'Pending'),
     ('accepted', 'Accepted'),
     ('rejected', 'Rejected'),
     ('completed', 'Completed'),

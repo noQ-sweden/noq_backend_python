@@ -10,6 +10,8 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 
 
+
+
 from .api_schemas import (
     LoginPostSchema,
     LoginSchema,
@@ -27,6 +29,8 @@ api.add_router("/host/", "rest_api.api.host_api.router")
 api.add_router("/caseworker/", "rest_api.api.caseworker_api.router")
 api.add_router("/volunteer", "rest_api.api.volunteer_api.router")
 api.add_router("/so_admin/", "rest_api.api.admin_api.router")
+api.add_router("/admin/activities", "rest_api.api.admin_activities_api.router")
+api.add_router("/admin/volunteer", "rest_api.api.admin_volunteer_api.router")
 
 # temporör testsektion
 api.add_router("/old/", "rest_api.api.old_api.router")
