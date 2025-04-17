@@ -42,7 +42,9 @@ def list_resources(request,
         
         # Apply open now filter
         if open_now:
-            resources = [r for r in resources if r.is_open_now()]
+            from datetime import datetime
+            current_time = datetime.now().time()
+            resources = [r for r in resources if r.opening_time <= current_time <= r.closing_time]
         
         # Apply EU citizen filter
         if eu_citizen:

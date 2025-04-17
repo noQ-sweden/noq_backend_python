@@ -471,5 +471,6 @@ class Resource(models.Model):
         return self.name
 
     def is_open_now(self):
-        now = timezone.now().time()
+        from datetime import datetime
+        now = datetime.now().time()
         return self.opening_time <= now <= self.closing_time
