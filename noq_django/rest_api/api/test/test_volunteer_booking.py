@@ -11,6 +11,43 @@ from backend.models import (
 from django.test import Client as TestClient
 from ..volunteer_api import router  
 
+
+class TestVolunteerRegistrationApi(TestCase):
+    def setUp(self):
+        self.region = Region.objects.create(name="Test Region")
+        Group.objects.get_or_create(name="volunteer")
+
+    def test_registration_volunteer(self):
+        # Prepare test data
+        data = {
+            "email": "volunteertestuser1234@example.com",
+            "password": "SecurePass123!",
+            "first_name": "volunteer",
+            "last_name": "User"
+        }
+        url = "/api/register/"
+
+        # Send POST request with headers
+        response = self.client.post(
+            url,
+            data,
+            content_type="application/json",
+            **{"HTTP_X-User-Role": "volunteer"}
+        )
+
+        # Check response status
+        self.assertEqual(response.status_code, 201)
+
+        # Check that the User was created
+        self.assertTrue(User.objects.filter(email=data["email"]).exists())
+        user = User.objects.get(email=data["email"])
+
+        # Verify the user belongs to the "volunteer" group
+        self.assertTrue(user.groups.filter(name="volunteer").exists())
+
+        # Check that the Client record was created
+        self.assertTrue(Client.objects.filter(email=data["email"]).exists())
+
 class TestVolunteerApi(TestCase):
     # Constants for test data
     VOLUNTEER_USERNAME = "volunteer@test.com"
