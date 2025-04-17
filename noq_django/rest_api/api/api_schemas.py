@@ -247,10 +247,6 @@ class BookingUpdateSchema(Schema):
     booking_id: int
 
 
-class BookingUpdateSchema(Schema):
-    booking_id: int
-
-
 class AvailableSchema(Schema):
     """
     Available för att kunna se om en Product har tillgängliga platser
@@ -340,4 +336,49 @@ class UserShelterStayCountSchema(Schema):
     first_name: str
     last_name: str
     user_stay_counts: List[UserStaySummarySchema]
+
+
+class ResourceSchema(Schema):
+    """
+    Schema for Resource model
+    """
+    id: int
+    name: str
+    opening_time: str
+    closing_time: str
+    address: str
+    phone: str
+    email: str
+    target_group: str
+    other: str
+    applies_to: List[str]
+    is_open_now: bool
+
+class ResourcePostSchema(Schema):
+    """
+    Schema for creating new resources
+    """
+    name: str
+    opening_time: str
+    closing_time: str
+    address: str
+    phone: str
+    email: str
+    target_group: str
+    other: str
+    applies_to: List[str]
+
+class ResourcePatchSchema(Schema):
+    """
+    Schema for updating resources
+    """
+    name: Optional[str] = None
+    opening_time: Optional[str] = None
+    closing_time: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    target_group: Optional[str] = None
+    other: Optional[str] = None
+    applies_to: Optional[List[str]] = None
 
