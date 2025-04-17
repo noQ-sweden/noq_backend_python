@@ -7,6 +7,8 @@ from django.shortcuts import get_object_or_404
 from backend.models import Resource
 from .api_schemas import ResourceSchema, ResourcePostSchema, ResourcePatchSchema
 from backend.auth import group_auth
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 
 # List of EU countries for filtering
 EU_COUNTRIES = [
@@ -16,9 +18,11 @@ EU_COUNTRIES = [
     "Poland", "Portugal", "Romania", "Slovakia", "Slovenia", "Spain", "Sweden"
 ]
 
-router = Router(auth=lambda request: group_auth(request, "user"))
+# Create router without authentication for public access
+router = Router()
 
 @router.get("/", response=List[ResourceSchema], tags=["Resources"])
+@csrf_exempt
 def list_resources(request, 
                   search: str = None,
                   open_now: bool = None,
@@ -29,44 +33,52 @@ def list_resources(request,
     """
     List all resources with optional filtering
     """
-    resources = Resource.objects.all()
-    
-    # Apply search filter
-    if search:
-        resources = resources.filter(name__icontains=search)
-    
-    # Apply open now filter
-    if open_now:
-        resources = [r for r in resources if r.is_open_now()]
-    
-    # Apply EU citizen filter
-    if eu_citizen:
-        resources = [r for r in resources if any(country.lower() in r.address.lower() for country in EU_COUNTRIES)]
-    
-    # Apply target group filter
-    if target_group:
-        resources = [r for r in resources if r.target_group in target_group]
-    
-    # Apply applies_to filter
-    if applies_to:
-        resources = [r for r in resources if any(tag in r.applies_to for tag in applies_to)]
-    
-    # Apply sorting
-    if sort in ['name', '-name']:
-        reverse = sort.startswith('-')
-        resources = sorted(resources, key=lambda r: r.name.lower(), reverse=reverse)
-    
-    return resources
+    try:
+        resources = Resource.objects.all()
+        
+        # Apply search filter
+        if search:
+            resources = resources.filter(name__icontains=search)
+        
+        # Apply open now filter
+        if open_now:
+            resources = [r for r in resources if r.is_open_now()]
+        
+        # Apply EU citizen filter
+        if eu_citizen:
+            resources = [r for r in resources if any(country.lower() in r.address.lower() for country in EU_COUNTRIES)]
+        
+        # Apply target group filter
+        if target_group:
+            resources = [r for r in resources if r.target_group in target_group]
+        
+        # Apply applies_to filter
+        if applies_to:
+            resources = [r for r in resources if any(tag in r.applies_to for tag in applies_to)]
+        
+        # Apply sorting
+        if sort in ['name', '-name']:
+            reverse = sort.startswith('-')
+            resources = sorted(resources, key=lambda r: r.name.lower(), reverse=reverse)
+        
+        return resources
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
 
 @router.get("/{resource_id}", response=ResourceSchema, tags=["Resources"])
+@csrf_exempt
 def get_resource(request, resource_id: int):
     """
     Get a specific resource by ID
     """
-    resource = get_object_or_404(Resource, id=resource_id)
-    return resource
+    try:
+        resource = get_object_or_404(Resource, id=resource_id)
+        return resource
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
 
-@router.post("/", response={201: ResourceSchema}, tags=["Resources"])
+# Protected endpoints (require authentication)
+@router.post("/", response={201: ResourceSchema}, tags=["Resources"], auth=lambda request: group_auth(request, "user"))
 def create_resource(request, payload: ResourcePostSchema):
     """
     Create a new resource
@@ -87,7 +99,7 @@ def create_resource(request, payload: ResourcePostSchema):
     except Exception as e:
         raise HttpError(400, str(e))
 
-@router.patch("/{resource_id}", response=ResourceSchema, tags=["Resources"])
+@router.patch("/{resource_id}", response=ResourceSchema, tags=["Resources"], auth=lambda request: group_auth(request, "user"))
 def update_resource(request, resource_id: int, payload: ResourcePatchSchema):
     """
     Update an existing resource
@@ -103,7 +115,7 @@ def update_resource(request, resource_id: int, payload: ResourcePatchSchema):
     except Exception as e:
         raise HttpError(400, str(e))
 
-@router.delete("/{resource_id}", response={204: None}, tags=["Resources"])
+@router.delete("/{resource_id}", response={204: None}, tags=["Resources"], auth=lambda request: group_auth(request, "user"))
 def delete_resource(request, resource_id: int):
     """
     Delete a resource
