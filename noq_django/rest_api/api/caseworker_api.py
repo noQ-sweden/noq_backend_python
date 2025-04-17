@@ -337,6 +337,31 @@ def get_user_information(request, user_id: int):
 
     return user_data
 
+""" Get all users """
+
+@router.get("/users", response=List[UserInfoSchema], tags=["caseworker-user-management"])
+def get_all_users(request):
+    clients = Client.objects.all()
+    users_data = [
+        UserInfoSchema(
+            first_name=client.first_name,
+            last_name=client.last_name,
+            email=client.email,
+            username=client.user.username,
+            phone=client.phone,
+            gender=client.gender,
+            street=client.street,
+            postcode=client.postcode,
+            city=client.city,
+            region=client.region.id if client.region else None,
+            country=client.country,
+            day_of_birth=client.day_of_birth.isoformat() if client.day_of_birth else None,
+            personnr_lastnr=client.personnr_lastnr
+        )
+        for client in clients
+    ]
+    return users_data
+
 
 """
 Register a new user and client in the system.
