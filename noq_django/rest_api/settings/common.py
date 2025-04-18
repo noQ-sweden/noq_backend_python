@@ -22,6 +22,9 @@ CORS_ALLOW_HEADERS = [
     'Authorization',
     'Content-Type',
     'Cookie',
+    'Cache-Control',
+    'Pragma',
+    'Expires',
 ]
 
 # Application definition
