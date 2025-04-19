@@ -1,9 +1,13 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from ninja import NinjaAPI
-from backend.models import (Host)
+from backend.models import (Host, Client, Region)
+from django.contrib.auth.models import User, Group
 from ninja.responses import Response
+from django.db import transaction, IntegrityError
 from django.http import JsonResponse
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
@@ -17,6 +21,7 @@ from .api_schemas import (
     LoginSchema,
     ForgotPasswordSchema,
     ResetPasswordSchema,
+    UserRegistrationSchema,
 )
 
 
@@ -79,7 +84,6 @@ def logout_user(request):
     response =  JsonResponse({"login_status": False, "message": "Logout Successful"}, status=200)
     response.delete_cookie("sessionid")
     return response
-
 
 
 @api.post("/login/", response=LoginSchema, tags=["Login"])
@@ -157,3 +161,68 @@ def reset_password(request, payload: ResetPasswordSchema):
         return JsonResponse({"status": True, "message": "Password reset successful"}, status=200)
     else:
         return JsonResponse({"status": False, "message": "Invalid token"}, status=400)
+@api.post("/register/", response={201: dict, 400: dict}, tags=["Login"])
+def register_user(request, user_data: UserRegistrationSchema):
+    role = request.headers.get("X-User-Role", "user")
+    allowed_roles = ["user", "volunteer"]
+    if role not in allowed_roles:
+        return 400, {"error": "Invalid role specified."}
+
+    if not user_data.email or not user_data.email.strip():
+        return 400, {"error": "E-post måste anges och får inte vara tom."}
+    try:
+        validate_email(user_data.email)
+    except ValidationError:
+        return 400, {"error": "Ogiltig e-postadress."}
+
+    if not user_data.password or not user_data.password.strip():
+        return 400, {"error": "Lösenord måste anges och får inte vara tomt."}
+
+    if User.objects.filter(email=user_data.email).exists():
+        return 400, {"error": "Användare med denna e-postadress finns redan."}
+
+    try:
+        with transaction.atomic():
+            region_obj = Region.objects.first()
+            if not region_obj:
+                raise ValueError("Regionen finns inte i databasen.")
+            
+            # Create the user account
+            userClient = User.objects.create_user(
+                email=user_data.email,
+                username=user_data.email,
+                password=user_data.password,
+                first_name=user_data.first_name,
+                last_name=user_data.last_name
+            )
+
+            group_obj, _ = Group.objects.get_or_create(name=role)
+            userClient.groups.add(group_obj)
+
+            # Create the Client record
+            user = Client(
+                user=userClient,
+                first_name=user_data.first_name,
+                last_name=user_data.last_name,
+                region=region_obj,
+                phone="",
+                email=user_data.email,
+                gender="",
+                street="",
+                postcode="",  
+                city="",
+                country="",
+                day_of_birth=None,
+                personnr_lastnr="",
+                unokod="",
+            )
+            user.save()
+
+    except IntegrityError:
+        return 400, {"error": "Något gick fel: En användare kunde inte skapas."}
+    except ValueError:
+        return 400, {"error": "Ett oväntat fel inträffade. Vänligen försök igen."}
+    except Exception:
+        return 400, {"error": "Ett oväntat fel inträffade. Vänligen försök igen."}
+
+    return 201, {"success": "Användare registrerad!", "user_id": userClient.id}

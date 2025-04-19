@@ -1,0 +1,189 @@
+@startuml
+entity Region {
+    * id : Integer [PK]
+    --
+    name : CharField
+}
+
+entity ClientRequirement {
+    * id : Integer [PK]
+    --
+    requirements : ManyToManyField
+}
+
+entity ProductRequirement {
+    * id : Integer [PK]
+    --
+    requirements : ManyToManyField
+}
+
+entity Client {
+    * id : Integer [PK]
+    --
+    user : ForeignKey(User)
+    first_name : CharField
+    last_name : CharField
+    gender : CharField
+    street : CharField
+    postcode : CharField
+    city : CharField
+    country : CharField
+    phone : CharField
+    email : CharField
+    unokod : CharField
+    day_of_birth : DateField
+    personnr_lastnr : CharField
+    region : ForeignKey(Region)
+    requirements : ForeignKey(ClientRequirement)
+    last_edit : DateField
+    flag : BooleanField
+}
+
+entity Host {
+    * id : Integer [PK]
+    --
+    users : ManyToManyField(User)
+    name : CharField
+    street : CharField
+    postcode : CharField
+    city : CharField
+    region : ForeignKey(Region)
+    blocked_clients : ManyToManyField(Client)
+    caseworkers : ManyToManyField(User)
+}
+
+entity Product {
+    * id : Integer [PK]
+    --
+    name : CharField
+    description : CharField
+    total_places : IntegerField
+    host : ForeignKey(Host)
+    type : CharField
+    room_location : CharField
+    requirements : ForeignKey(ProductRequirement)
+    bookable : BooleanField
+}
+
+entity BookingStatus {
+    * id : Integer [PK]
+    --
+    description : CharField
+}
+
+entity Booking {
+    * id : Integer [PK]
+    --
+    booking_time : DateTimeField
+    start_date : DateField
+    end_date : DateField
+    product : ForeignKey(Product)
+    user : ForeignKey(Client)
+    status : ForeignKey(BookingStatus)
+}
+
+entity Available {
+    * id : Integer [PK]
+    --
+    available_date : DateField
+    product : ForeignKey(Product)
+    places_left : IntegerField
+}
+
+entity InvoiceStatus {
+    * id : Integer [PK]
+    --
+    name : CharField
+}
+
+entity Invoice {
+    * id : Integer [PK]
+    --
+    host : ForeignKey(Host)
+    amount : DecimalField
+    created_at : DateTimeField
+    updated_at : DateTimeField
+    description : TextField
+    status : ForeignKey(InvoiceStatus)
+    due_date : DateField
+    currency : CharField
+    invoice_number : CharField
+    vat : DecimalField
+    vat_rate : DecimalField
+    sale_date : DateField
+    seller_vat_number : CharField
+    buyer_vat_number : CharField
+    buyer_name : CharField
+    buyer_address : TextField
+}
+
+entity SleepingSpace {
+    * id : Integer [PK]
+    --
+    bed_type : CharField
+    status : CharField
+}
+
+entity VolunteerProfile {
+    * id : Integer [PK]
+    --
+    user : OneToOneField(User)
+    availability : CharField
+    skills : TextField
+}
+
+entity VolunteerHostAssignment {
+    * id : Integer [PK]
+    --
+    volunteer : ForeignKey(VolunteerProfile)
+    host : ForeignKey(Host)
+    active : BooleanField
+    start_date : DateField
+    end_date : DateField
+}
+
+entity User {
+    * id : Integer [PK]
+    --
+    username : CharField
+    password : CharField
+    email : CharField
+    first_name : CharField
+    last_name : CharField
+    is_staff : BooleanField
+    is_active : BooleanField
+    date_joined : DateTimeField
+}
+
+entity Group {
+    * id : Integer [PK]
+    --
+    name : CharField
+}
+
+entity UserGroups {
+    * id : Integer [PK]
+    --
+    user_id : ForeignKey(User)
+    group_id : ForeignKey(Group)
+}
+
+' Relationships
+Region ||--o{ Client
+Region ||--o{ Host
+ClientRequirement ||--o{ Client
+ProductRequirement ||--o{ Product
+Host ||--o{ Product
+Client ||--o{ Booking
+Product ||--o{ Booking
+BookingStatus ||--o{ Booking
+Product ||--o{ Available
+Host ||--o{ Invoice
+InvoiceStatus ||--o{ Invoice
+VolunteerProfile ||--o{ VolunteerHostAssignment
+Host ||--o{ VolunteerHostAssignment
+User ||--o{ Group
+User ||--o{ Client
+User ||--o{ Host
+User ||-- VolunteerProfile
+@enduml
