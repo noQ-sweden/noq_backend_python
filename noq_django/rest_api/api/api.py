@@ -19,9 +19,9 @@ from django.conf import settings
 from .api_schemas import (
     LoginPostSchema,
     LoginSchema,
+    UserRegistrationSchema,
     ForgotPasswordSchema,
     ResetPasswordSchema,
-    UserRegistrationSchema,
 )
 
 
@@ -125,42 +125,6 @@ def login_user(request, payload: LoginPostSchema):
         )
 
 
-@api.post("/forgot-password/", tags=["Password Reset"])
-def forgot_password(request, payload: ForgotPasswordSchema):
-
-    try:
-        user = User.objects.get(username=payload.username)
-    except User.DoesNotExist:
-        return JsonResponse({"status": False, "message": "User not found"}, status=404)
-    
-    token = default_token_generator.make_token(user)
-    uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
-
-    reset_link = f"http://localhost:5173/reset-password/{uidb64}/{token}/"
-
-    send_mail(
-        "Password Reset Request",
-        f"Click the link to reset your password: {reset_link}",
-        settings.DEFAULT_FROM_EMAIL,
-        [user.username],
-        fail_silently=False,
-    )
-    return JsonResponse({"status": True, "message": "Password reset link sent to email"}, status=200)
-
-@api.post("/reset-password/", tags=["Password Reset"])
-def reset_password(request, payload: ResetPasswordSchema):
-    try:
-        uid = urlsafe_base64_decode(payload.uidb64).decode()
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
-
-    if user is not None and default_token_generator.check_token(user, payload.token):
-        user.set_password(payload.new_password)
-        user.save()
-        return JsonResponse({"status": True, "message": "Password reset successful"}, status=200)
-    else:
-        return JsonResponse({"status": False, "message": "Invalid token"}, status=400)
 @api.post("/register/", response={201: dict, 400: dict}, tags=["Login"])
 def register_user(request, user_data: UserRegistrationSchema):
     role = request.headers.get("X-User-Role", "user")
@@ -226,3 +190,41 @@ def register_user(request, user_data: UserRegistrationSchema):
         return 400, {"error": "Ett oväntat fel inträffade. Vänligen försök igen."}
 
     return 201, {"success": "Användare registrerad!", "user_id": userClient.id}
+
+
+@api.post("/forgot-password/", tags=["Password Reset"])
+def forgot_password(request, payload: ForgotPasswordSchema):
+
+    try:
+        user = User.objects.get(username=payload.username)
+    except User.DoesNotExist:
+        return JsonResponse({"status": False, "message": "User not found"}, status=404)
+    
+    token = default_token_generator.make_token(user)
+    uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+
+    reset_link = f"http://localhost:5173/reset-password/{uidb64}/{token}/"
+
+    send_mail(
+        "Password Reset Request",
+        f"Click the link to reset your password: {reset_link}",
+        settings.DEFAULT_FROM_EMAIL,
+        [user.username],
+        fail_silently=False,
+    )
+    return JsonResponse({"status": True, "message": "Password reset link sent to email"}, status=200)
+
+@api.post("/reset-password/", tags=["Password Reset"])
+def reset_password(request, payload: ResetPasswordSchema):
+    try:
+        uid = urlsafe_base64_decode(payload.uidb64).decode()
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, payload.token):
+        user.set_password(payload.new_password)
+        user.save()
+        return JsonResponse({"status": True, "message": "Password reset successful"}, status=200)
+    else:
+        return JsonResponse({"status": False, "message": "Invalid token"}, status=400)
