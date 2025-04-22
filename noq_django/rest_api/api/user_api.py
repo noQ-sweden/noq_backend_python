@@ -204,3 +204,5 @@ def delete_booking(request, booking_id: int):
     
     # Return a success message
     return 200, "Booking deleted successfully."
+
+

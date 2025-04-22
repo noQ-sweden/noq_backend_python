@@ -63,7 +63,30 @@ def list_resources(request,
             reverse = sort.startswith('-')
             resources = sorted(resources, key=lambda r: r.name.lower(), reverse=reverse)
         
-        return resources
+        # Create a list to store processed resources
+        processed_resources = []
+        
+        # Process each resource
+        for resource in resources:
+            # Create a dictionary with resource data
+            resource_dict = {
+                'id': resource.id,
+                'name': resource.name,
+                'opening_time': resource.opening_time.strftime('%H:%M:%S'),
+                'closing_time': resource.closing_time.strftime('%H:%M:%S'),
+                'address': resource.address,
+                'phone': resource.phone,
+                'email': resource.email,
+                'target_group': resource.target_group,
+                'other': resource.other,
+                'applies_to': resource.applies_to,
+                'is_open_now': resource.is_open_now()
+            }
+            
+            # Add to the processed list
+            processed_resources.append(resource_dict)
+        
+        return processed_resources
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
 
@@ -75,7 +98,23 @@ def get_resource(request, resource_id: int):
     """
     try:
         resource = get_object_or_404(Resource, id=resource_id)
-        return resource
+        
+        # Create a dictionary with resource data
+        resource_dict = {
+            'id': resource.id,
+            'name': resource.name,
+            'opening_time': resource.opening_time.strftime('%H:%M:%S'),
+            'closing_time': resource.closing_time.strftime('%H:%M:%S'),
+            'address': resource.address,
+            'phone': resource.phone,
+            'email': resource.email,
+            'target_group': resource.target_group,
+            'other': resource.other,
+            'applies_to': resource.applies_to,
+            'is_open_now': resource.is_open_now()
+        }
+        
+        return resource_dict
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
 
@@ -97,7 +136,23 @@ def create_resource(request, payload: ResourcePostSchema):
             other=payload.other,
             applies_to=payload.applies_to
         )
-        return 201, resource
+        
+        # Create a dictionary with resource data
+        resource_dict = {
+            'id': resource.id,
+            'name': resource.name,
+            'opening_time': resource.opening_time.strftime('%H:%M:%S'),
+            'closing_time': resource.closing_time.strftime('%H:%M:%S'),
+            'address': resource.address,
+            'phone': resource.phone,
+            'email': resource.email,
+            'target_group': resource.target_group,
+            'other': resource.other,
+            'applies_to': resource.applies_to,
+            'is_open_now': resource.is_open_now()
+        }
+        
+        return 201, resource_dict
     except Exception as e:
         raise HttpError(400, str(e))
 
@@ -113,7 +168,23 @@ def update_resource(request, resource_id: int, payload: ResourcePatchSchema):
     
     try:
         resource.save()
-        return resource
+        
+        # Create a dictionary with resource data
+        resource_dict = {
+            'id': resource.id,
+            'name': resource.name,
+            'opening_time': resource.opening_time.strftime('%H:%M:%S'),
+            'closing_time': resource.closing_time.strftime('%H:%M:%S'),
+            'address': resource.address,
+            'phone': resource.phone,
+            'email': resource.email,
+            'target_group': resource.target_group,
+            'other': resource.other,
+            'applies_to': resource.applies_to,
+            'is_open_now': resource.is_open_now()
+        }
+        
+        return resource_dict
     except Exception as e:
         raise HttpError(400, str(e))
 

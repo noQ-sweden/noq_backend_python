@@ -14,6 +14,7 @@ from typing import List, Dict
 from django.shortcuts import get_object_or_404
 from ninja.security import django_auth, django_auth_superuser, HttpBearer
 from datetime import date, timedelta, datetime
+from pydantic import BaseModel
 
 date_string: str
 

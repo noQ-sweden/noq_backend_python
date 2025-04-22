@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+from rest_framework.authtoken.views import obtain_auth_token
+
 
 # from views import book_room_view
 
@@ -10,6 +12,8 @@ from . import views
 #
 #   3. tables.py
 #   4. html-template
+
+ 
 
 urlpatterns = [
     path("", views.main_view, name="main_view"),
@@ -30,6 +34,7 @@ urlpatterns = [
     path('sleeping_spaces/delete/<int:pk>/', views.delete_sleeping_space, name='delete_sleeping_space'),
     path('bookings/daily/', views.daily_bookings_view, name='daily_bookings_view'),
     path('host/<int:host_id>/', views.host_bookings_view, name='host_bookings'),
-    path("resources/", views.resource_list, name="resource_list")
+    path("resources/", views.resource_list, name="resource_list"),
+    path('api/token/', obtain_auth_token),
 
 ]
