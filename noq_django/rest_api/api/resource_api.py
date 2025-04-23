@@ -9,7 +9,35 @@ from .api_schemas import ResourceSchema, ResourcePostSchema, ResourcePatchSchema
 from backend.auth import group_auth
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from ninja import Query
+from pydantic import BaseModel
+from typing import Optional
+from ninja import Schema
+from typing import List
+from datetime import datetime
 
+class ResourceSchema(Schema):
+    id: int
+    name: str
+    opening_time: str
+    closing_time: str
+    address: str
+    phone: str
+    email: str
+    target_group: str
+    other: str
+    applies_to: List[str]
+    is_open_now: bool  # ✅ Add this line
+
+
+class ResourceQuerySchema(BaseModel):
+    search: Optional[str] = None
+    open_now: Optional[bool] = None
+    eu_citizen: Optional[bool] = None
+    target_group: Optional[List[str]] = None
+    applies_to: Optional[List[str]] = None
+    sort: Optional[str] = None
+    
 # List of EU countries for filtering
 EU_COUNTRIES = [
     "Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus", "Czech Republic",
@@ -19,17 +47,13 @@ EU_COUNTRIES = [
 ]
 
 # Create router without authentication for public access
-router = Router()
+router = Router(tags=["Resources"])  # for authenticated routes
+public_router = Router(auth=None, tags=["Resources"])  # for Swagger testing (no auth)
+
 
 @router.get("/", response=List[ResourceSchema], tags=["Resources"])
 @csrf_exempt
-def list_resources(request, 
-                  search: str = None,
-                  open_now: bool = None,
-                  eu_citizen: bool = None,
-                  target_group: List[str] = None,
-                  applies_to: List[str] = None,
-                  sort: str = None):
+def list_resources(request, filters: ResourceQuerySchema = Query(...)):
     """
     List all resources with optional filtering
     """
@@ -37,30 +61,38 @@ def list_resources(request,
         resources = Resource.objects.all()
         
         # Apply search filter
-        if search:
-            resources = resources.filter(name__icontains=search)
-        
+        if filters.search and filters.search.strip():
+            resources = resources.filter(name__icontains=filters.search.strip())
+
         # Apply open now filter
-        if open_now:
-            from datetime import datetime
+        if filters.open_now is True:
             current_time = datetime.now().time()
-            resources = [r for r in resources if r.opening_time <= current_time <= r.closing_time]
-        
+
+            def parse_time(t):
+                if isinstance(t, str):
+                    return datetime.strptime(t, '%H:%M:%S').time()
+                return t
+
+            resources = [
+                r for r in resources
+                if parse_time(r.opening_time) <= current_time <= parse_time(r.closing_time)
+            ]
+
         # Apply EU citizen filter
-        if eu_citizen:
+        if filters.eu_citizen is True:
             resources = [r for r in resources if any(country.lower() in r.address.lower() for country in EU_COUNTRIES)]
-        
+
         # Apply target group filter
-        if target_group:
-            resources = [r for r in resources if r.target_group in target_group]
-        
+        if filters.target_group and any(filters.target_group):
+            resources = [r for r in resources if r.target_group in filters.target_group]
+
         # Apply applies_to filter
-        if applies_to:
-            resources = [r for r in resources if any(tag in r.applies_to for tag in applies_to)]
-        
+        if filters.applies_to and any(filters.applies_to):
+            resources = [r for r in resources if any(tag in r.applies_to for tag in filters.applies_to)]
+
         # Apply sorting
-        if sort in ['name', '-name']:
-            reverse = sort.startswith('-')
+        if filters.sort and filters.sort in ['name', '-name']:
+            reverse = filters.sort.startswith('-')
             resources = sorted(resources, key=lambda r: r.name.lower(), reverse=reverse)
         
         # Create a list to store processed resources
@@ -86,7 +118,7 @@ def list_resources(request,
             # Add to the processed list
             processed_resources.append(resource_dict)
         
-        return processed_resources
+        return [ResourceSchema(**resource_dict) for resource_dict in processed_resources]
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
 
@@ -103,8 +135,8 @@ def get_resource(request, resource_id: int):
         resource_dict = {
             'id': resource.id,
             'name': resource.name,
-            'opening_time': resource.opening_time.strftime('%H:%M:%S'),
-            'closing_time': resource.closing_time.strftime('%H:%M:%S'),
+            'opening_time': str(resource.opening_time),
+            'closing_time': str(resource.closing_time),
             'address': resource.address,
             'phone': resource.phone,
             'email': resource.email,
@@ -119,16 +151,18 @@ def get_resource(request, resource_id: int):
         return JsonResponse({"error": str(e)}, status=400)
 
 # Protected endpoints (require authentication)
-@router.post("/", response={201: ResourceSchema}, tags=["Resources"], auth=lambda request: group_auth(request, "user"))
-def create_resource(request, payload: ResourcePostSchema):
-    """
-    Create a new resource
-    """
+@public_router.post("/", response={201: ResourceSchema})
+def create_resource_public(request, payload: ResourcePostSchema):
     try:
+        # Convert string times to datetime.time objects
+        opening_time = datetime.strptime(payload.opening_time, '%H:%M:%S').time()
+        closing_time = datetime.strptime(payload.closing_time, '%H:%M:%S').time()
+
+        # Create the resource
         resource = Resource.objects.create(
             name=payload.name,
-            opening_time=payload.opening_time,
-            closing_time=payload.closing_time,
+            opening_time=opening_time,
+            closing_time=closing_time,
             address=payload.address,
             phone=payload.phone,
             email=payload.email,
@@ -136,13 +170,11 @@ def create_resource(request, payload: ResourcePostSchema):
             other=payload.other,
             applies_to=payload.applies_to
         )
-        
-        # Create a dictionary with resource data
-        resource_dict = {
+        return 201, {
             'id': resource.id,
             'name': resource.name,
-            'opening_time': resource.opening_time.strftime('%H:%M:%S'),
-            'closing_time': resource.closing_time.strftime('%H:%M:%S'),
+            'opening_time': str(resource.opening_time),
+            'closing_time': str(resource.closing_time),
             'address': resource.address,
             'phone': resource.phone,
             'email': resource.email,
@@ -151,8 +183,6 @@ def create_resource(request, payload: ResourcePostSchema):
             'applies_to': resource.applies_to,
             'is_open_now': resource.is_open_now()
         }
-        
-        return 201, resource_dict
     except Exception as e:
         raise HttpError(400, str(e))
 

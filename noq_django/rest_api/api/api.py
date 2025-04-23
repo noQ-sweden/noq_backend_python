@@ -4,6 +4,7 @@ from ninja import NinjaAPI
 from backend.models import (Host)
 from ninja.responses import Response
 from django.http import JsonResponse
+from rest_api.api.resource_api import public_router
 
 
 from .api_schemas import (
@@ -23,6 +24,7 @@ api.add_router("/caseworker/", "rest_api.api.caseworker_api.router")
 api.add_router("/volunteer", "rest_api.api.volunteer_api.router")
 api.add_router("/so_admin/", "rest_api.api.admin_api.router")
 api.add_router("/resources/", "rest_api.api.resource_api.router")
+api.add_router("/public/resources/", public_router)
 
 # temporör testsektion
 api.add_router("/old/", "rest_api.api.old_api.router")
