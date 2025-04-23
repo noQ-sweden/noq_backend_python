@@ -8,16 +8,14 @@ from django.db import transaction, IntegrityError
 from django.http import JsonResponse
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
-
-
-
+from django.core.mail import send_mail
+from django.conf import settings
 
 from .api_schemas import (
     LoginPostSchema,
     LoginSchema,
     UserRegistrationSchema,
 )
-
 
 api = NinjaAPI(
     csrf=False,
@@ -36,7 +34,6 @@ api.add_router("/admin/volunteer", "rest_api.api.admin_volunteer_api.router")
 api.add_router("/old/", "rest_api.api.old_api.router")
 
 documentation = """
-
     Generell namnsättning för alla API:er
     
     /objects    GET     listar ett objekt, med metodnamn objects_list, kan även ha filterparametrar
@@ -44,9 +41,7 @@ documentation = """
     /objects/id POST    skapar ett objekt, med metodnamn object_add
     /objects/id PATCH   uppdaterar ett objekt, med metodnamn object_update(id)
     /objects/id DELETE  tar bort ett objekt, med metodnamn object_delete(id)
-
 """
-
 
 @login_required
 @api.get("/self/auth/", response=LoginSchema, tags=["Login"])
@@ -71,7 +66,7 @@ def get(request):
         first_name=request.user.first_name,
         last_name=request.user.last_name 
     )
-    
+
 
 @login_required
 @api.get("/logout/", tags=["Login"])
@@ -177,6 +172,15 @@ def register_user(request, user_data: UserRegistrationSchema):
                 unokod="",
             )
             user.save()
+
+            # Send email after registration
+            send_mail(
+                "Välkommen till noQ!",
+                f"Hej {user_data.first_name},\n\nVälkommen till noQ! Ditt konto har nu skapats och du kan logga in med din e-postadress.",
+                None,  # Use default email from settings
+                [user_data.email],
+                fail_silently=False,
+            )
 
     except IntegrityError:
         return 400, {"error": "Något gick fel: En användare kunde inte skapas."}
