@@ -1,6 +1,7 @@
 from ninja import Router, ModelSchema
 from backend.models import Activity
 from django.shortcuts import get_object_or_404
+from .api_schemas import ActivityUpdateSchema
 
 router = Router()
 

@@ -346,3 +346,11 @@ class UserShelterStayCountSchema(Schema):
     last_name: str
     user_stay_counts: List[UserStaySummarySchema]
 
+#---- API SCHEMAS ACTIVITIESUPDATESCHEMA ----#
+class ActivityUpdateSchema(Schema):
+    title: Optional[str] 
+    description: Optional[str]
+    start_time: Optional[datetime] 
+    end_time: Optional[datetime]
+    is_approved: Optional[bool]
+    status: Optional[str]
