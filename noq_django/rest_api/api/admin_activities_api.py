@@ -1,6 +1,10 @@
-from ninja import Router, ModelSchema
-from backend.models import Activity
+from datetime import date
+from typing import Dict, List
+from ninja import Router, ModelSchema, Schema
+from backend.models import Activity, VolunteerProfile
 from django.shortcuts import get_object_or_404
+
+from backend.models_volunteer_task import VolunteerTask
 from .api_schemas import ActivityUpdateSchema
 
 router = Router()
@@ -10,6 +14,16 @@ class ActivitySchema(ModelSchema):
     class Config:
         model = Activity
         model_fields = ["id", "title", "description", "start_time", "end_time", "is_approved"]
+
+class VolunteerProfileSchema(Schema):
+    id: int
+    first_name: str
+    last_name: str
+    email: str
+    date_joined: date
+
+class ActivityDetailSchema(ActivitySchema):
+    volunteers: List[VolunteerProfileSchema]
 
 class ActivityCreateSchema(ModelSchema):
     class Config:
@@ -22,9 +36,31 @@ class ActivityUpdateSchema(ModelSchema):
         model_fields = ["title", "description", "start_time", "end_time", "is_approved"]
 #---- API ENDPOINTS ----#
 
+# List all activities
 @router.get("/", response=list[ActivitySchema], tags=["Admin Activities"])
 def list_activities(request):
     return Activity.objects.all()
+
+# Get details of an activity by ID
+@router.get("/{activity_id}", response=ActivityDetailSchema, tags=["Admin Activities"])
+def activity_detail(request, activity_id: int):
+    activity = get_object_or_404(Activity, id=activity_id)
+    tasks = VolunteerTask.objects.filter(activity_id=activity_id).select_related("volunteer")
+    volunteers = [
+        {
+        "id": task.volunteer.id,
+         "first_name": task.volunteer.first_name,
+         "last_name": task.volunteer.last_name,
+         "email": task.volunteer.email,
+         "date_joined": task.volunteer.date_joined.date()
+        }
+        for task in tasks
+    ]
+
+    return {
+        **ActivitySchema.from_orm(activity).dict(),
+        "volunteers": volunteers
+    }
 
 @router.post("/", response=ActivitySchema, tags=["Admin Activities"])
 def create_activity(request, payload: ActivityCreateSchema):
