@@ -13,6 +13,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
+
 from django.core.mail import send_mail
 from django.conf import settings
 
@@ -24,7 +25,6 @@ from .api_schemas import (
     ResetPasswordSchema,
 )
 
-
 api = NinjaAPI(
     csrf=False,
     title="noQ API (Django Ninja API)",
@@ -35,12 +35,13 @@ api.add_router("/host/", "rest_api.api.host_api.router")
 api.add_router("/caseworker/", "rest_api.api.caseworker_api.router")
 api.add_router("/volunteer", "rest_api.api.volunteer_api.router")
 api.add_router("/so_admin/", "rest_api.api.admin_api.router")
+api.add_router("/admin/activities", "rest_api.api.admin_activities_api.router")
+api.add_router("/admin/volunteer", "rest_api.api.admin_volunteer_api.router")
 
 # temporör testsektion
 api.add_router("/old/", "rest_api.api.old_api.router")
 
 documentation = """
-
     Generell namnsättning för alla API:er
     
     /objects    GET     listar ett objekt, med metodnamn objects_list, kan även ha filterparametrar
@@ -48,9 +49,7 @@ documentation = """
     /objects/id POST    skapar ett objekt, med metodnamn object_add
     /objects/id PATCH   uppdaterar ett objekt, med metodnamn object_update(id)
     /objects/id DELETE  tar bort ett objekt, med metodnamn object_delete(id)
-
 """
-
 
 @login_required
 @api.get("/self/auth/", response=LoginSchema, tags=["Login"])
@@ -75,7 +74,7 @@ def get(request):
         first_name=request.user.first_name,
         last_name=request.user.last_name 
     )
-    
+
 
 @login_required
 @api.get("/logout/", tags=["Login"])
@@ -181,6 +180,15 @@ def register_user(request, user_data: UserRegistrationSchema):
                 unokod="",
             )
             user.save()
+
+            # Send email after registration
+            send_mail(
+                "Välkommen till noQ!",
+                f"Hej {user_data.first_name},\n\nVälkommen till noQ! Ditt konto har nu skapats och du kan logga in med din e-postadress.",
+                None,  # Use default email from settings
+                [user_data.email],
+                fail_silently=False,
+            )
 
     except IntegrityError:
         return 400, {"error": "Något gick fel: En användare kunde inte skapas."}

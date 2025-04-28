@@ -357,3 +357,12 @@ class ResetPasswordSchema(Schema):
     token: str
     uidb64: str
     new_password: str
+      
+#---- API SCHEMAS ACTIVITIESUPDATESCHEMA ----#
+class ActivityUpdateSchema(Schema):
+    title: Optional[str] 
+    description: Optional[str]
+    start_time: Optional[datetime] 
+    end_time: Optional[datetime]
+    is_approved: Optional[bool]
+    status: Optional[str]
