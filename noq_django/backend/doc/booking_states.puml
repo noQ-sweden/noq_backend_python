@@ -1,0 +1,51 @@
+
+
+@startuml
+
+title State diagram for booking
+
+state in_queue
+state pending
+state accepted
+state advised_against
+state reserved
+state confirmed
+state checked_in
+state declined
+
+state booking_action <<fork>>
+[*] --> booking_action : User makes a booking
+booking_action --> pending : Härbärge has free places
+booking_action --> in_queue : Härbärge is full
+
+state approval_state <<fork>>
+pending --> approval_state
+in_queue --> pending : place is available
+
+approval_state --> accepted : Caseworker accepts
+approval_state --> advised_against : Caseworker advises against
+
+advised_against --> reserved : Host reserves
+accepted --> reserved : Host reserves
+advised_against --> declined : Host declines
+accepted --> declined : Host declines
+
+reserved --> confirmed : User confims
+reserved --> declined : User declines
+confirmed --> checked_in : Host checks-in user on arrival
+
+checked_in --> completed : Host checks-out user on departure
+completed --> [*]
+declined --> [*]
+
+pending: User has made a successful booking. Place is reserved in the product.
+in_queue: User has made a booking, but there is not places left
+in_queue: User is put into a queue
+accepted: User booking has been accepted by the caseworker
+advised_against: Caseworkes thinks reservation should not be made
+reserved: Place has been reserved for the user
+declined: Users booking has been declined by the caseworker,
+declined: host or user, reservation is released.
+confirmed: User has confirmed the booking
+
+@enduml

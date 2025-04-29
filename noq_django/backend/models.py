@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from enum import IntEnum
 
+from .models_volunteer_task import VolunteerTask
+
 class State(IntEnum):
     PENDING = 1
     DECLINED = 2
