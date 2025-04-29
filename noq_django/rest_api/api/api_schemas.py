@@ -340,13 +340,10 @@ class UserShelterStayCountSchema(Schema):
 
 
 class ResourceSchema(Schema):
-    """
-    Schema for Resource model
-    """
     id: int
     name: str
-    opening_time: str
-    closing_time: str
+    opening_time: str  # ✅ Change to str
+    closing_time: str  # ✅ Change to str
     address: str
     phone: str
     email: str
@@ -355,6 +352,7 @@ class ResourceSchema(Schema):
     applies_to: List[str]
     is_open_now: bool
 
+     
 class ResourcePostSchema(Schema):
     """
     Schema for creating new resources

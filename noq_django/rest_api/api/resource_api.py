@@ -226,3 +226,5 @@ def delete_resource(request, resource_id: int):
     resource = get_object_or_404(Resource, id=resource_id)
     resource.delete()
     return 204, None 
+
+
