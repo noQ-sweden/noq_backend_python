@@ -54,13 +54,13 @@ INSTALLED_APPS = [
     'rest_api',
     'backend',
     'rest_framework',
-    'rest_framework.authtoken',
+    # 'rest_framework.authtoken',
 ]
 
  
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-    ],
-}
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': [
+#         'rest_framework.authentication.TokenAuthentication',
+#     ],
+# }
     

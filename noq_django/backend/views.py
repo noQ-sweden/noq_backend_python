@@ -20,15 +20,15 @@ from .models import APPLIES_TO_OPTIONS
 
 
 # views.py
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.viewsets import ModelViewSet
+# from rest_framework.permissions import IsAuthenticated
+# from rest_framework.viewsets import ModelViewSet
 from .models import Resource
  
 
-class ResourceViewSet(ModelViewSet):
-    queryset = Resource.objects.all()
+# class ResourceViewSet(ModelViewSet):
+#     queryset = Resource.objects.all()
      
-    permission_classes = [IsAuthenticated]  # <- Only authenticated users can use this
+#     permission_classes = [IsAuthenticated]  # <- Only authenticated users can use this
 
         
 def main_view(request):

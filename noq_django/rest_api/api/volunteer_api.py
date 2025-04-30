@@ -1,4 +1,3 @@
-from ninja import NinjaAPI, Schema, ModelSchema, Router
 from ninja import Router, Schema
 from ninja.errors import HttpError
 from django.db import models
@@ -8,31 +7,16 @@ from django.shortcuts import get_object_or_404
 from backend.models import Resource
 from .api_schemas import ResourceSchema, ResourcePostSchema, ResourcePatchSchema
 from backend.auth import group_auth
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-from ninja import Query
-from pydantic import BaseModel
-from typing import Optional
-from ninja import Schema
-from typing import List
-from datetime import datetime
-from ninja.errors import HttpError
-from typing import Optional
-from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Lower
 from django.core.mail import send_mail
-from django.utils import timezone
-from backend.auth import group_auth
-from typing import List
-from ninja import Router
 import json
-from django.shortcuts import get_object_or_404
-from ninja.security import django_auth, django_auth_superuser, HttpBearer
-from datetime import date
-from backend.models import Resource
-from rest_api.api.api_schemas import ResourcePostSchema
-from rest_api.api.api_schemas import ResourceSchema
+from ninja.security import HttpBasicAuth
+from django.contrib.auth import authenticate
+from datetime import datetime, date
+ 
+
+
 from backend.models import (
     Client,
     Host,
@@ -65,7 +49,16 @@ from .api_schemas import (
     SimplifiedClientSchema,
 )
 
-router = Router(auth=None)
+
+class BasicAuth(HttpBasicAuth):
+    def authenticate(self, request, username, password):
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            return user
+
+basic_auth = BasicAuth()
+router = Router(auth=basic_auth)
+# router = Router(auth=None)
 
 # TODO: Test live email server setup to ensure delivery in production
 # TODO: Use the created modules for volunteer profile when confirming bookings to make sure they have the right to request booking at the specific host
@@ -414,7 +407,7 @@ def list_compass_resources(request):
 #     ]
 
 # Get a Compass resource by ID
-@router.get("/compass/{resource_id}", response=ResourceSchema, tags=["Volunteer"])
+@router.get("/compass/resources/{resource_id}", response=ResourceSchema, tags=["Volunteer"])
 def get_resource_by_id(request, resource_id: int):
     resource = get_object_or_404(Resource, id=resource_id)
     return ResourceSchema(
@@ -467,7 +460,7 @@ def create_resource_public(request, payload: ResourcePostSchema):
     except Exception as e:
         raise HttpError(400, str(e))
 
-@router.patch("/compass/{resource_id}", response=ResourceSchema, tags=["Volunteer"])
+@router.patch("/compass/resources/{resource_id}", response=ResourceSchema, tags=["Volunteer"])
 def update_resource(request, resource_id: int, payload: ResourcePatchSchema):
     resource = get_object_or_404(Resource, id=resource_id)
 
@@ -495,7 +488,7 @@ def update_resource(request, resource_id: int, payload: ResourcePatchSchema):
     except Exception as e:
         raise HttpError(400, str(e))
 
-@router.delete("/compass/{resource_id}", response={204: None}, tags=["Volunteer"])
+@router.delete("/compass/resources/{resource_id}", response={204: None}, tags=["Volunteer"])
 def delete_resource(request, resource_id: int):
     """
     Delete a resource
