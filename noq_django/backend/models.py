@@ -459,3 +459,10 @@ class Activity(models.Model):
 
     def __str__(self):
         return self.title
+class VolunteerActivity(models.Model):
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    volunteer = models.ForeignKey(User, on_delete=models.CASCADE)
+    registered_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('activity', 'volunteer')

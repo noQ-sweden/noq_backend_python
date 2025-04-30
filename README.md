@@ -59,6 +59,7 @@ Access API documentation at http://localhost:8000/api/docs.
 
     python manage.py runscript delete_all_data
     python manage.py runscript generate_data
+    python manage.py runscript generate_data_activities
 
 All login credentials for generated users are stored in the fake_credentials.txt file located in the scripts folder.
 
