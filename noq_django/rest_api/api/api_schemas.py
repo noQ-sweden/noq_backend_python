@@ -8,6 +8,8 @@ from backend.models import (
     Booking,
     Available,
     Invoice,
+    Activity,
+    VolunteerActivity
 )
 
 from typing import List, Dict
@@ -247,6 +249,28 @@ class VolunteerCreateClientPostSchema(Schema):
     gender: str
     region: str
 
+class ActivitySchema(ModelSchema):
+    is_signed_up: bool = False
+
+    class Config:
+        model = Activity
+        model_fields = ["id", "title", "description", "start_time", "end_time", "is_approved"]
+
+class VolunteerActivitySchema(ModelSchema):
+    activity: int
+    volunteer: int
+    registered_at: datetime
+
+    class Config:
+        model = VolunteerActivity
+        model_fields = ["activity", "volunteer", "registered_at"]
+
+class VolunteerActivityCreateSchema(ModelSchema):
+    activity: int
+
+    class Config:
+        model = VolunteerActivity
+        model_fields = ["activity"]
 
 class BookingUpdateSchema(Schema):
     booking_id: int
