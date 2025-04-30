@@ -41,3 +41,5 @@ MEDIA_URL = '/static/media/'
 
 MEDIA_ROOT = '/vol/web/media'
 STATIC_ROOT = '/vol/web/static'
+
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://www.noqapp.se/")

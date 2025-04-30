@@ -22,3 +22,5 @@ DATABASES = {
         "NAME": BASE_DIR / "noq.sqlite3",
     }
 }
+
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://demo.noqapp.se/login/")
