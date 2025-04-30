@@ -1,10 +1,9 @@
 from datetime import date
 from typing import Dict, List
 from ninja import Router, ModelSchema, Schema
-from backend.models import Activity, VolunteerProfile
+from backend.models import Activity, VolunteerActivity, VolunteerProfile
 from django.shortcuts import get_object_or_404
 
-from backend.models_volunteer_task import VolunteerTask
 from .api_schemas import ActivityUpdateSchema
 
 router = Router()
@@ -21,6 +20,7 @@ class VolunteerProfileSchema(Schema):
     last_name: str
     email: str
     date_joined: date
+    registered_at: date
 
 class ActivityDetailSchema(ActivitySchema):
     volunteers: List[VolunteerProfileSchema]
@@ -44,24 +44,29 @@ def list_activities(request):
 # Get details of an activity by ID
 @router.get("/{activity_id}", response=ActivityDetailSchema, tags=["Admin Activities"])
 def activity_detail(request, activity_id: int):
-    activity = get_object_or_404(Activity, id=activity_id)
-    tasks = VolunteerTask.objects.filter(activity_id=activity_id).select_related("volunteer")
-    volunteers = [
-        {
-        "id": task.volunteer.id,
-         "first_name": task.volunteer.first_name,
-         "last_name": task.volunteer.last_name,
-         "email": task.volunteer.email,
-         "date_joined": task.volunteer.date_joined.date()
+    try:
+        activity = get_object_or_404(Activity, id=activity_id)
+        tasks = VolunteerActivity.objects.filter(activity_id=activity_id).select_related("volunteer")
+        volunteers = [
+            {
+                "id": task.volunteer.id,
+                "first_name": task.volunteer.first_name,
+                "last_name": task.volunteer.last_name,
+                "email": task.volunteer.email,
+                "date_joined": task.volunteer.date_joined.date(),
+                "registered_at": task.registered_at.date()
+            }
+            for task in tasks
+        ]
+        
+        return {
+            **ActivitySchema.from_orm(activity).dict(),
+            "volunteers": volunteers
         }
-        for task in tasks
-    ]
 
-    return {
-        **ActivitySchema.from_orm(activity).dict(),
-        "volunteers": volunteers
-    }
-
+    except Activity.DoesNotExist:
+        return {'error': 'Activity not found.'}
+    
 @router.post("/", response=ActivitySchema, tags=["Admin Activities"])
 def create_activity(request, payload: ActivityCreateSchema):
     activity = Activity.objects.create(**payload.dict())
