@@ -1,7 +1,5 @@
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
 """
 Django settings for rest_api project.
 
