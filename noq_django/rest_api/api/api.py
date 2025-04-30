@@ -15,6 +15,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.core.mail import send_mail
 from django.conf import settings
+import os
 
 from .api_schemas import (
     LoginPostSchema,
@@ -203,7 +204,8 @@ def forgot_password(request, payload: ForgotPasswordSchema):
     token = default_token_generator.make_token(user)
     uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
 
-    reset_link = f"http://localhost:5173/reset-password/{uidb64}/{token}/"
+    reset_url_base = os.getenv("RESET_LINK")
+    reset_link = f"{reset_url_base}/{uidb64}/{token}/"
 
     send_mail(
         "Password Reset Request",
