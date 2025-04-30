@@ -25,6 +25,9 @@ CORS_ALLOW_HEADERS = [
     'Authorization',
     'Content-Type',
     'Cookie',
+    'Cache-Control',
+    'Pragma',
+    'Expires',
 ]
 
 # Application definition
@@ -38,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_extensions",
+    "django_q",
     "crispy_forms",
     "corsheaders",
     "crispy_bootstrap4",
