@@ -17,6 +17,8 @@ from django.contrib.auth.decorators import login_required
 from .models import Resource
 from django.db.models import Q
 from .models import APPLIES_TO_OPTIONS
+import unicodedata
+
 
 
 # views.py
@@ -393,12 +395,25 @@ def delete_sleeping_space(request, pk):
 
 
 
-EU_COUNTRIES = [
-    "Sweden", "Germany", "France", "Spain", "Italy", "Finland", "Denmark", "Poland",
-    "Austria", "Netherlands", "Belgium", "Ireland", "Portugal", "Czech", "Greece",
-    "Slovakia", "Slovenia", "Lithuania", "Latvia", "Estonia", "Hungary", "Croatia",
-    "Luxembourg", "Bulgaria", "Romania", "Cyprus", "Malta", "Browntown"
+# EU_COUNTRIES = [
+#     "Sweden", "Germany", "France", "Spain", "Italy", "Finland", "Denmark", "Poland",
+#     "Austria", "Netherlands", "Belgium", "Ireland", "Portugal", "Czech", "Greece",
+#     "Slovakia", "Slovenia", "Lithuania", "Latvia", "Estonia", "Hungary", "Croatia",
+#     "Luxembourg", "Bulgaria", "Romania", "Cyprus", "Malta", "Browntown"
+# ]
+problem_areas = [
+    "Konflikter", "Miljö", "Hälsa", "Våld", "Tunnelbana", "Hemlöshet",
+    "Otrygghet", "Ordningsstörning", "Sysselsättning", "Kriminalitet",
+    "Människohandel", "Våldutsatthet", "Immigration", "Psykisk ohälsa",
+    "Missbruk", "Sjukvård", "Samverkan", "Studier", "Akut hjälp",
+    "Direktinsats", "Juridisk rådgivning", "Stöd till barn",
+    "Socialtjänstkontakt", "Bostadssökande"
 ]
+
+
+
+def normalize_string(text):
+    return unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('utf-8').lower()
 
 def resource_list(request):
     search_query = request.GET.get("search", "")
@@ -410,98 +425,63 @@ def resource_list(request):
 
     resources = Resource.objects.all()
 
-    # Handle search logic
+    # ✅ Apply normalized keyword search first
     if search_query:
-        search_lower = search_query.lower()
-        matched_groups = set()
+        normalized_search = normalize_string(search_query)
+        filtered_by_search = []
 
-        # Handle direct age input
-        import re
-        age_match = re.findall(r'\d+', search_lower)
-        if age_match:
-            age_numbers = [int(num) for num in age_match]
-            for age in age_numbers:
-                if age < 18:
-                    matched_groups.add("Children - under 18 years old")
-                elif 18 <= age <= 25:
-                    matched_groups.add("Youth 18-25")
-                elif age > 25:
-                    matched_groups.update( ["Adult - over 18 years old","Adults 25+"])
+        for r in resources:
+            fields_to_search = [
+                r.name, r.address, r.email, r.phone,
+                r.other, r.target_group
+            ]
 
-        # Keyword-based mapping
-        group_map = {
-            "adult - over 18 years old": ["Adult - over 18 years old", "Youth 18-25", "Women only","Adults 25+"],
-            "adult": ["Adult - over 18 years old", "Youth 18-25", "Women only","Adults 25+"],
-            "youth": ["Youth 18-25"],
-            "women": ["Women only"],
-            "children": ["Children - under 18 years old"],
-            "under 18": ["Children - under 18 years old"],
-            "kids": ["Children - under 18 years old"],
-            "all ages": ["Adult - over 18 years old", "Youth 18-25", "Women only", "Children - under 18 years old","Adults 25+", "All ages"],
-            # "ages": ["All ages"],
-            # "age": ["All ages"],
-            
-            
-        }
+            # Add applies_to list or comma-separated string
+            if isinstance(r.applies_to, list):
+                fields_to_search.extend(r.applies_to)
+            elif isinstance(r.applies_to, str):
+                fields_to_search.extend([val.strip() for val in r.applies_to.split(",")])
 
-        for keyword, groups in group_map.items():
-            if keyword in search_lower:
-                matched_groups.update(groups)
+            # Normalize and search
+            searchable_text = " ".join([normalize_string(str(f)) for f in fields_to_search])
+            if normalized_search in searchable_text:
+                filtered_by_search.append(r)
 
-        resources = resources.filter(
-            Q(name__icontains=search_query)
-            | Q(address__icontains=search_query)
-            | Q(email__icontains=search_query)
-            | Q(other__icontains=search_query)
-            | Q(applies_to__icontains=search_query)
-            | Q(target_group__in=matched_groups)
-        )
+        resources = filtered_by_search
 
-    # Helper for target group matching
-    def matches_target_group(group):
-        group_map = {
-            "adults 25+": ["Adults 25+"],
-            "youth 18-25": ["Youth 18-25"],
-            "women only": ["Women only"],
-            "children - under 18 years old": ["Children - under 18 years old"],
-            "all ages": ["Adult - over 18 years old", "Youth 18-25", "Women only", "Children - under 18 years old"]
-        }
+    # ✅ Filter by target group
+    if target_group_filter:
+        # resources = resources.filter(target_group__in=target_group_filter)
+        resources = [r for r in resources if r.target_group in target_group_filter]
 
-        normalized_group = group.strip().lower()
-        normalized_filters = [f.strip().lower() for f in target_group_filter]
-
-        if (
-            "adults 25+" in normalized_filters and
-            "children - under 18 years old" in normalized_filters
-        ) or "all ages" in normalized_filters:
-            return True
-
-        expanded_groups = set()
-        for f in normalized_filters:
-            expanded_groups.update(g.lower() for g in group_map.get(f, [f]))
-
-        return normalized_group in expanded_groups
-
-    # Apply filters after search
+    # ✅ Apply remaining filters
     filtered_resources = []
-
     for r in resources:
-        if eu_citizen and not any(country.lower() in r.address.lower() for country in EU_COUNTRIES):
+        # EU filter
+        if eu_citizen and "EU" not in r.address:
             continue
-        if applies_to_filter and not any(tag in r.applies_to for tag in applies_to_filter):
+
+        # Applies to (problem area)
+        if applies_to_filter:
+            applies_to_vals = r.applies_to
+            if isinstance(applies_to_vals, str):
+                applies_to_vals = [val.strip() for val in applies_to_vals.split(",")]
+            if not any(tag in applies_to_vals for tag in applies_to_filter):
+                continue
+
+        # Open now
+        if open_now == "1" and not r.is_open_now():
             continue
-        if open_now and not r.is_open_now():
-            continue
-        if target_group_filter and not matches_target_group(r.target_group):
-            continue
+
         filtered_resources.append(r)
 
-    # Apply sorting
+    # ✅ Sort results
     if sort in ['name', '-name']:
         reverse = sort.startswith('-')
         filtered_resources = sorted(filtered_resources, key=lambda r: r.name.lower(), reverse=reverse)
 
-    context = {
+    # ✅ Return context to template
+    return render(request, "resource_list.html", {
         "resources": filtered_resources,
         "search": search_query,
         "sort": sort,
@@ -510,6 +490,5 @@ def resource_list(request):
         "target_group_filter": target_group_filter,
         "applies_to_filter": applies_to_filter,
         "applies_to_options": APPLIES_TO_OPTIONS,
-    }
-
-    return render(request, "resource_list.html", context)
+        "problem_areas": problem_areas,
+    })

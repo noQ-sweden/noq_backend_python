@@ -7,7 +7,9 @@ from faker import Faker
 from django.contrib.auth.models import User, Group
 import os
 from django.conf import settings
-
+from datetime import time
+ 
+import random
 from .delete_all_data import reset_all_data
 
 from backend.models import Host, Client, Product, Region, Booking, BookingStatus, State, VolunteerProfile, VolunteerHostAssignment, Resource
@@ -429,72 +431,47 @@ def add_products(nbr: int = 3):
 
 
 def generate_resources(n=20):
-    faker = Faker()
-    applies_to_values = [
-    "Crime", "Abuse", "Prostitution", "Unaccompanied children",
-    "Mental illness", "New arrival", "Suicide", "Human trafficking",
-    "Disturbance", "Insecurity", "Vulnerability to violence",
-    "EU citizens", "Homelessness", "extra cold nights -7",
-    "Cooperation", "Healthcare care", "studies", "Employment",
-    "The subway", "Violence"
-]
+    faker = Faker("sv_SE")  # Use Swedish locale for realistic names and addresses
+
     target_groups = [
-        "Children - under 18 years old",
-        "Youth 18-25",
-        "Adults 25+",
-        "All ages",
-        "Women only"
+        "Över 18",
+        "Under 18", 
+         
+         
+    ]
+
+    applies_to_values = [
+        "Konflikter", "Miljö", "Hälsa", "Våld", "Tunnelbana", "Hemlöshet",
+    "Otrygghet", "Ordningsstörning", "Sysselsättning", "Kriminalitet",
+    "Människohandel", "Våldutsatthet", "Immigration", "Psykisk ohälsa",
+    "Missbruk", "Sjukvård", "Samverkan", "Studier", "Akut hjälp",
+    "Direktinsats", "Juridisk rådgivning", "Stöd till barn",
+    "Socialtjänstkontakt", "Bostadssökande"
     ]
 
     for _ in range(n):
         name = faker.company()
-        opening_time = faker.time_object()
-        closing_time = faker.time_object()
-        if opening_time > closing_time:
-            opening_time, closing_time = closing_time, opening_time
+        opening_time = time(random.randint(7, 10), random.choice([0, 15, 30]))
+        closing_time = time(random.randint(15, 18), random.choice([0, 30, 45]))
+        address = f"{faker.street_name()} {faker.building_number()}, {faker.city()}"
+        email = f"{faker.first_name().lower()}@{faker.domain_name()}"
 
         Resource.objects.create(
             name=name,
             opening_time=opening_time,
             closing_time=closing_time,
-            address=faker.address(),
+            address=address,
             phone=faker.phone_number(),
-            email=faker.email(),
+            email=email,
             target_group=random.choice(target_groups),
-            other=faker.sentence(),
-            applies_to=random.sample(applies_to_values, k=random.randint(1, 4))
+            other=faker.sentence(nb_words=6),
+            applies_to=random.sample(applies_to_values, k=random.randint(1, 3))
         )
 
     print(f"{n} resources created.")
 
-def run(*args):
-    docs = """
-    generate test data
-    
-    python manage.py runscript generate_data 
-    
-    Args: [--script-args v2]
-    
-    """
-    print(docs)
-    v2_arg = "v2" in args
-
-    if "reset" in args:
-        reset_all_data()
-
-    antal_hosts = len(Host.objects.all())
-    antal_bookings = len(Host.objects.all())
-    if antal_hosts > 0 or antal_bookings > 0:
-        print("---- Tabellerna innehåller data -----")
-        print("HOSTS:", antal_hosts, "BOOKINGS:", antal_bookings)
-    add_region(5)
-    add_hosts(10)
-    add_caseworkers(1)
-    add_volunteers(2)
-    add_products(6)
-    add_users(16)
-
-    add_booking_statuses()
-    add_product_bookings(40, 7, v2_arg)
-
+def run():
+    from backend.scripts.generate_data import generate_resources
     generate_resources(20)
+
+    
