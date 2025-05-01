@@ -1,4 +1,5 @@
 import os
+
 """
 Django settings for rest_api project.
 
@@ -169,11 +170,13 @@ LOGGING = {
     },
 }
 
-# Email configuration
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "placeholder" # Add desired smtp server
-EMAIL_PORT = 587 # Placeholder port, potentially change to desired port
-EMAIL_USE_TLS = True # Could use EMAIL_USE_SSL instead
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "name_lastname@example.com")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "password")
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+RESET_LINK = os.environ.get('RESET_LINK')

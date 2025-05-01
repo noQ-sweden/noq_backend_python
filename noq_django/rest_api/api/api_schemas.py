@@ -370,6 +370,18 @@ class UserShelterStayCountSchema(Schema):
     last_name: str
     user_stay_counts: List[UserStaySummarySchema]
 
+
+class ForgotPasswordSchema(Schema):
+    """
+    Schema för att begära en återställning av lösenordet.
+    """
+    username: str
+
+class ResetPasswordSchema(Schema):
+    token: str
+    uidb64: str
+    new_password: str
+      
 #---- API SCHEMAS ACTIVITIESUPDATESCHEMA ----#
 class ActivityUpdateSchema(Schema):
     title: Optional[str] 

@@ -8,13 +8,22 @@ from django.db import transaction, IntegrityError
 from django.http import JsonResponse
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+
+from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes
+
 from django.core.mail import send_mail
 from django.conf import settings
+import os
 
 from .api_schemas import (
     LoginPostSchema,
     LoginSchema,
     UserRegistrationSchema,
+    ForgotPasswordSchema,
+    ResetPasswordSchema,
 )
 
 api = NinjaAPI(
@@ -193,3 +202,42 @@ def register_user(request, user_data: UserRegistrationSchema):
         return 400, {"error": "Ett oväntat fel inträffade. Vänligen försök igen."}
 
     return 201, {"success": "Användare registrerad!", "user_id": userClient.id}
+
+
+@api.post("/forgot-password/", tags=["Password Reset"])
+def forgot_password(request, payload: ForgotPasswordSchema):
+
+    try:
+        user = User.objects.get(username=payload.username)
+    except User.DoesNotExist:
+        return JsonResponse({"status": False, "message": "User not found"}, status=404)
+    
+    token = default_token_generator.make_token(user)
+    uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+
+    reset_url_base = os.getenv("RESET_LINK")
+    reset_link = f"{reset_url_base}/{uidb64}/{token}/"
+
+    send_mail(
+        "Password Reset Request",
+        f"Click the link to reset your password: {reset_link}",
+        settings.DEFAULT_FROM_EMAIL,
+        [user.username],
+        fail_silently=False,
+    )
+    return JsonResponse({"status": True, "message": "Password reset link sent to email"}, status=200)
+
+@api.post("/reset-password/", tags=["Password Reset"])
+def reset_password(request, payload: ResetPasswordSchema):
+    try:
+        uid = urlsafe_base64_decode(payload.uidb64).decode()
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, payload.token):
+        user.set_password(payload.new_password)
+        user.save()
+        return JsonResponse({"status": True, "message": "Password reset successful"}, status=200)
+    else:
+        return JsonResponse({"status": False, "message": "Invalid token"}, status=400)
