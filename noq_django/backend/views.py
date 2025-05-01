@@ -419,7 +419,7 @@ def resource_list(request):
     search_query = request.GET.get("search", "")
     sort = request.GET.get("sort", "")
     open_now = request.GET.get("open_now")
-    eu_citizen = request.GET.get("eu_citizen")
+    # eu_citizen = request.GET.get("eu_citizen")
     target_group_filter = request.GET.getlist("target_group")
     applies_to_filter = request.GET.getlist("applies_to")
 
@@ -458,8 +458,8 @@ def resource_list(request):
     filtered_resources = []
     for r in resources:
         # EU filter
-        if eu_citizen and "EU" not in r.address:
-            continue
+        # if eu_citizen and "EU" not in r.address:
+        #     continue
 
         # Applies to (problem area)
         if applies_to_filter:
@@ -486,7 +486,7 @@ def resource_list(request):
         "search": search_query,
         "sort": sort,
         "open_now": open_now,
-        "eu_citizen": eu_citizen,
+        # "eu_citizen": eu_citizen,
         "target_group_filter": target_group_filter,
         "applies_to_filter": applies_to_filter,
         "applies_to_options": APPLIES_TO_OPTIONS,
