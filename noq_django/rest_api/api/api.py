@@ -1,5 +1,8 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.decorators import login_required
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
 from ninja import NinjaAPI
 from backend.models import (Host, Client, Region)
 from django.contrib.auth.models import User, Group
@@ -8,13 +11,22 @@ from django.db import transaction, IntegrityError
 from django.http import JsonResponse
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+
+from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes
+
 from django.core.mail import send_mail
 from django.conf import settings
+import os
 
 from .api_schemas import (
     LoginPostSchema,
     LoginSchema,
     UserRegistrationSchema,
+    ForgotPasswordSchema,
+    ResetPasswordSchema,
 )
 
 api = NinjaAPI(
@@ -151,14 +163,15 @@ def register_user(request, user_data: UserRegistrationSchema):
                 username=user_data.email,
                 password=user_data.password,
                 first_name=user_data.first_name,
-                last_name=user_data.last_name
+                last_name=user_data.last_name,
+                is_active=False,
             )
 
             group_obj, _ = Group.objects.get_or_create(name=role)
             userClient.groups.add(group_obj)
 
             # Create the Client record
-            user = Client(
+            client = Client(
                 user=userClient,
                 first_name=user_data.first_name,
                 last_name=user_data.last_name,
@@ -174,13 +187,28 @@ def register_user(request, user_data: UserRegistrationSchema):
                 personnr_lastnr="",
                 unokod="",
             )
-            user.save()
+            client.save()
+
+            uidb64 = urlsafe_base64_encode(force_bytes(userClient.pk))
+            token = default_token_generator.make_token(userClient)
+            activation_path = f"{uidb64}/{token}"
+            activation_link = settings.FRONTEND_URL + activation_path
+
+            subject = "Välkommen till NoQ – aktivera ditt konto"
+            message = (
+                f"Hej {user_data.first_name},\n\n"
+                "Välkommen till NoQ!\n\n För att komma igång och logga in, "
+                "måste du aktivera ditt konto genom att klicka på länken nedan:\n\n"
+                f"{activation_link}\n\n"
+                "Med vänliga hälsningar,\n"
+                "NoQ-teamet"
+            )
 
             # Send email after registration
             send_mail(
-                "Välkommen till noQ!",
-                f"Hej {user_data.first_name},\n\nVälkommen till noQ! Ditt konto har nu skapats och du kan logga in med din e-postadress.",
-                None,  # Use default email from settings
+                subject,           
+                message,          
+                None,            
                 [user_data.email],
                 fail_silently=False,
             )
@@ -191,5 +219,63 @@ def register_user(request, user_data: UserRegistrationSchema):
         return 400, {"error": "Ett oväntat fel inträffade. Vänligen försök igen."}
     except Exception:
         return 400, {"error": "Ett oväntat fel inträffade. Vänligen försök igen."}
+    return 201, {"success": "Användare registrerad! – kolla mejlen för aktivering", "user_id": userClient.id}
 
+
+@api.post("/activate/{uidb64}/{token}/", response={200: dict, 400: dict})
+def activate_account(request, uidb64: str, token: str):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except Exception:
+        return 400, {"error": "Ogiltig aktiveringslänk."}
+    
+    if user.is_active:
+        return 400, {"error": "Länken är ogiltig eller har gått ut."}
+
+    if default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.save()
+        return 200, {"message": "Konto aktiverat."}
+    else:
+        return 400, {"error": "Länken är ogiltig eller har gått ut."}
     return 201, {"success": "Användare registrerad!", "user_id": userClient.id}
+
+
+@api.post("/forgot-password/", tags=["Password Reset"])
+def forgot_password(request, payload: ForgotPasswordSchema):
+
+    try:
+        user = User.objects.get(username=payload.username)
+    except User.DoesNotExist:
+        return JsonResponse({"status": False, "message": "User not found"}, status=404)
+    
+    token = default_token_generator.make_token(user)
+    uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+
+    reset_url_base = os.getenv("RESET_LINK")
+    reset_link = f"{reset_url_base}/{uidb64}/{token}/"
+
+    send_mail(
+        "Password Reset Request",
+        f"Click the link to reset your password: {reset_link}",
+        settings.DEFAULT_FROM_EMAIL,
+        [user.username],
+        fail_silently=False,
+    )
+    return JsonResponse({"status": True, "message": "Password reset link sent to email"}, status=200)
+
+@api.post("/reset-password/", tags=["Password Reset"])
+def reset_password(request, payload: ResetPasswordSchema):
+    try:
+        uid = urlsafe_base64_decode(payload.uidb64).decode()
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, payload.token):
+        user.set_password(payload.new_password)
+        user.save()
+        return JsonResponse({"status": True, "message": "Password reset successful"}, status=200)
+    else:
+        return JsonResponse({"status": False, "message": "Invalid token"}, status=400)
