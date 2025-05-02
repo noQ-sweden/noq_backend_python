@@ -6,4 +6,4 @@ class BackendConfig(AppConfig):
     name = 'backend'
 
     def ready(self):
-        from . import signals
+        pass
