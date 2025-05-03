@@ -1,8 +1,9 @@
 from faker import Faker
 import random
 from datetime import datetime, timedelta
-from backend.models import Activity
+from backend.models import Activity, VolunteerActivity
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 def add_activities(nbr: int):
     faker = Faker("sv_SE")
@@ -41,6 +42,34 @@ def add_activities(nbr: int):
         activity.save()
         print(f"Skapad: {title} ({start_time} → {end_time})")
 
+def add_volunteer_activities(nbr: int):
+    faker = Faker("sv_SE")
+
+    print("\n---- VOLUNTEER ACTIVITY ANMÄLNINGAR ----")
+
+    users = list(User.objects.filter(groups__name="volunteer"))
+    activities = list(Activity.objects.all())
+
+    created = 0
+    attempts = 0
+
+    while created < nbr and attempts < nbr * 5:
+        attempts += 1
+        activity = random.choice(activities)
+        volunteers = random.sample(users, k = random.randint(1, 2))
+
+        for user in volunteers:
+            
+            if VolunteerActivity.objects.filter(activity=activity, volunteer=user).exists():
+                continue
+
+            VolunteerActivity.objects.create(activity=activity, volunteer=user)
+            print(f"{user.username} anmälde sig till '{activity.title}'")
+            created += 1
+
+            if created >= nbr:
+                break
+
 
 def run(*args):
     docs = """
@@ -53,3 +82,4 @@ def run(*args):
     """
     print(docs)
     add_activities(50)
+    add_volunteer_activities(10)
