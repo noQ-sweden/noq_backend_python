@@ -14,10 +14,7 @@ import json
 from ninja.security import HttpBasicAuth
 from django.contrib.auth import authenticate
 from datetime import datetime, date
-import backend.models
- 
-
-
+import backend.models 
 from backend.models import (
     Resource, Client, Host, Region, Product, Booking, BookingStatus,
     Available, VolunteerProfile, VolunteerHostAssignment, User
