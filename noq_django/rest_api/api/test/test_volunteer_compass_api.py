@@ -40,7 +40,7 @@ class TestVolunteerCompassAPI(TestCase):
         # response = self.client.get("/api/volunteer/compass/")
         response = self.client.get("/api/volunteer/compass/", **self.auth_headers())
         self.assertEqual(response.status_code, 200)
-        self.assertGreaterEqual(len(response.json()), 1)
+        self.assertEqual(len(response.json()), 1)
 
     def test_get_resource_by_id(self):
         response = self.client.get(f"/api/volunteer/compass/resources/{self.resource.id}", **self.auth_headers())

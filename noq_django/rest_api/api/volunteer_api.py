@@ -14,6 +14,7 @@ import json
 from ninja.security import HttpBasicAuth
 from django.contrib.auth import authenticate
 from datetime import datetime, date
+import backend.models
  
 
 
@@ -375,36 +376,8 @@ def list_compass_resources(request):
     ]
 
 
-# Filter Compass resources by service type and open status as query params
-# @router.get("/compass/resources/{resource_id}", response=List[ResourceSchema], tags=["Volunteer"])
-# def filter_compass_resources(request, service_type: Optional[str] = None, open_now: Optional[bool] = None):
-#     resources = Resource.objects.all()
 
-#     if service_type:
-#         resources = resources.filter(target_group=service_type)
 
-#     if open_now:
-#         current_time = timezone.now().time()
-#         resources = [
-#             r for r in resources if r.opening_time <= current_time <= r.closing_time
-#         ]
-
-#     return [
-#         ResourceSchema(
-#             id=resource.id,
-#             name=resource.name,
-#             opening_time=resource.opening_time.strftime("%H:%M:%S"),
-#             closing_time=resource.closing_time.strftime("%H:%M:%S"),
-#             address=resource.address,
-#             phone=resource.phone,
-#             email=resource.email,
-#             target_group=resource.target_group,
-#             other=resource.other,
-#             applies_to=resource.applies_to,
-#             is_open_now=resource.is_open_now()
-#         )
-#         for resource in resources
-#     ]
 
 # Get a Compass resource by ID
 @router.get("/compass/resources/{resource_id}", response=ResourceSchema, tags=["Volunteer"])

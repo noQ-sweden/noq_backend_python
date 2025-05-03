@@ -21,16 +21,11 @@ import unicodedata
 
 
 
-# views.py
-# from rest_framework.permissions import IsAuthenticated
-# from rest_framework.viewsets import ModelViewSet
+ 
 from .models import Resource
  
-
-# class ResourceViewSet(ModelViewSet):
-#     queryset = Resource.objects.all()
-     
-#     permission_classes = [IsAuthenticated]  # <- Only authenticated users can use this
+ 
+ 
 
         
 def main_view(request):
@@ -395,12 +390,7 @@ def delete_sleeping_space(request, pk):
 
 
 
-# EU_COUNTRIES = [
-#     "Sweden", "Germany", "France", "Spain", "Italy", "Finland", "Denmark", "Poland",
-#     "Austria", "Netherlands", "Belgium", "Ireland", "Portugal", "Czech", "Greece",
-#     "Slovakia", "Slovenia", "Lithuania", "Latvia", "Estonia", "Hungary", "Croatia",
-#     "Luxembourg", "Bulgaria", "Romania", "Cyprus", "Malta", "Browntown"
-# ]
+
 problem_areas = [
     "Konflikter", "Miljö", "Hälsa", "Våld", "Tunnelbana", "Hemlöshet",
     "Otrygghet", "Ordningsstörning", "Sysselsättning", "Kriminalitet",
@@ -419,13 +409,13 @@ def resource_list(request):
     search_query = request.GET.get("search", "")
     sort = request.GET.get("sort", "")
     open_now = request.GET.get("open_now")
-    # eu_citizen = request.GET.get("eu_citizen")
+     
     target_group_filter = request.GET.getlist("target_group")
     applies_to_filter = request.GET.getlist("applies_to")
 
     resources = Resource.objects.all()
 
-    # ✅ Apply normalized keyword search first
+    # Apply normalized keyword search first
     if search_query:
         normalized_search = normalize_string(search_query)
         filtered_by_search = []
@@ -449,12 +439,12 @@ def resource_list(request):
 
         resources = filtered_by_search
 
-    # ✅ Filter by target group
+    #  Filter by target group
     if target_group_filter:
         # resources = resources.filter(target_group__in=target_group_filter)
         resources = [r for r in resources if r.target_group in target_group_filter]
 
-    # ✅ Apply remaining filters
+    #  Apply remaining filters
     filtered_resources = []
     for r in resources:
         # EU filter
@@ -475,18 +465,17 @@ def resource_list(request):
 
         filtered_resources.append(r)
 
-    # ✅ Sort results
+    #  Sort results
     if sort in ['name', '-name']:
         reverse = sort.startswith('-')
         filtered_resources = sorted(filtered_resources, key=lambda r: r.name.lower(), reverse=reverse)
 
-    # ✅ Return context to template
+    #  Return context to template
     return render(request, "resource_list.html", {
         "resources": filtered_resources,
         "search": search_query,
         "sort": sort,
         "open_now": open_now,
-        # "eu_citizen": eu_citizen,
         "target_group_filter": target_group_filter,
         "applies_to_filter": applies_to_filter,
         "applies_to_options": APPLIES_TO_OPTIONS,
