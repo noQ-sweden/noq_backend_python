@@ -36,42 +36,40 @@ class ActivityUpdateSchema(ModelSchema):
         model_fields = ["title", "description", "start_time", "end_time", "is_approved"]
 #---- API ENDPOINTS ----#
 
-# List all activities
+# List all activities without volunteers' detail
 @router.get("/", response=list[ActivitySchema], tags=["Admin Activities"])
 def list_activities(request):
     return Activity.objects.all()
 
-# Get details of an activity by ID
+# Get details with volunteers' info of a specific activity by ID
 @router.get("/{activity_id}", response=ActivityDetailSchema, tags=["Admin Activities"])
 def activity_detail(request, activity_id: int):
-    try:
-        activity = get_object_or_404(Activity, id=activity_id)
-        tasks = VolunteerActivity.objects.filter(activity_id=activity_id).select_related("volunteer")
-        volunteers = [
-            {
-                "id": task.volunteer.id,
-                "first_name": task.volunteer.first_name,
-                "last_name": task.volunteer.last_name,
-                "email": task.volunteer.email,
-                "date_joined": task.volunteer.date_joined.date(),
-                "registered_at": task.registered_at.date()
-            }
-            for task in tasks
-        ]
-        
-        return {
-            **ActivitySchema.from_orm(activity).dict(),
-            "volunteers": volunteers
+    activity = get_object_or_404(Activity, id=activity_id)
+    tasks = VolunteerActivity.objects.filter(activity_id=activity_id).select_related("volunteer")
+    volunteers = [
+        {
+            "id": task.volunteer.id,
+            "first_name": task.volunteer.first_name,
+            "last_name": task.volunteer.last_name,
+            "email": task.volunteer.email,
+            "date_joined": task.volunteer.date_joined.date(),
+            "registered_at": task.registered_at.date()
         }
-
-    except Activity.DoesNotExist:
-        return {'error': 'Activity not found.'}
+        for task in tasks
+    ]
     
+    return {
+        **ActivitySchema.from_orm(activity).dict(),
+        "volunteers": volunteers
+    }
+    
+# Add an activity
 @router.post("/", response=ActivitySchema, tags=["Admin Activities"])
 def create_activity(request, payload: ActivityCreateSchema):
     activity = Activity.objects.create(**payload.dict())
     return activity
 
+# Update detail of activity
 @router.patch("/{activity_id}", response=ActivitySchema, tags=["Admin Activities"])
 def update_activity(request, activity_id: int, payload: ActivityUpdateSchema):
     activity = get_object_or_404(Activity, id=activity_id)
@@ -80,6 +78,7 @@ def update_activity(request, activity_id: int, payload: ActivityUpdateSchema):
     activity.save()
     return activity
 
+# Delete an activity
 @router.delete("/{activity_id}", tags=["Admin Activities"])
 def delete_activity(request, activity_id: int):
     activity = get_object_or_404(Activity, id=activity_id)
