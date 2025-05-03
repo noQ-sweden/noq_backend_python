@@ -19,35 +19,16 @@ import backend.models
 
 
 from backend.models import (
-    Client,
-    Host,
-    Region,
-    Product,
-    Booking,
-    BookingStatus,
-    Available,
-    VolunteerProfile,
-    VolunteerHostAssignment,
-    User,
+    Resource, Client, Host, Region, Product, Booking, BookingStatus,
+    Available, VolunteerProfile, VolunteerHostAssignment, User
 )
 
 from .api_schemas import (
-    RegionSchema,
-    UserSchema,
-    UserPostSchema,
-    HostSchema,
-    HostPostSchema,
-    HostPatchSchema,
-    ProductSchema,
-    BookingSchema,
-    BookingPostSchema,
-    AvailableSchema,
-    AvailableProductsSchema,
-    ProductSchemaWithPlacesLeft,
-    UserIDSchema,
-    ClientSchema,
-    VolunteerCreateClientPostSchema,
-    SimplifiedClientSchema,
+    ResourceSchema, ResourcePostSchema, ResourcePatchSchema,
+    RegionSchema, UserSchema, UserPostSchema, HostSchema, HostPostSchema, HostPatchSchema,
+    ProductSchema, BookingSchema, BookingPostSchema,
+    AvailableSchema, AvailableProductsSchema, ProductSchemaWithPlacesLeft,
+    UserIDSchema, ClientSchema, VolunteerCreateClientPostSchema, SimplifiedClientSchema,
 )
 
 
