@@ -37,7 +37,7 @@ class ResourceQuerySchema(BaseModel):
     target_group: Optional[List[str]] = None
     applies_to: Optional[List[str]] = None
     sort: Optional[str] = None
-    
+
 # List of EU countries for filtering
 EU_COUNTRIES = [
     "Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus", "Czech Republic",
@@ -59,7 +59,7 @@ def list_resources(request, filters: ResourceQuerySchema = Query(...)):
     """
     try:
         resources = Resource.objects.all()
-        
+
         # Apply search filter
         if filters.search and filters.search.strip():
             resources = resources.filter(name__icontains=filters.search.strip())
@@ -94,10 +94,10 @@ def list_resources(request, filters: ResourceQuerySchema = Query(...)):
         if filters.sort and filters.sort in ['name', '-name']:
             reverse = filters.sort.startswith('-')
             resources = sorted(resources, key=lambda r: r.name.lower(), reverse=reverse)
-        
+
         # Create a list to store processed resources
         processed_resources = []
-        
+
         # Process each resource
         for resource in resources:
             # Create a dictionary with resource data
@@ -114,13 +114,19 @@ def list_resources(request, filters: ResourceQuerySchema = Query(...)):
                 'applies_to': resource.applies_to,
                 'is_open_now': resource.is_open_now()
             }
-            
+
             # Add to the processed list
             processed_resources.append(resource_dict)
-        
+
         return [ResourceSchema(**resource_dict) for resource_dict in processed_resources]
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+
+# @public_router.get("/", response=List[ResourceSchema], tags=["Resources"])
+# @csrf_exempt
+# def public_list_resources(request, filters: ResourceQuerySchema = Query(...)):
+#     return list_resources(request, filters)
+
 
 @router.get("/{resource_id}", response=ResourceSchema, tags=["Resources"])
 @csrf_exempt
@@ -130,7 +136,7 @@ def get_resource(request, resource_id: int):
     """
     try:
         resource = get_object_or_404(Resource, id=resource_id)
-        
+
         # Create a dictionary with resource data
         resource_dict = {
             'id': resource.id,
@@ -145,7 +151,7 @@ def get_resource(request, resource_id: int):
             'applies_to': resource.applies_to,
             'is_open_now': resource.is_open_now()
         }
-        
+
         return resource_dict
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
@@ -192,13 +198,13 @@ def update_resource(request, resource_id: int, payload: ResourcePatchSchema):
     Update an existing resource
     """
     resource = get_object_or_404(Resource, id=resource_id)
-    
+
     for field, value in payload.dict(exclude_unset=True).items():
         setattr(resource, field, value)
-    
+
     try:
         resource.save()
-        
+
         # Create a dictionary with resource data
         resource_dict = {
             'id': resource.id,
@@ -213,7 +219,7 @@ def update_resource(request, resource_id: int, payload: ResourcePatchSchema):
             'applies_to': resource.applies_to,
             'is_open_now': resource.is_open_now()
         }
-        
+
         return resource_dict
     except Exception as e:
         raise HttpError(400, str(e))
@@ -225,6 +231,4 @@ def delete_resource(request, resource_id: int):
     """
     resource = get_object_or_404(Resource, id=resource_id)
     resource.delete()
-    return 204, None 
-
-
+    return 204, None
