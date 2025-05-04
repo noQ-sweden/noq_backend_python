@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 """
 Django settings for rest_api project.
@@ -33,6 +36,7 @@ from corsheaders.defaults import default_headers
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "cache-control",
+    "x-user-role"
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
