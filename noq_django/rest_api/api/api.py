@@ -4,7 +4,7 @@ from ninja import NinjaAPI
 from backend.models import (Host)
 from ninja.responses import Response
 from django.http import JsonResponse
-from rest_api.api.resource_api import router
+from rest_api.api.resource_api import router, public_router
 
 
 from .api_schemas import (
@@ -24,8 +24,8 @@ api.add_router("/host/", "rest_api.api.host_api.router")
 api.add_router("/caseworker/", "rest_api.api.caseworker_api.router")
 api.add_router("/volunteer", "rest_api.api.volunteer_api.router")
 api.add_router("/so_admin/", "rest_api.api.admin_api.router")
-# api.add_router("/resources/", router)  # Authenticated routes (e.g., POST, PATCH, DELETE)
-# api.add_router("/public/resources/", public_router)  # Public GET routes for Swagger/docs
+api.add_router("/resources/", router)  # Authenticated routes (e.g., POST, PATCH, DELETE)
+#api.add_router("/public/resources/", public_router)  # Public GET routes for Swagger/docs
 
 # temporör testsektion
 api.add_router("/old/", "rest_api.api.old_api.router")
@@ -33,7 +33,7 @@ api.add_router("/old/", "rest_api.api.old_api.router")
 documentation = """
 
     Generell namnsättning för alla API:er
-    
+
     /objects    GET     listar ett objekt, med metodnamn objects_list, kan även ha filterparametrar
     /objects/id GET     hämtar en unik instans av objekt(/objects/id), med metodnamn object_detail(id)
     /objects/id POST    skapar ett objekt, med metodnamn object_add
@@ -64,9 +64,9 @@ def get(request):
         groups=user_groups,
         host=host,
         first_name=request.user.first_name,
-        last_name=request.user.last_name 
+        last_name=request.user.last_name
     )
-    
+
 
 @login_required
 @api.get("/logout/", tags=["Login"])
@@ -80,10 +80,10 @@ def logout_user(request):
 
 @api.post("/login/", response=LoginSchema, tags=["Login"])
 def login_user(request, payload: LoginPostSchema):
-        
+
     email = payload.email
     password = payload.password
-    
+
     # Authenticate user
     user = authenticate(request, username=email, password=password)
     if user is not None:
@@ -97,13 +97,13 @@ def login_user(request, payload: LoginPostSchema):
             except Host.DoesNotExist:
                 pass
 
-        # Add firt_name and last_name to the response        
+        # Add firt_name and last_name to the response
         return LoginSchema(
             login_status=True,
             message="Login Successful",
             groups=user_groups,
             host=host,
-            first_name=user.first_name, # Include users first_name 
+            first_name=user.first_name, # Include users first_name
             last_name=user.last_name # Include users last_name
         )
     else:
