@@ -14,7 +14,7 @@ import json
 from ninja.security import HttpBasicAuth
 from django.contrib.auth import authenticate
 from datetime import datetime, date
- 
+
 
 
 from backend.models import (
@@ -57,7 +57,7 @@ class BasicAuth(HttpBasicAuth):
             return user
 
 basic_auth = BasicAuth()
-router = Router(auth=basic_auth)
+router = Router(auth=None)
 # router = Router(auth=None)
 
 # TODO: Test live email server setup to ensure delivery in production
@@ -248,7 +248,7 @@ def search_guest(
         ):
             matching_clients.append(client)
 
-    
+
     return [
         {
             "id": client.id,
@@ -495,4 +495,4 @@ def delete_resource(request, resource_id: int):
     """
     resource = get_object_or_404(Resource, id=resource_id)
     resource.delete()
-    return 204, None 
+    return 204, None
