@@ -14,18 +14,39 @@ import json
 from ninja.security import HttpBasicAuth
 from django.contrib.auth import authenticate
 from datetime import datetime, date
-import backend.models 
+
+
+
 from backend.models import (
-    Resource, Client, Host, Region, Product, Booking, BookingStatus,
-    Available, VolunteerProfile, VolunteerHostAssignment, User
+    Client,
+    Host,
+    Region,
+    Product,
+    Booking,
+    BookingStatus,
+    Available,
+    VolunteerProfile,
+    VolunteerHostAssignment,
+    User,
 )
 
 from .api_schemas import (
-    ResourceSchema, ResourcePostSchema, ResourcePatchSchema,
-    RegionSchema, UserSchema, UserPostSchema, HostSchema, HostPostSchema, HostPatchSchema,
-    ProductSchema, BookingSchema, BookingPostSchema,
-    AvailableSchema, AvailableProductsSchema, ProductSchemaWithPlacesLeft,
-    UserIDSchema, ClientSchema, VolunteerCreateClientPostSchema, SimplifiedClientSchema,
+    RegionSchema,
+    UserSchema,
+    UserPostSchema,
+    HostSchema,
+    HostPostSchema,
+    HostPatchSchema,
+    ProductSchema,
+    BookingSchema,
+    BookingPostSchema,
+    AvailableSchema,
+    AvailableProductsSchema,
+    ProductSchemaWithPlacesLeft,
+    UserIDSchema,
+    ClientSchema,
+    VolunteerCreateClientPostSchema,
+    SimplifiedClientSchema,
 )
 
 
@@ -36,8 +57,8 @@ class BasicAuth(HttpBasicAuth):
             return user
 
 basic_auth = BasicAuth()
-router = Router(auth=basic_auth)
-# router = Router(auth=None)
+# router = Router(auth=basic_auth)
+router = Router(auth=None)
 
 # TODO: Test live email server setup to ensure delivery in production
 # TODO: Use the created modules for volunteer profile when confirming bookings to make sure they have the right to request booking at the specific host
