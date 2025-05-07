@@ -13,6 +13,8 @@ import random
 from .delete_all_data import reset_all_data
 
 from backend.models import Host, Client, Product, Region, Booking, BookingStatus, State, VolunteerProfile, VolunteerHostAssignment, Resource
+from backend.models import APPLIES_TO_OPTIONS
+
 
 
 def get_regioner():
@@ -449,6 +451,7 @@ def generate_resources(n=20):
     "Socialtjänstkontakt", "Bostadssökande"
     ]
 
+    applies_to_values = APPLIES_TO_OPTIONS
     for _ in range(n):
         name = faker.company()
         opening_time = time(random.randint(7, 10), random.choice([0, 15, 30]))

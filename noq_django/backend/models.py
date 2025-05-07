@@ -449,13 +449,14 @@ class VolunteerHostAssignment(models.Model):
         return f"{self.volunteer.user.username} assigned to {self.host.name} - {'Active' if self.active else 'Inactive'}" 
     
 APPLIES_TO_OPTIONS = [
-    "Crime", "Abuse", "Prostitution", "Unaccompanied children",
-    "Mental illness", "New arrival", "Suicide", "Human trafficking",
-    "Disturbance", "Insecurity", "Vulnerability to violence",
-    "EU citizens", "Homelessness", "extra cold nights -7",
-    "Cooperation", "Healthcare care", "studies", "Employment",
-    "The subway", "Violence"
-]
+        "Konflikter", "Miljö", "Hälsa", "Våld", "Tunnelbana", "Hemlöshet",
+    "Otrygghet", "Ordningsstörning", "Sysselsättning", "Kriminalitet",
+    "Människohandel", "Våldutsatthet", "Immigration", "Psykisk ohälsa",
+    "Missbruk", "Sjukvård", "Samverkan", "Studier", "Akut hjälp",
+    "Direktinsats", "Juridisk rådgivning", "Stöd till barn",
+    "Socialtjänstkontakt", "Bostadssökande"
+    ]
+
 class Resource(models.Model):
     name = models.CharField(max_length=100)
     opening_time = models.TimeField()
