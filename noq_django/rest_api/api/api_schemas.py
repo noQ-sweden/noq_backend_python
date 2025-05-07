@@ -381,3 +381,29 @@ class ResourcePatchSchema(Schema):
     other: Optional[str] = None
     applies_to: Optional[List[str]] = None
 
+#Preferences profile schema
+
+class UserProfileCreateSchema(Schema):
+    uno: str
+    first_name: str
+    last_name: str
+    sex: Optional[str]
+    birthday: Optional[date]
+    birth_year: Optional[int]
+    email: str
+    telephone: Optional[str]
+    language: Optional[str]
+    presentation: Optional[str]
+    supporting_person_id: Optional[int]
+
+class UserProfileUpdateSchema(Schema):
+    first_name: Optional[str]
+    last_name: Optional[str]
+    sex: Optional[str]
+    birthday: Optional[int]
+    birth_year: Optional[int]
+    email: Optional[str]
+    telephone: Optional[str]
+    language: Optional[str]
+    presentation: Optional[str]
+    supporting_person_id: Optional[int]

@@ -1,7 +1,7 @@
 from typing import Any
 from django.contrib import admin
 from django.contrib.auth.models import User, Group
-from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus, SleepingSpace, VolunteerProfile, VolunteerHostAssignment, Resource
+from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus, SleepingSpace, VolunteerProfile, VolunteerHostAssignment, Resource,UserProfile
 
 # Register the models.
 admin.site.register(Region)
@@ -176,5 +176,8 @@ class ResourceAdmin(admin.ModelAdmin):
         'applies_to',
     )
 
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "uno", "email", "language", "telephone")
 
 
