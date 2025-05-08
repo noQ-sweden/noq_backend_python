@@ -176,8 +176,19 @@ class ResourceAdmin(admin.ModelAdmin):
         'applies_to',
     )
 
+# @admin.register(UserProfile)
+# class UserProfileAdmin(admin.ModelAdmin):
+#     list_display = ("user", "uno", "email", "language", "telephone")
+
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "uno", "email", "language", "telephone")
+    list_display = ("user", "uno", "email", "language", "telephone", "get_role", "supporting_person")
+    search_fields = ("user__username", "email", "uno", "first_name", "last_name")
+    list_filter = ("language",)
+    autocomplete_fields = ["user", "supporting_person"]
 
+    def get_role(self, obj):
+        groups = obj.user.groups.values_list('name', flat=True)
+        return ", ".join(groups) if groups else "Guest"
+    get_role.short_description = "Role"
 

@@ -1,37 +1,87 @@
+from datetime import date
+from django.utils.dateparse import parse_date
+from email.utils import parsedate
 from ninja import Router
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from backend.models import UserProfile
 from backend.models import User
 from ninja.errors import HttpError
-from .api_schemas import UserProfileCreateSchema, UserProfileUpdateSchema
+from .api_schemas import UserProfileCreateSchema, UserProfileOut, UserProfileUpdateSchema
+from ninja.security import HttpBasicAuth
+from django.contrib.auth import authenticate
 
 preference_router = Router(tags=["Preferences"])
+
+from backend.models import (
+    Client,
+    Host,
+    Region,
+    Product,
+    Booking,
+    BookingStatus,
+    Available,
+    VolunteerProfile,
+    VolunteerHostAssignment,
+    User,
+)
+
+from .api_schemas import (
+    RegionSchema,
+    UserSchema,
+    UserPostSchema,
+    HostSchema,
+    HostPostSchema,
+    HostPatchSchema,
+    ProductSchema,
+    BookingSchema,
+    BookingPostSchema,
+    AvailableSchema,
+    AvailableProductsSchema,
+    ProductSchemaWithPlacesLeft,
+    UserIDSchema,
+    ClientSchema,
+    VolunteerCreateClientPostSchema,
+    SimplifiedClientSchema,
+    UserProfileCreateSchema,
+    UserProfileUpdateSchema,
+    UserProfileOut,
+)
+
+
+class BasicAuth(HttpBasicAuth):
+    def authenticate(self, request, username, password):
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            return user
+
+basic_auth = BasicAuth()
+preference_router = Router(auth=basic_auth)
 
 # @preference_router.get("/test")
 # def test_view(request):
 #     return {"message": "Test successful"}
 
 
-@preference_router.get("/", response=list[UserProfileCreateSchema])
+@preference_router.get("/", response=list[UserProfileOut])
 def list_profiles(request):
     profiles = UserProfile.objects.all()
     return profiles
 
 
-@preference_router.post("/", response=UserProfileCreateSchema)
-def create_profile(request, payload: UserProfileCreateSchema):
-    if UserProfile.objects.filter(user=request.user).exists():
-        raise HttpError(400, "Profile already exists for this user")
+# @preference_router.post("/", response=UserProfileCreateSchema)
+# def create_profile(request, payload: UserProfileCreateSchema):
+#     if UserProfile.objects.filter(user=request.user).exists():
+#         raise HttpError(400, "Profile already exists for this user")
 
-    if UserProfile.objects.filter(uno=payload.uno).exists():
-        raise HttpError(400, "UNO already exists")
+#     if UserProfile.objects.filter(uno=payload.uno).exists():
+#         raise HttpError(400, "UNO already exists")
 
-    profile = UserProfile.objects.create(user=request.user, **payload.dict())
-    return payload
+#     profile = UserProfile.objects.create(user=request.user, **payload.dict())
+#     return payload
 
 # READ user profile (by ID)
-@preference_router.get("/{user_id}", response=UserProfileCreateSchema)
+@preference_router.get("/{user_id}", response=UserProfileOut)
 def get_profile(request, user_id: int):
     if request.user.id != user_id:
         raise HttpError(403, "Not authorized to access this profile")
@@ -51,7 +101,13 @@ def update_profile(request, user_id: int, payload: UserProfileUpdateSchema):
     if not profile:
         raise HttpError(404, "User profile not found")
 
-    for key, value in payload.dict(exclude_unset=True).items():
+    updates = payload.dict(exclude_unset=True)
+    for key, value in updates.items():
+        if key == "birthday":
+            if isinstance(value, str):
+                value = parse_date(value)  # convert from ISO format string
+            elif not isinstance(value, (date, type(None))):
+                raise HttpError(400, "Invalid date format for birthday")
         setattr(profile, key, value)
     profile.save()
     return profile
@@ -67,6 +123,33 @@ def delete_profile(request, user_id: int):
         raise HttpError(404, "User profile not found")
     profile.delete()
     return {"success": True}
+
+@preference_router.post("/{user_id}")
+def create_profile(request, payload: UserProfileCreateSchema):
+    user = request.user
+
+    if hasattr(user, "profile"):
+        return {"error": "Profile already exists"}
+
+    supporting_person = None
+    if payload.supporting_person_id:
+        supporting_person = get_object_or_404(User, id=payload.supporting_person_id)
+
+    profile = UserProfile.objects.create(
+        user=user,
+        uno=payload.uno,
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        sex=payload.sex,
+        birthday=payload.birthday,
+        birth_year=payload.birth_year,
+        email=payload.email,
+        telephone=payload.telephone or "",
+        language=payload.language,
+        presentation=payload.presentation or "",
+        supporting_person=supporting_person
+    )
+    return {"success": True, "profile_id": profile.id}
 
 # @preference_router.post("/profile", response={200: dict, 400: str})
 # def create_profile(request, payload: UserProfileCreateSchema):

@@ -5,7 +5,7 @@ from backend.models import (Host)
 from ninja.responses import Response
 from django.http import JsonResponse
 from rest_api.api.resource_api import router
-
+from rest_api.api.preference_api import preference_router
 
 from .api_schemas import (
     LoginPostSchema,
@@ -26,7 +26,7 @@ api.add_router("/volunteer", "rest_api.api.volunteer_api.router")
 api.add_router("/so_admin/", "rest_api.api.admin_api.router")
 # api.add_router("/resources/", router)  # Authenticated routes (e.g., POST, PATCH, DELETE)
 # api.add_router("/public/resources/", public_router)  # Public GET routes for Swagger/docs
-
+api.add_router("/preferences/", preference_router, tags=["Preferences"])
 # temporör testsektion
 api.add_router("/old/", "rest_api.api.old_api.router")
 
