@@ -342,8 +342,8 @@ class UserShelterStayCountSchema(Schema):
 class ResourceSchema(Schema):
     id: int
     name: str
-    opening_time: str  # ✅ Change to str
-    closing_time: str  # ✅ Change to str
+    opening_time: str   
+    closing_time: str   
     address: str
     phone: str
     email: str
