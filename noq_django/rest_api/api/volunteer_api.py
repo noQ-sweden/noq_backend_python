@@ -11,7 +11,7 @@ from django.db.models import Q
 from django.db.models.functions import Lower
 from django.core.mail import send_mail
 import json
-from ninja.security import HttpBasicAuth
+
 from django.contrib.auth import authenticate
 from datetime import datetime, date
 
@@ -48,15 +48,8 @@ from .api_schemas import (
     VolunteerCreateClientPostSchema,
     SimplifiedClientSchema,
 )
+router = Router(auth=lambda request: group_auth(request, "volunteer"))
 
-
-class BasicAuth(HttpBasicAuth):
-    def authenticate(self, request, username, password):
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            return user
-
-basic_auth = BasicAuth()
 # router = Router(auth=basic_auth)
 router = Router(auth=None)
 
