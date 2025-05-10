@@ -1,6 +1,7 @@
 from typing import Any
 from django.contrib import admin
 from django.contrib.auth.models import User, Group
+from django import forms
 from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus, SleepingSpace, VolunteerProfile, VolunteerHostAssignment, Resource
 
 # Register the models.
@@ -147,9 +148,44 @@ class VolunteerProfileAdmin(admin.ModelAdmin):
 
     display_preferred_regions.short_description = 'Preferred Regions'
 
+class ResourceAdminForm(forms.ModelForm):
+    APPLIES_TO_CHOICES = [
+        ("Konflikter", "Konflikter"), ("Miljö", "Miljö"), ("Hälsa", "Hälsa"), ("Våld", "Våld"),
+        ("Tunnelbana", "Tunnelbana"), ("Hemlöshet", "Hemlöshet"), ("Otrygghet", "Otrygghet"),
+        ("Ordningsstörning", "Ordningsstörning"), ("Sysselsättning", "Sysselsättning"),
+        ("Kriminalitet", "Kriminalitet"), ("Människohandel", "Människohandel"),
+        ("Våldutsatthet", "Våldutsatthet"), ("Immigration", "Immigration"),
+        ("Psykisk ohälsa", "Psykisk ohälsa"), ("Missbruk", "Missbruk"),
+        ("Sjukvård", "Sjukvård"), ("Samverkan", "Samverkan"), ("Studier", "Studier"),
+        ("Akut hjälp", "Akut hjälp"), ("Direktinsats", "Direktinsats"),
+        ("Juridisk rådgivning", "Juridisk rådgivning"), ("Stöd till barn", "Stöd till barn"),
+        ("Socialtjänstkontakt", "Socialtjänstkontakt"), ("Bostadssökande", "Bostadssökande")
+    ]
+
+    TARGET_GROUP_CHOICES = [
+        ("Över 18", "Över 18"),
+        ("Under 18", "Under 18")
+    ]
+
+    applies_to = forms.MultipleChoiceField(
+        choices=APPLIES_TO_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+        required=False
+    )
+
+    target_group = forms.ChoiceField(
+        choices=TARGET_GROUP_CHOICES,
+        required=False
+    )
+
+    class Meta:
+        model = Resource
+        fields = '__all__'
+
 
 @admin.register(Resource)
 class ResourceAdmin(admin.ModelAdmin):
+    form = ResourceAdminForm
     list_display = (
         'name',
         'opening_time',
@@ -161,7 +197,6 @@ class ResourceAdmin(admin.ModelAdmin):
         'target_group',
         'other',
         'applies_to',
-        
     )
     list_filter = ('opening_time', 'closing_time')
     fields = (
@@ -175,6 +210,3 @@ class ResourceAdmin(admin.ModelAdmin):
         'other',
         'applies_to',
     )
-
-
-
