@@ -263,7 +263,7 @@ def set_booking_pending(request, booking_id: int):
 
 
 @router.patch("/bookings/{booking_id}/checkin", response=BookingSchema, tags=["host-manage-bookings"])
-def set_booking_pending(request, booking_id: int):
+def set_booking_checked_in(request, booking_id: int):
     host = Host.objects.get(users=request.user)
     booking = get_object_or_404(Booking, id=booking_id, product__host=host)
 
@@ -276,7 +276,7 @@ def set_booking_pending(request, booking_id: int):
 
 
 @router.patch("/bookings/{booking_id}/checkout", response=BookingSchema, tags=["host-manage-bookings"])
-def set_booking_pending(request, booking_id: int):
+def set_booking_checked_out(request, booking_id: int):
     host = Host.objects.get(users=request.user)
     booking = get_object_or_404(Booking, id=booking_id, product__host=host)
 
