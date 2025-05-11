@@ -473,8 +473,38 @@ def generate_resources(n=20):
 
     print(f"{n} resources created.")
 
-def run():
-    from backend.scripts.generate_data import generate_resources
+
+
+def run(*args):
+    docs = """
+    generate test data
+    
+    python manage.py runscript generate_data 
+    
+    Args: [--script-args v2]
+    
+    """
+    print(docs)
+    v2_arg = "v2" in args
+
+    if "reset" in args:
+        reset_all_data()
+
+    antal_hosts = len(Host.objects.all())
+    antal_bookings = len(Host.objects.all())
+    if antal_hosts > 0 or antal_bookings > 0:
+        print("---- Tabellerna innehåller data -----")
+        print("HOSTS:", antal_hosts, "BOOKINGS:", antal_bookings)
+    add_region(5)
+    add_hosts(10)
+    add_caseworkers(1)
+    add_volunteers(2)
+    add_products(6)
+    add_users(16)
+
+    add_booking_statuses()
+    add_product_bookings(40, 7, v2_arg)
     generate_resources(20)
 
-    
+    print("\n Test data generation complete.")
+
