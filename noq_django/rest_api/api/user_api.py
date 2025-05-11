@@ -124,19 +124,30 @@ def request_booking(request, booking_data: UserBookingPostSchema):
     if not products:
         raise HttpError(404, "No products available")
 
+    client = Client.objects.get(user=request.user)
+
+    error_code = None
+
     # Loop through the products and check if they are available
     for product in products.all():
         if not product.bookable:
+            error_code = "Product is not bookable."
             continue
 
-        available = Available.objects.get(product=product, available_date=booking_data.start_date)
-        if available.places_left > 0:
+        if client.gender != 'K' and product.type == 'woman_only':
+            error_code = "User can't book woman only product."
+            continue
+
+        available = Available.objects.filter(product=product, available_date=booking_data.start_date).first()
+
+        if available is None or available.places_left >= 0:
+            # Check that the
             # If the product is available, book it for the user
             booking = Booking()
             booking.start_date = booking_data.start_date
             booking.end_date = booking_data.end_date
             booking.product = product
-            booking.user = Client.objects.get(user=request.user)
+            booking.user = client
             booking.status = BookingStatus.objects.get(description="pending")
             try:
                 booking.save()
@@ -145,9 +156,11 @@ def request_booking(request, booking_data: UserBookingPostSchema):
                 # Booking failed as there is no available beds. Returns 409 (Conflict)
                 if hasattr(e, "code") and e.code == "full":
                     raise HttpError(409, "No available product found for the selected date.")
+                elif hasattr(e, "code") and e.code == "already_booked":
+                    raise HttpError(409, "User has another booking for the same date.")
 
     # Booking failed as there is no available beds. Returns 409 (Conflict)
-    raise HttpError(409, "No available product found for the selected date.")
+    raise HttpError(409, error_code)
 
 def getBookings (user):
     client = Client.objects.get(user=user)

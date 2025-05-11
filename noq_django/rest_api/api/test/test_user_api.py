@@ -190,16 +190,7 @@ class TestProductsApi(TestCase):
     def setUp(self):
         # Add data to the db
         self.t_data = TestData()
-        # log in host user for the tests
-        self.t_data.user_login(user_group="user", nr_of_users=2)
-
-class TestProductsApi(TestCase):
-    t_data = None
-
-    def setUp(self):
-        # Add data to the db
-        self.t_data = TestData()
-        # log in host user for the tests
+        # log in user for the tests
         self.t_data.user_login(user_group="user", nr_of_users=2)
 
 
@@ -402,6 +393,60 @@ class TestProductsApi(TestCase):
             self.assertEqual(product_data["places_left"], expected["places_left"])
             self.assertCountEqual(product_data["available_dates"], expected["available_dates"])
 
+
+    def test_book_a_product_wrong_gender(self):
+        '''
+        NOTE! Keep this test case as last in the file, as it logs in as a male user
+
+        Step 0: Remove all products except one women-only product
+        Step 1: Log in as a male user
+        Step 2: Try to book women only product
+
+        Booking is not accepted and API returns 409 with correct info.
+        '''
+
+        # Step 0: Remove all products except one
+        Product.objects.filter(total_places__gt=1).delete()
+        self.assertEqual(Product.objects.all().count(), 1)
+
+        # Step 1: Log in as a male user
+        # Create new user
+        username = "maleuser"
+        password = "badpassword"
+        user = User.objects.create_user(username=username, password=password)
+        group_obj, created = Group.objects.get_or_create(name="user")
+        user.groups.add(group_obj)
+        client = Client.objects.create(
+            first_name=username,
+            gender="M",
+            user=user,
+            region=self.t_data.region)
+
+        # Login the first user
+        self.t_data.test_client.login(username=username, password=password)
+
+        # Step 2: Try to book women only product
+        # Set product as women-only
+        product = Product.objects.get(total_places=1)
+        product.type = "woman_only"
+        product.save()
+
+        start_date = datetime.now().date() + timedelta(days=1)
+        end_date = start_date + timedelta(days=1)
+
+        data = {
+            "start_date": start_date,
+            "end_date": end_date,
+            "host_id": product.host.id
+        }
+
+        url = "/api/user/request_booking"
+        response = self.t_data.test_client.post(url, data, content_type='application/json')
+
+        # Check status code is 409 and the message is correct
+        self.assertEqual(response.status_code, 409)
+        data = json.loads(response.content)
+        self.assertEqual(data['detail'], "User can't book woman only product.")
 
 
     def tearDown(self):
