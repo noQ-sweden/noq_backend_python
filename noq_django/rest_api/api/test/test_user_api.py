@@ -232,13 +232,13 @@ class TestProductsApi(TestCase):
         Create a booking
         '''
         start_date = datetime.now().date()
-        end_date = start_date + timedelta(days=2)
-        product_id = Product.objects.get(total_places=4).id
+        end_date = start_date + timedelta(days=1)
+        host_id = Product.objects.get(total_places=4).host.id
 
         data = {
             "start_date": start_date,
             "end_date": end_date,
-            "product_id": product_id
+            "host_id": host_id
         }
 
         url = "/api/user/request_booking"
@@ -252,22 +252,29 @@ class TestProductsApi(TestCase):
 
     def test_book_a_product_full(self):
         '''
+        Step 0: Remove all products except one
         Step 1: Create one booking for product with one places
         Step 2: Create second overlapping booking and get back
                 a list of available places per day
 
-        Dates    123456
-        Booking1   |-|
-        Booking2 |----|
-        Expected 00110
+        Dates    1
+        Booking1 |
+        Booking2 |
+        Expected 1
 
         Booking2 is not accepted and API returns list of bookings count
         per day and the max amount of places. End date is not included
         in the list.
         '''
+
+        # Step 0: Remove all products except one
+        Product.objects.filter(total_places__gt=1).delete()
+        self.assertEqual(Product.objects.all().count(), 1)
+
+
         # Step 1: Create a booking for user 2
-        start_date = datetime.now().date() + timedelta(days=2)
-        end_date = start_date + timedelta(days=2)
+        start_date = datetime.now().date()
+        end_date = start_date + timedelta(days=1)
         product = Product.objects.get(total_places=1)
 
         client = Client.objects.get(
@@ -282,41 +289,28 @@ class TestProductsApi(TestCase):
         )
         booking.save()
 
-        # Step 2: Create second booking that doesn't pass the validation
+        # Step 2: Create second booking for same dates that doesn't pass the validation
         # as there is no free rooms available
-        start_date = datetime.now().date()
-        end_date = start_date + timedelta(days=5)
+        host_id = Product.objects.get(total_places=1).host.id
+
         data = {
             "start_date": start_date,
             "end_date": end_date,
-            "product_id": product.id
+            "host_id": host_id
         }
 
         url = "/api/user/request_booking"
         response = self.t_data.test_client.post(url, data, content_type='application/json')
 
         # Check status code is 200 and the bookings count matches
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 409)
         data = json.loads(response.content)
-        params = json.loads(data['detail'])
-
-        self.assertEqual(params['nr_or_places'], 1)
-
-        self.assertEqual(
-            params['bookings_per_date'][f"{start_date:%Y-%m-%d}"], 0)
-        self.assertEqual(
-            params['bookings_per_date'][f"{start_date + timedelta(days=1):%Y-%m-%d}"], 0)
-        self.assertEqual(
-            params['bookings_per_date'][f"{start_date + timedelta(days=2):%Y-%m-%d}"], 1)
-        self.assertEqual(
-            params['bookings_per_date'][f"{start_date + timedelta(days=3):%Y-%m-%d}"], 1)
-        self.assertEqual(
-            params['bookings_per_date'][f"{start_date + timedelta(days=4):%Y-%m-%d}"], 0)
+        self.assertEqual(data['detail'], "No available product found for the selected date.")
 
     def test_delete_reserved_booking(self):
         # Step 1: Create a booking for the test user
         start_date = datetime.now().date()
-        end_date = start_date + timedelta(days=3)
+        end_date = start_date + timedelta(days=1)
         product = Product.objects.get(total_places=1)
         # Since only the first user is logged in the list of the two users, the booking will belong to the first user
         client = Client.objects.get(

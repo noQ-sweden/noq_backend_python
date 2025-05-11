@@ -1,5 +1,6 @@
 from ninja import NinjaAPI, Schema, ModelSchema, Router
-from ninja.errors import HttpError
+from ninja.errors import HttpError, ValidationError
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from backend.models import (
@@ -21,6 +22,7 @@ from .api_schemas import (
     HostPatchSchema,
     ProductSchema,
     BookingSchema,
+    UserBookingPostSchema,
     BookingPostSchema,
     AvailableSchema,
     AvailableProductsSchema,
@@ -115,35 +117,37 @@ def list_available_by_host(request, host_id: int):
 
 
 @router.post("/request_booking", response=BookingSchema, tags=["user-booking"])
-def request_booking(request, booking_data: BookingPostSchema):
-    
-    try:
-        product = Product.objects.get(id=booking_data.product_id)
-        
+# This function searches for the first available product for the host and books that for the user
+def request_booking(request, booking_data: UserBookingPostSchema):
+    # Get list of products for the host
+    products = Product.objects.filter(host=booking_data.host_id)
+    if not products:
+        raise HttpError(404, "No products available")
+
+    # Loop through the products and check if they are available
+    for product in products.all():
         if not product.bookable:
-            raise HttpError(422, "This product is not bookable.")
-    
-        Available.objects.filter(product=product)
-    except Available.DoesNotExist:
-        raise HttpError(404, "Product is not available")
-    except Product.DoesNotExist:
-        raise HttpError(404, "Product does not exist")
+            continue
 
-    user = Client.objects.get(user=request.user)
-    booking = Booking()
-    booking.start_date = booking_data.start_date
-    booking.end_date = booking_data.end_date
-    booking.product = product
-    booking.user = user
-    booking.status = BookingStatus.objects.get(description="pending")
-    try:
-        booking.save()
-    except Exception as e:
-        if e.code == "full":
-            raise HttpError(200, json.dumps(e.params))
+        available = Available.objects.get(product=product, available_date=booking_data.start_date)
+        if available.places_left > 0:
+            # If the product is available, book it for the user
+            booking = Booking()
+            booking.start_date = booking_data.start_date
+            booking.end_date = booking_data.end_date
+            booking.product = product
+            booking.user = Client.objects.get(user=request.user)
+            booking.status = BookingStatus.objects.get(description="pending")
+            try:
+                booking.save()
+                return booking
+            except ValidationError as e:
+                # Booking failed as there is no available beds. Returns 409 (Conflict)
+                if hasattr(e, "code") and e.code == "full":
+                    raise HttpError(409, "No available product found for the selected date.")
 
-    return booking
-
+    # Booking failed as there is no available beds. Returns 409 (Conflict)
+    raise HttpError(409, "No available product found for the selected date.")
 
 def getBookings (user):
     client = Client.objects.get(user=user)

@@ -211,7 +211,6 @@ class BookingSchema(Schema):
     product: ProductSchema
     user: UserSchema
 
-
 class BookingPostSchema(Schema):
     """
     Booking för att boka en Product
@@ -223,6 +222,16 @@ class BookingPostSchema(Schema):
     product_id: int
     user_id: Optional[int] = None
 
+class UserBookingPostSchema(Schema):
+    """
+    Booking för att boka en Product
+
+    """
+
+    start_date: date
+    end_date: date
+    host_id: int
+    user_id: Optional[int] = None
 
 class VolunteerBookingPostSchema(Schema):
     """
