@@ -1,13 +1,17 @@
 from datetime import date
+from http.client import HTTPException
 from django.utils.dateparse import parse_date
 from email.utils import parsedate
 from ninja import Router
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from pydantic import BaseModel, ValidationError
 from backend.models import UserProfile
 from backend.models import User
 from ninja.errors import HttpError
-from .api_schemas import UserProfileCreateSchema, UserProfileOut, UserProfileUpdateSchema
+
+from .services import update_user_profile
+from .api_schemas import UserProfileCreateSchema, UserProfileOut, UserProfileUpdateSchema,UserProfileUpdateResponseSchema
 from ninja.security import HttpBasicAuth
 from django.contrib.auth import authenticate
 
@@ -56,8 +60,8 @@ class BasicAuth(HttpBasicAuth):
             return user
 
 basic_auth = BasicAuth()
-preference_router = Router(auth=basic_auth)
-
+# preference_router = Router(auth=basic_auth)
+preference_router = Router(auth=None)
 # @preference_router.get("/test")
 # def test_view(request):
 #     return {"message": "Test successful"}
@@ -91,27 +95,19 @@ def get_profile(request, user_id: int):
         raise HttpError(404, "User profile not found")
     return profile
 
+class SuccessResponseSchema(BaseModel):
+    success: bool
+    profile_id: int
+    
 # UPDATE user profile
 @preference_router.patch("/{user_id}", response=UserProfileCreateSchema)
-def update_profile(request, user_id: int, payload: UserProfileUpdateSchema):
-    if request.user.id != user_id:
-        raise HttpError(403, "Not authorized to update this profile")
-
-    profile = UserProfile.objects.filter(user__id=user_id).first()
-    if not profile:
-        raise HttpError(404, "User profile not found")
-
-    updates = payload.dict(exclude_unset=True)
-    for key, value in updates.items():
-        if key == "birthday":
-            if isinstance(value, str):
-                value = parse_date(value)  # convert from ISO format string
-            elif not isinstance(value, (date, type(None))):
-                raise HttpError(400, "Invalid date format for birthday")
-        setattr(profile, key, value)
-    profile.save()
-    return profile
-
+def update_profile(request, user_id: int, data: UserProfileUpdateSchema):
+    try:
+        profile = update_user_profile(user_id=user_id, data=data.dict(exclude_unset=True))
+        return profile
+    except ValidationError as e:
+         raise HttpError(400,str(e))
+    
 # DELETE user profile
 @preference_router.delete("/{user_id}")
 def delete_profile(request, user_id: int):

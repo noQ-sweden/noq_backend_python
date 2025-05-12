@@ -408,6 +408,10 @@ class UserProfileUpdateSchema(Schema):
     presentation: Optional[str]
     supporting_person_id: Optional[int]
 
+class UserProfileUpdateResponseSchema(BaseModel):
+    success: bool
+    profile_id: int
+    
 class UserProfileOut(Schema):
     id: int
     user_id: int  # <-- Include here for read operations
