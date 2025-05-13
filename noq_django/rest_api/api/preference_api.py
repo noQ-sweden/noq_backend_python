@@ -69,20 +69,6 @@ preference_router = Router(auth=None)
 
 @preference_router.get("/", response=list[UserProfileOut])
 def list_profiles(request):
-<<<<<<< HEAD
-    return UserProfile.objects.all()
-
-# Creating profile
-@preference_router.post("/", response={201: UserProfileOut, 400: dict})
-def create_profile(request, payload: UserProfileCreateSchema):
-    user = request.user
-
-    if UserProfile.objects.filter(user=user).exists():
-        return 400, {"error": "Profile already exists"}
-
-    if UserProfile.objects.filter(uno=payload.uno).exists():
-        return 400, {"error": "UNO already exists"}
-=======
     profiles = UserProfile.objects.all()
     return profiles
 
@@ -140,7 +126,6 @@ def create_profile(request, payload: UserProfileCreateSchema,user_id: int):
 
     if hasattr(user, "profile"):
         return {"error": "Profile already exists"}
->>>>>>> feature/preference_page
 
     supporting_person = None
     if payload.supporting_person_id:
@@ -160,82 +145,7 @@ def create_profile(request, payload: UserProfileCreateSchema,user_id: int):
         presentation=payload.presentation or "",
         supporting_person=supporting_person
     )
-<<<<<<< HEAD
-    return 201, profile
-
-# Read profile (GET /preferences/{user_id})
-@preference_router.get("/{user_id}", response={200: UserProfileOut, 403: dict, 404: dict})
-def get_profile(request, user_id: int):
-    if request.user.id != user_id:
-        return 403, {"error": "Not authorized to access this profile"}
-
-    profile = UserProfile.objects.filter(user__id=user_id).first()
-    if not profile:
-        return 404, {"error": "Profile not found"}
-
-    return profile
-
-class SuccessResponseSchema(BaseModel):
-    success: bool
-    profile_id: int
-    
-# UPDATE user profile
-@preference_router.patch("/{user_id}", response={200: UserProfileOut, 400: dict, 403: dict, 404: dict})
-def update_profile(request, user_id: int, payload: UserProfileUpdateSchema):
-    if request.user.id != user_id:
-        return 403, {"error": "Not authorized to update this profile"}
-
-    try:
-        profile = update_user_profile(user_id=user_id, data=payload.dict(exclude_unset=True))
-        return 200, profile
-    except UserProfile.DoesNotExist:
-        return 404, {"error": "Profile not found"}
-    except Exception as e:
-        return 400, {"error": str(e)}
-
-
-# Delete profile (DELETE /preferences/{user_id})
-@preference_router.delete("/{user_id}", response={200: dict, 403: dict, 404: dict})
-def delete_profile(request, user_id: int):
-    if request.user.id != user_id:
-        return 403, {"error": "Not authorized to delete this profile"}
-
-    profile = UserProfile.objects.filter(user__id=user_id).first()
-    if not profile:
-        return 404, {"error": "Profile not found"}
-
-    profile.delete()
-    return 200, {"success": True}
-
-# @preference_router.post("/{user_id}")
-# def create_profile(request, payload: UserProfileCreateSchema,user_id: int):
-#     user = request.user
-
-#     if hasattr(user, "profile"):
-#         return {"error": "Profile already exists"}
-
-#     supporting_person = None
-#     if payload.supporting_person_id:
-#         supporting_person = get_object_or_404(User, id=payload.supporting_person_id)
-
-#     profile = UserProfile.objects.create(
-#         user=user,
-#         uno=payload.uno,
-#         first_name=payload.first_name,
-#         last_name=payload.last_name,
-#         sex=payload.sex,
-#         birthday=payload.birthday,
-#         birth_year=payload.birth_year,
-#         email=payload.email,
-#         telephone=payload.telephone or "",
-#         language=payload.language,
-#         presentation=payload.presentation or "",
-#         supporting_person=supporting_person
-#     )
-#     return {"success": True, "profile_id": profile.id}
-=======
     return {"success": True, "profile_id": profile.id}
->>>>>>> feature/preference_page
 
 # @preference_router.post("/profile", response={200: dict, 400: str})
 # def create_profile(request, payload: UserProfileCreateSchema):

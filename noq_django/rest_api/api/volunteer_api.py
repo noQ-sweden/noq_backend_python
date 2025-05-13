@@ -1,22 +1,17 @@
-from ninja import Router, Schema
+from ninja import NinjaAPI, Schema, ModelSchema, Router
 from ninja.errors import HttpError
+from typing import Optional
 from django.db import models
-from django.utils import timezone
-from typing import List, Optional
-from django.shortcuts import get_object_or_404
-from backend.models import Resource
-from .api_schemas import ResourceSchema, ResourcePostSchema, ResourcePatchSchema
-from backend.auth import group_auth
 from django.db.models import Q
 from django.db.models.functions import Lower
 from django.core.mail import send_mail
+from django.utils import timezone
+from backend.auth import group_auth
+from typing import List
 import json
-from ninja.security import HttpBasicAuth
-from django.contrib.auth import authenticate
-from datetime import datetime, date
-
-
-
+from django.shortcuts import get_object_or_404
+from ninja.security import django_auth, django_auth_superuser, HttpBearer
+from datetime import date
 from backend.models import (
     Client,
     Host,
@@ -49,16 +44,7 @@ from .api_schemas import (
     SimplifiedClientSchema,
 )
 
-
-class BasicAuth(HttpBasicAuth):
-    def authenticate(self, request, username, password):
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            return user
-
-basic_auth = BasicAuth()
-# router = Router(auth=basic_auth)
-router = Router(auth=None)
+router = Router(auth=lambda request: group_auth(request, "volunteer"))
 
 # TODO: Test live email server setup to ensure delivery in production
 # TODO: Use the created modules for volunteer profile when confirming bookings to make sure they have the right to request booking at the specific host
@@ -349,122 +335,3 @@ def list_available(request, selected_date: str):
     return [{"host": host, "products": products} for host, products in hostproduct_dict.items()]
 
 """
-
-@router.get("/compass/", response=List[ResourceSchema], tags=["Volunteer"])
-def list_compass_resources(request):
-    """
-    List Compass resources for volunteers.
-    """
-    resources = Resource.objects.all()
-
-    return [
-        ResourceSchema(
-            id=resource.id,
-            name=resource.name,
-            opening_time=resource.opening_time.strftime("%H:%M:%S"),
-            closing_time=resource.closing_time.strftime("%H:%M:%S"),
-            address=resource.address,
-            phone=resource.phone,
-            email=resource.email,
-            target_group=resource.target_group,
-            other=resource.other,
-            applies_to=resource.applies_to,
-            is_open_now=resource.is_open_now()
-        )
-        for resource in resources
-    ]
-
-
-
-
-
-# Get a Compass resource by ID
-@router.get("/compass/resources/{resource_id}", response=ResourceSchema, tags=["Volunteer"])
-def get_resource_by_id(request, resource_id: int):
-    resource = get_object_or_404(Resource, id=resource_id)
-    return ResourceSchema(
-        id=resource.id,
-        name=resource.name,
-        opening_time=resource.opening_time.strftime("%H:%M:%S"),
-        closing_time=resource.closing_time.strftime("%H:%M:%S"),
-        address=resource.address,
-        phone=resource.phone,
-        email=resource.email,
-        target_group=resource.target_group,
-        other=resource.other,
-        applies_to=resource.applies_to,
-        is_open_now=resource.is_open_now()
-    )
-
-
-@router.post("/compass/", response={201: ResourceSchema}, tags=["Volunteer"])
-def create_resource_public(request, payload: ResourcePostSchema):
-    try:
-        # Convert string times to datetime.time objects
-        opening_time = datetime.strptime(payload.opening_time, '%H:%M:%S').time()
-        closing_time = datetime.strptime(payload.closing_time, '%H:%M:%S').time()
-
-        # Create the resource
-        resource = Resource.objects.create(
-            name=payload.name,
-            opening_time=opening_time,
-            closing_time=closing_time,
-            address=payload.address,
-            phone=payload.phone,
-            email=payload.email,
-            target_group=payload.target_group,
-            other=payload.other,
-            applies_to=payload.applies_to
-        )
-        return 201, {
-            'id': resource.id,
-            'name': resource.name,
-            'opening_time': str(resource.opening_time),
-            'closing_time': str(resource.closing_time),
-            'address': resource.address,
-            'phone': resource.phone,
-            'email': resource.email,
-            'target_group': resource.target_group,
-            'other': resource.other,
-            'applies_to': resource.applies_to,
-            'is_open_now': resource.is_open_now()
-        }
-    except Exception as e:
-        raise HttpError(400, str(e))
-
-@router.patch("/compass/resources/{resource_id}", response=ResourceSchema, tags=["Volunteer"])
-def update_resource(request, resource_id: int, payload: ResourcePatchSchema):
-    resource = get_object_or_404(Resource, id=resource_id)
-
-    for field, value in payload.dict(exclude_unset=True).items():
-        if field in ["opening_time", "closing_time"] and isinstance(value, str):
-            # Convert string to datetime.time
-            value = datetime.strptime(value, "%H:%M:%S").time()
-        setattr(resource, field, value)
-
-    try:
-        resource.save()
-        return ResourceSchema(
-            id=resource.id,
-            name=resource.name,
-            opening_time=resource.opening_time.strftime("%H:%M:%S") if hasattr(resource.opening_time, "strftime") else resource.opening_time,
-            closing_time=resource.closing_time.strftime("%H:%M:%S") if hasattr(resource.closing_time, "strftime") else resource.closing_time,
-            address=resource.address,
-            phone=resource.phone,
-            email=resource.email,
-            target_group=resource.target_group,
-            other=resource.other,
-            applies_to=resource.applies_to,
-            is_open_now=resource.is_open_now()
-        )
-    except Exception as e:
-        raise HttpError(400, str(e))
-
-@router.delete("/compass/resources/{resource_id}", response={204: None}, tags=["Volunteer"])
-def delete_resource(request, resource_id: int):
-    """
-    Delete a resource
-    """
-    resource = get_object_or_404(Resource, id=resource_id)
-    resource.delete()
-    return 204, None 
