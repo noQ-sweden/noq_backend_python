@@ -16,6 +16,7 @@ from typing import List, Dict
 from django.shortcuts import get_object_or_404
 from ninja.security import django_auth, django_auth_superuser, HttpBearer
 from datetime import date, timedelta, datetime
+from pydantic import BaseModel
 
 date_string: str
 
@@ -390,3 +391,46 @@ class ActivityUpdateSchema(Schema):
     end_time: Optional[datetime]
     is_approved: Optional[bool]
     status: Optional[str]
+
+class ResourceSchema(Schema):
+    id: int
+    name: str
+    opening_time: str   
+    closing_time: str   
+    address: str
+    phone: str
+    email: str
+    target_group: str
+    other: str
+    applies_to: List[str]
+    is_open_now: bool
+
+     
+class ResourcePostSchema(Schema):
+    """
+    Schema for creating new resources
+    """
+    name: str
+    opening_time: str
+    closing_time: str
+    address: str
+    phone: str
+    email: str
+    target_group: str
+    other: str
+    applies_to: List[str]
+
+class ResourcePatchSchema(Schema):
+    """
+    Schema for updating resources
+    """
+    name: Optional[str] = None
+    opening_time: Optional[str] = None
+    closing_time: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    target_group: Optional[str] = None
+    other: Optional[str] = None
+    applies_to: Optional[List[str]] = None
+

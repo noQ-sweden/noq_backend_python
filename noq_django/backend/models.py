@@ -466,3 +466,30 @@ class VolunteerActivity(models.Model):
 
     class Meta:
         unique_together = ('activity', 'volunteer')
+    
+APPLIES_TO_OPTIONS = [
+        "Konflikter", "Miljö", "Hälsa", "Våld", "Tunnelbana", "Hemlöshet",
+    "Otrygghet", "Ordningsstörning", "Sysselsättning", "Kriminalitet",
+    "Människohandel", "Våldutsatthet", "Immigration", "Psykisk ohälsa",
+    "Missbruk", "Sjukvård", "Samverkan", "Studier", "Akut hjälp",
+    "Direktinsats", "Juridisk rådgivning", "Stöd till barn",
+    "Socialtjänstkontakt", "Bostadssökande"
+    ]
+
+class Resource(models.Model):
+    name = models.CharField(max_length=100)
+    opening_time = models.TimeField()
+    closing_time = models.TimeField()
+    address = models.CharField(max_length=255, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(blank=True)
+    target_group = models.CharField(max_length=100, blank=True)
+    other = models.TextField(blank=True)
+    applies_to = models.JSONField(blank=True, default=list)
+
+    def __str__(self):
+        return self.name
+
+    def is_open_now(self):
+        now = timezone.localtime().time()
+        return self.opening_time <= now <= self.closing_time

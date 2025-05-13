@@ -1,17 +1,22 @@
-from ninja import NinjaAPI, Schema, ModelSchema, Router
+from ninja import Router, Schema
 from ninja.errors import HttpError
-from typing import Optional
 from django.db import models
+from django.utils import timezone
+from typing import List, Optional
+from django.shortcuts import get_object_or_404
+from backend.models import Resource
+from .api_schemas import ResourceSchema, ResourcePostSchema, ResourcePatchSchema
+from backend.auth import group_auth
 from django.db.models import Q
 from django.db.models.functions import Lower
 from django.core.mail import send_mail
-from django.utils import timezone
-from backend.auth import group_auth
-from typing import List
 import json
-from django.shortcuts import get_object_or_404
-from ninja.security import django_auth, django_auth_superuser, HttpBearer
-from datetime import date
+
+from django.contrib.auth import authenticate
+from datetime import datetime, date
+
+
+
 from backend.models import (
     Client,
     Host,
@@ -43,8 +48,9 @@ from .api_schemas import (
     VolunteerCreateClientPostSchema,
     SimplifiedClientSchema,
 )
-
 router = Router(auth=lambda request: group_auth(request, "volunteer"))
+
+ 
 
 # TODO: Test live email server setup to ensure delivery in production
 # TODO: Use the created modules for volunteer profile when confirming bookings to make sure they have the right to request booking at the specific host
@@ -335,3 +341,51 @@ def list_available(request, selected_date: str):
     return [{"host": host, "products": products} for host, products in hostproduct_dict.items()]
 
 """
+
+@router.get("/compass/", response=List[ResourceSchema], tags=["Volunteer"])
+def list_compass_resources(request):
+    """
+    List Compass resources for volunteers.
+    """
+    resources = Resource.objects.all()
+
+    return [
+        ResourceSchema(
+            id=resource.id,
+            name=resource.name,
+            opening_time=resource.opening_time.strftime("%H:%M:%S"),
+            closing_time=resource.closing_time.strftime("%H:%M:%S"),
+            address=resource.address,
+            phone=resource.phone,
+            email=resource.email,
+            target_group=resource.target_group,
+            other=resource.other,
+            applies_to=resource.applies_to,
+            is_open_now=resource.is_open_now()
+        )
+        for resource in resources
+    ]
+
+
+
+
+
+# Get a Compass resource by ID
+@router.get("/compass/resources/{resource_id}", response=ResourceSchema, tags=["Volunteer"])
+def get_resource_by_id(request, resource_id: int):
+    resource = get_object_or_404(Resource, id=resource_id)
+    return ResourceSchema(
+        id=resource.id,
+        name=resource.name,
+        opening_time=resource.opening_time.strftime("%H:%M:%S"),
+        closing_time=resource.closing_time.strftime("%H:%M:%S"),
+        address=resource.address,
+        phone=resource.phone,
+        email=resource.email,
+        target_group=resource.target_group,
+        other=resource.other,
+        applies_to=resource.applies_to,
+        is_open_now=resource.is_open_now()
+    )
+
+

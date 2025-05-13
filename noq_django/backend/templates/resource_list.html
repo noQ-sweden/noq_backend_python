@@ -1,0 +1,202 @@
+{% load static %}
+
+<div style="margin:40px;">
+  <!-- Klarna Kompassen-style: Logo and search -->
+  <div style="display:flex;align-items:center;gap:20px;margin-bottom:28px;">
+    <img src="{% static 'images/noq_logo.png' %}" alt="noQ Logo" style="height:42px;">
+    <form method="get" style="flex-grow:1;display:flex;align-items:center;">
+      <input
+        type="text"
+        name="search"
+        placeholder="Search for services, support, locations..."
+        value="{{ search }}"
+        style="flex-grow:1;padding:10px 15px;font-size:16px;border:1px solid #ccc;border-radius:8px;"
+      >
+      <button type="submit" style="margin-left:10px;padding:10px 18px;font-size:16px;background-color:#19536b;color:white;border:none;border-radius:8px;">
+        Find
+      </button>
+      <button type="button" onclick="document.querySelector('input[name=search]').value=''; this.form.submit();" style="margin-left:10px;padding:10px 18px;font-size:16px;background-color:#eee;color:#333;border:none;border-radius:8px;">
+        Clear
+      </button>
+      <!-- Preserve all filters -->
+      {% if sort %}
+        <input type="hidden" name="sort" value="{{ sort }}">
+      {% endif %}
+      {% if open_now %}
+        <input type="hidden" name="open_now" value="{{ open_now }}">
+      {% endif %}
+      {% for tg in target_group_filter %}
+        <input type="hidden" name="target_group" value="{{ tg }}">
+      {% endfor %}
+      {% for at in applies_to_filter %}
+        <input type="hidden" name="applies_to" value="{{ at }}">
+      {% endfor %}
+    </form>
+    {% if search_suggestion and search != search_suggestion %}
+      <div style="margin-top: 10px; color: #666; font-size: 15px;">
+        Did you mean: 
+        <a href="?search={{ search_suggestion }}{% if sort %}&sort={{ sort }}{% endif %}{% for tg in target_group_filter %}&target_group={{ tg }}{% endfor %}{% for at in applies_to_filter %}&applies_to={{ at }}{% endfor %}"
+           style="text-decoration: underline; color: #19536b;">
+           {{ search_suggestion }}
+        </a>?
+      </div>
+    {% endif %}
+    <a href="{% url 'resource_list' %}" style="margin-left:12px;color:#888;">Reset filters</a>
+  </div>
+
+  <h2 style="font-weight:700;font-size:28px;margin-bottom:18px;">Find support services</h2>
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:40px;">
+    <!-- Filters (left column) -->
+    <aside style="min-width:280px;">
+      <h3 style="margin-bottom:10px;font-weight:600;">🔎 Filter Results</h3>
+      <!-- Sort -->
+      <form method="get" style="margin-bottom:18px;">
+        <label for="sort" style="font-weight:600;">Sort alphabetically:</label>
+        <select name="sort" id="sort" onchange="this.form.submit()" style="margin-left:10px;padding:4px 8px;">
+          <option value="">-- Choose --</option>
+          <option value="name" {% if sort == 'name' %}selected{% endif %}>A → Z</option>
+          <option value="-name" {% if sort == '-name' %}selected{% endif %}>Z → A</option>
+        </select>
+        <!-- Preserve all filters -->
+        {% if search %}<input type="hidden" name="search" value="{{ search }}">{% endif %}
+        {% if open_now %}<input type="hidden" name="open_now" value="{{ open_now }}">{% endif %}
+        {% for tg in target_group_filter %}<input type="hidden" name="target_group" value="{{ tg }}">{% endfor %}
+        {% for at in applies_to_filter %}<input type="hidden" name="applies_to" value="{{ at }}">{% endfor %}
+      </form>
+
+      <!-- Opening hours -->
+      <form method="get" style="margin-bottom:18px;background:#f6f4fa;padding:14px 12px;border-radius:8px;">
+        <div style="font-weight:600;font-size:17px;margin-bottom:8px;">Opening hours</div>
+        <label style="display:flex;align-items:center;gap:7px;font-size:15px;margin-bottom:6px;">
+          <input type="checkbox" name="open_now" value="1" {% if open_now %}checked{% endif %} onchange="this.form.submit()">
+          Öppet just nu
+        </label>
+        <!-- Preserve all filters -->
+        {% if search %}<input type="hidden" name="search" value="{{ search }}">{% endif %}
+        {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+        {% for tg in target_group_filter %}<input type="hidden" name="target_group" value="{{ tg }}">{% endfor %}
+        {% for at in applies_to_filter %}<input type="hidden" name="applies_to" value="{{ at }}">{% endfor %}
+      </form>
+
+      <!-- Age group / Target group -->
+      <form method="get" style="margin-bottom:18px;background:#f6f4fa;padding:14px 12px;border-radius:8px;">
+        <div style="font-weight:600;font-size:17px;margin-bottom:8px;">Target group</div>
+        <label>
+          <input type="checkbox" name="target_group" value= "Över 18" {% if 'Över 18' in target_group_filter %}checked{% endif %} onchange="this.form.submit()">  Över 18
+        </label>
+        <label>
+          <input type="checkbox" name="target_group" value="Under 18" {% if 'Under 18' in target_group_filter %}checked{% endif %} onchange="this.form.submit()"> Under 18
+        </label>
+        <!-- <label>
+          <input type="checkbox" name="target_group" value="Barn - under 18 år" {% if 'Barn - under 18 år' in target_group_filter %}checked{% endif %} onchange="this.form.submit()"> Barn - under 18 år
+        </label>
+        <label>
+          <input type="checkbox" name="target_group" value="Vuxna över 25 år" {% if 'Vuxna över 25 år' in target_group_filter %}checked{% endif %} onchange="this.form.submit()"> Vuxna över 25 år
+        </label>
+        <label>
+          <input type="checkbox" name="target_group" value="Endast kvinnor" {% if 'Endast kvinnor' in target_group_filter %}checked{% endif %} onchange="this.form.submit()"> Endast kvinnor
+        </label> -->
+        <!-- Preserve all filters -->
+        {% if search %}<input type="hidden" name="search" value="{{ search }}">{% endif %}
+        {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+        {% if open_now %}<input type="hidden" name="open_now" value="{{ open_now }}">{% endif %}
+        {% for at in applies_to_filter %}<input type="hidden" name="applies_to" value="{{ at }}">{% endfor %}
+      </form>
+
+      <!-- Applies to / Problem area -->
+      <form method="get" style="margin-bottom:18px;background:#f6f4fa;padding:14px 12px;border-radius:8px;">
+        <div style="font-weight:600;font-size:17px;margin-bottom:8px;">Problem area</div>
+        {% comment %} Hardcoded list of options {% endcomment %}
+        {% for tag in problem_areas %}
+          <label style="display:block;margin-bottom:5px;">
+            <input type="checkbox" name="applies_to" value="{{ tag }}"
+              {% if tag in applies_to_filter %}checked{% endif %}
+              onchange="this.form.submit()">
+            {{ tag }}
+          </label>
+        {% endfor %}
+        <!-- Preserve all filters -->
+        {% if search %}<input type="hidden" name="search" value="{{ search }}">{% endif %}
+        {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+        {% if open_now %}<input type="hidden" name="open_now" value="{{ open_now }}">{% endif %}
+        {% for tg in target_group_filter %}<input type="hidden" name="target_group" value="{{ tg }}">{% endfor %}
+      </form>
+    </aside>
+
+    <!-- Results (right column) -->
+    <main style="flex:1;">
+      <ul style="list-style:none;padding-left:0;">
+        {% for resource in resources %}
+        <li style="margin-bottom:36px;padding:24px 26px 20px 26px;border-radius:16px;background:#faf9fa;box-shadow:0 1px 6px 0 #e2e0e6;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:1.3em;">🏢</span>
+            <span style="font-weight:600;font-size:1.18em;">{{ resource.name }}</span>
+          </div>
+          <div style="margin:10px 0 0 0;display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+            <span style="font-size:1.1em;">🕒</span>
+            <span style="min-width:100px;">{{ resource.opening_time|time:"H:i" }} - {{ resource.closing_time|time:"H:i" }}</span>
+            <span style="font-size:1.1em;">📍</span>
+            <span>{{ resource.address }}</span>
+          </div>
+          <div style="margin:8px 0 0 0;display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+            <span style="font-size:1.1em;">📧</span>
+            <span><a href="mailto:{{ resource.email }}">{{ resource.email }}</a></span>
+            <span style="font-size:1.1em;">📞</span>
+            <span>{{ resource.phone }}</span>
+          </div>
+          <div style="margin:10px 0 0 0;display:flex;align-items:flex-start;gap:32px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:7px;min-width:180px;">
+              <span style="font-size:1.1em;">🎯</span>
+              <span>
+                <strong>Target groups:</strong>&nbsp;
+                {% if resource.target_group == "Children - under 18 years old" %}
+                  Barn - under 18 år
+                {% elif resource.target_group == "Youth 18-25" or resource.target_group == "Young people 18-25 years old" %}
+                  Ungdomar 18-25 år
+                {% elif resource.target_group == "Adults 25+" %}
+                  Vuxna över 25 år
+                {% elif resource.target_group == "All ages" %}
+                  Alla åldrar
+                {% elif resource.target_group == "Women only" %}
+                  Endast kvinnor
+                {% else %}
+                  {{ resource.target_group }}
+                {% endif %}
+              </span>
+            </div>
+            <div style="display:flex;align-items:center;gap:7px;min-width:180px;">
+              <span style="font-size:1.1em;">📝</span>
+              <span><strong>Other info:</strong>&nbsp;{{ resource.other }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:7px;">
+              <span style="font-size:1.1em;">📚</span>
+              <span>
+                <strong>This applies to:</strong>&nbsp;
+                {% if resource.applies_to %}
+                  {% for item in resource.applies_to %}
+                    {% if item == "Socialtjänstkontakt" %}
+                      Socialtjänstkontakt
+                    {% elif item == "Stöd till barn" %}
+                      Stöd till barn
+                    {% elif item == "Akut hjälp" %}
+                      Akut hjälp
+                    {% else %}
+                      {{ item }}
+                    {% endif %}
+                    {# Add comma if not the last item #}
+                    {% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                {% endif %}
+              </span>
+            </div>
+          </div>
+        </li>
+        <hr style="margin:0 0 24px 0;border:none;border-top:1px solid #e2e0e6;">
+        {% empty %}
+        <li>No resources available.</li>
+        {% endfor %}
+      </ul>
+    </main>
+  </div>
+</div>

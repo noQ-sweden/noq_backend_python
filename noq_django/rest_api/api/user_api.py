@@ -166,7 +166,7 @@ def list_bookings(request):
 
 
 @router.get("/bookings/confirm/{booking_id}", response=List[BookingSchema], tags=["user-booking"])
-def list_bookings(request, booking_id: int):
+def confirm_booking(request, booking_id: int):
     try:
         # Get the booking object, raise an exception if it doesn't exist
         booking = Booking.objects.get(id=booking_id)
@@ -204,3 +204,5 @@ def delete_booking(request, booking_id: int):
     
     # Return a success message
     return 200, "Booking deleted successfully."
+
+

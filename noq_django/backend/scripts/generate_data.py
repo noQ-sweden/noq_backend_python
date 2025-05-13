@@ -7,10 +7,14 @@ from faker import Faker
 from django.contrib.auth.models import User, Group
 import os
 from django.conf import settings
-
+from datetime import time
+ 
+import random
 from .delete_all_data import reset_all_data
 
-from backend.models import Host, Client, Product, Region, Booking, BookingStatus, State, VolunteerProfile, VolunteerHostAssignment
+from backend.models import Host, Client, Product, Region, Booking, BookingStatus, State, VolunteerProfile, VolunteerHostAssignment, Resource
+from backend.models import APPLIES_TO_OPTIONS
+
 
 
 def get_regioner():
@@ -447,6 +451,49 @@ def add_admin():
     print("Admin Test user created:", user.username)
     
 
+def generate_resources(n=20):
+    faker = Faker("sv_SE")  # Use Swedish locale for realistic names and addresses
+
+    target_groups = [
+        "Över 18",
+        "Under 18", 
+         
+         
+    ]
+
+    applies_to_values = [
+        "Konflikter", "Miljö", "Hälsa", "Våld", "Tunnelbana", "Hemlöshet",
+    "Otrygghet", "Ordningsstörning", "Sysselsättning", "Kriminalitet",
+    "Människohandel", "Våldutsatthet", "Immigration", "Psykisk ohälsa",
+    "Missbruk", "Sjukvård", "Samverkan", "Studier", "Akut hjälp",
+    "Direktinsats", "Juridisk rådgivning", "Stöd till barn",
+    "Socialtjänstkontakt", "Bostadssökande"
+    ]
+
+    applies_to_values = APPLIES_TO_OPTIONS
+    for _ in range(n):
+        name = faker.company()
+        opening_time = time(random.randint(7, 10), random.choice([0, 15, 30]))
+        closing_time = time(random.randint(15, 18), random.choice([0, 30, 45]))
+        address = f"{faker.street_name()} {faker.building_number()}, {faker.city()}"
+        email = f"{faker.first_name().lower()}@{faker.domain_name()}"
+
+        Resource.objects.create(
+            name=name,
+            opening_time=opening_time,
+            closing_time=closing_time,
+            address=address,
+            phone=faker.phone_number(),
+            email=email,
+            target_group=random.choice(target_groups),
+            other=faker.sentence(nb_words=6),
+            applies_to=random.sample(applies_to_values, k=random.randint(1, 3))
+        )
+
+    print(f"{n} resources created.")
+
+
+
 def run(*args):
     docs = """
     generate test data
@@ -477,3 +524,7 @@ def run(*args):
     add_booking_statuses()
     add_product_bookings(40, 7, v2_arg)
     add_admin()
+    generate_resources(20)
+
+   
+
