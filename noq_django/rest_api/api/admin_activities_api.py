@@ -3,8 +3,9 @@ from typing import Dict, List
 from ninja import Router, ModelSchema, Schema
 from backend.models import Activity, VolunteerActivity, VolunteerProfile
 from django.shortcuts import get_object_or_404
-
 from .api_schemas import ActivityUpdateSchema
+from backend.serializers import AdminActivitySerializer
+from rest_framework.viewsets import ReadOnlyModelViewSet
 
 router = Router()
 
@@ -37,9 +38,28 @@ class ActivityUpdateSchema(ModelSchema):
 #---- API ENDPOINTS ----#
 
 # List all activities without volunteers' detail
-@router.get("/", response=list[ActivitySchema], tags=["Admin Activities"])
+@router.get("/", response=list[ActivityDetailSchema], tags=["Admin Activities"])
 def list_activities(request):
-    return Activity.objects.all()
+    activities = Activity.objects.prefetch_related("volunteeractivity_set__volunteer").all()
+    result = []
+    for activity in activities:
+        tasks = VolunteerActivity.objects.filter(activity=activity).select_related("volunteer")
+        volunteers = [
+            {
+                "id": task.volunteer.id,
+                "first_name": task.volunteer.first_name,
+                "last_name": task.volunteer.last_name,
+                "email": task.volunteer.email,
+                "date_joined": task.volunteer.date_joined.date(),
+                "registered_at": task.registered_at.date()
+            }
+            for task in tasks
+        ]
+        result.append({
+            **ActivitySchema.from_orm(activity).dict(),
+            "volunteers": volunteers  
+        })
+    return result
 
 # Get details with volunteers' info of a specific activity by ID
 @router.get("/{activity_id}", response=ActivityDetailSchema, tags=["Admin Activities"])
@@ -84,3 +104,11 @@ def delete_activity(request, activity_id: int):
     activity = get_object_or_404(Activity, id=activity_id)
     activity.delete()
     return {"success": True}
+
+# Serialize activity data
+class AdminActivityViewSet(ReadOnlyModelViewSet):
+    serializer_class = AdminActivitySerializer
+
+    def get_queryset(self):
+        return Activity.objects.prefetch_related("volunteeractivity_set__volunteer")
+    
