@@ -390,3 +390,44 @@ class ActivityUpdateSchema(Schema):
     end_time: Optional[datetime]
     is_approved: Optional[bool]
     status: Optional[str]
+
+#Preferences profile schema
+
+class UserProfileCreateSchema(Schema):
+    uno: str
+    first_name: str
+    last_name: str
+    sex: Optional[str]
+    birthday: Optional[date]
+    birth_year: Optional[int]
+    email: str
+    telephone: Optional[str]
+    language: Optional[str]
+    presentation: Optional[str]
+    supporting_person_id: Optional[int]
+
+class UserProfileUpdateSchema(Schema):
+    first_name: Optional[str]
+    last_name: Optional[str]
+    sex: Optional[str]
+    birthday: Optional[date]
+    birth_year: Optional[int]
+    email: Optional[str]
+    telephone: Optional[str]
+    language: Optional[str]
+    presentation: Optional[str]
+    supporting_person_id: Optional[int]
+    
+class UserProfileOut(Schema):
+    id: int
+    user_id: int  # <-- Include here for read operations
+    uno: str
+    first_name: str
+    last_name: str
+    email: str
+    telephone: Optional[str]
+    language: str
+    presentation: Optional[str]
+    birthday: Optional[date]
+    birth_year: Optional[int]
+    sex: Optional[str]
