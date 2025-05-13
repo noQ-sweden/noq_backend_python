@@ -14,6 +14,18 @@ import json
 from urllib.parse import urlencode
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
+from .models import Resource
+from django.db.models import Q
+from .models import APPLIES_TO_OPTIONS
+import unicodedata
+
+
+
+ 
+from .models import Resource
+ 
+ 
+ 
 from django.utils.dateparse import parse_date
 from django.utils.timezone import make_aware
 from .models import Activity, VolunteerActivity
@@ -381,6 +393,101 @@ def delete_sleeping_space(request, pk):
         sleeping_space.delete()
         return redirect('list_sleeping_spaces')
     return render(request, 'sleeping_space_confirm_delete.html', {'sleeping_space': sleeping_space})
+
+
+
+
+
+problem_areas = [
+    "Konflikter", "Miljö", "Hälsa", "Våld", "Tunnelbana", "Hemlöshet",
+    "Otrygghet", "Ordningsstörning", "Sysselsättning", "Kriminalitet",
+    "Människohandel", "Våldutsatthet", "Immigration", "Psykisk ohälsa",
+    "Missbruk", "Sjukvård", "Samverkan", "Studier", "Akut hjälp",
+    "Direktinsats", "Juridisk rådgivning", "Stöd till barn",
+    "Socialtjänstkontakt", "Bostadssökande"
+]
+
+
+
+def normalize_string(text):
+    return unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('utf-8').lower()
+
+def resource_list(request):
+    search_query = request.GET.get("search", "")
+    sort = request.GET.get("sort", "")
+    open_now = request.GET.get("open_now")
+     
+    target_group_filter = request.GET.getlist("target_group")
+    applies_to_filter = request.GET.getlist("applies_to")
+
+    resources = Resource.objects.all()
+
+    # Apply normalized keyword search first
+    if search_query:
+        normalized_search = normalize_string(search_query)
+        filtered_by_search = []
+
+        for r in resources:
+            fields_to_search = [
+                r.name, r.address, r.email, r.phone,
+                r.other, r.target_group
+            ]
+
+            # Add applies_to list or comma-separated string
+            if isinstance(r.applies_to, list):
+                fields_to_search.extend(r.applies_to)
+            elif isinstance(r.applies_to, str):
+                fields_to_search.extend([val.strip() for val in r.applies_to.split(",")])
+
+            # Normalize and search
+            searchable_text = " ".join([normalize_string(str(f)) for f in fields_to_search])
+            if normalized_search in searchable_text:
+                filtered_by_search.append(r)
+
+        resources = filtered_by_search
+
+    #  Filter by target group
+    if target_group_filter:
+        # resources = resources.filter(target_group__in=target_group_filter)
+        resources = [r for r in resources if r.target_group in target_group_filter]
+
+    #  Apply remaining filters
+    filtered_resources = []
+    for r in resources:
+        # EU filter
+        # if eu_citizen and "EU" not in r.address:
+        #     continue
+
+        # Applies to (problem area)
+        if applies_to_filter:
+            applies_to_vals = r.applies_to
+            if isinstance(applies_to_vals, str):
+                applies_to_vals = [val.strip() for val in applies_to_vals.split(",")]
+            if not any(tag in applies_to_vals for tag in applies_to_filter):
+                continue
+
+        # Open now
+        if open_now == "1" and not r.is_open_now():
+            continue
+
+        filtered_resources.append(r)
+
+    #  Sort results
+    if sort in ['name', '-name']:
+        reverse = sort.startswith('-')
+        filtered_resources = sorted(filtered_resources, key=lambda r: r.name.lower(), reverse=reverse)
+
+    #  Return context to template
+    return render(request, "resource_list.html", {
+        "resources": filtered_resources,
+        "search": search_query,
+        "sort": sort,
+        "open_now": open_now,
+        "target_group_filter": target_group_filter,
+        "applies_to_filter": applies_to_filter,
+        "applies_to_options": APPLIES_TO_OPTIONS,
+        "problem_areas": problem_areas,
+    })
 
 
 

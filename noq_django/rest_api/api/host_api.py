@@ -126,8 +126,7 @@ def get_available_places(request, nr_of_days: int):
 
 
 @router.get("/bookings/incoming", response=List[BookingSchema], tags=["host-frontpage"])
-def get_bookings_by_date(request, limiter: Optional[
-    int] = None):  # Limiter example /bookings/incoming?limiter=10 for 10 results, empty returns all
+def get_incoming_bookings(request, limiter: Optional[int] = None):
     host = Host.objects.get(users=request.user)
     current_date = timezone.now().date()
     bookings = (Booking.objects.filter(
@@ -144,8 +143,7 @@ def get_bookings_by_date(request, limiter: Optional[
 
 
 @router.get("/bookings/outgoing", response=List[BookingSchema], tags=["host-frontpage"])
-def get_bookings_by_date(request, limiter: Optional[
-    int] = None):  # Limiter example /bookings/outgoing?limiter=10 for 10 results, empty returns all
+def get_outgoing_bookings(request, limiter: Optional[int] = None):
     host = Host.objects.get(users=request.user)
     bookings = Booking.objects.filter(
         product__host=host,
@@ -263,7 +261,7 @@ def set_booking_pending(request, booking_id: int):
 
 
 @router.patch("/bookings/{booking_id}/checkin", response=BookingSchema, tags=["host-manage-bookings"])
-def set_booking_pending(request, booking_id: int):
+def set_booking_checkin(request, booking_id: int):
     host = Host.objects.get(users=request.user)
     booking = get_object_or_404(Booking, id=booking_id, product__host=host)
 
@@ -276,7 +274,7 @@ def set_booking_pending(request, booking_id: int):
 
 
 @router.patch("/bookings/{booking_id}/checkout", response=BookingSchema, tags=["host-manage-bookings"])
-def set_booking_pending(request, booking_id: int):
+def set_booking_checkout(request, booking_id: int):
     host = Host.objects.get(users=request.user)
     booking = get_object_or_404(Booking, id=booking_id, product__host=host)
 

@@ -33,6 +33,7 @@ from .api_schemas import (
 api = NinjaAPI(
     csrf=False,
     title="noQ API (Django Ninja API)",
+    urls_namespace="noq-api",
 )
 
 api.add_router("/user/", "rest_api.api.user_api.router")
@@ -52,7 +53,7 @@ api.add_router("/old/", "rest_api.api.old_api.router")
 
 documentation = """
     Generell namnsättning för alla API:er
-    
+
     /objects    GET     listar ett objekt, med metodnamn objects_list, kan även ha filterparametrar
     /objects/id GET     hämtar en unik instans av objekt(/objects/id), med metodnamn object_detail(id)
     /objects/id POST    skapar ett objekt, med metodnamn object_add
@@ -81,8 +82,9 @@ def get(request):
         groups=user_groups,
         host=host,
         first_name=request.user.first_name,
-        last_name=request.user.last_name 
+        last_name=request.user.last_name
     )
+
 
 
 @login_required
@@ -96,10 +98,10 @@ def logout_user(request):
 
 @api.post("/login/", response=LoginSchema, tags=["Login"])
 def login_user(request, payload: LoginPostSchema):
-        
+
     email = payload.email
     password = payload.password
-    
+
     # Authenticate user
     user = authenticate(request, username=email, password=password)
     if user is not None:
@@ -113,13 +115,13 @@ def login_user(request, payload: LoginPostSchema):
             except Host.DoesNotExist:
                 pass
 
-        # Add firt_name and last_name to the response        
+        # Add firt_name and last_name to the response
         return LoginSchema(
             login_status=True,
             message="Login Successful",
             groups=user_groups,
             host=host,
-            first_name=user.first_name, # Include users first_name 
+            first_name=user.first_name, # Include users first_name
             last_name=user.last_name # Include users last_name
         )
     else:

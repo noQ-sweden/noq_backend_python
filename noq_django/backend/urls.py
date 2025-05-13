@@ -20,10 +20,7 @@ router.register(r'volunteer-tasks', VolunteerTaskViewSet, basename='volunteer-ta
 urlpatterns = [
     path("", views.main_view, name="main_view"),
     path("search", views.search_view, name="search_view"),
-    path(
-        "available/", views.available_list, name="available_list"
-    ),  # Listan som svar på sök
-    # path("book/", views.reservation_view, name="reservation_view"),
+    path( "available/", views.available_list, name="available_list"), 
     path("book/<int:available_id>/", views.book_room_view, name="book_room_view"),
     path('products/', views.product_list, name='product_list'),
     path('products/<int:pk>/', views.product_detail, name='product_detail'),
