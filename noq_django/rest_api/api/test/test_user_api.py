@@ -7,6 +7,140 @@ from backend.models import (Host, Client, Product, Region, Booking,
                             Available, State, BookingStatus)
 from datetime import datetime, timedelta
 from .test_data import TestData
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.core import mail
+from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+
+class TestUserRegistrationApi(TestCase):
+    def setUp(self):
+        self.region = Region.objects.create(name="Test Region")
+        Group.objects.get_or_create(name="user")
+
+    def test_registration_user(self):
+        # Prepare test data
+        data = {
+            "email": "testuser1234123@example.com",
+            "password": "SecurePass123!",
+            "first_name": "Test",
+            "last_name": "User"
+        }
+        url = "/api/register/"
+
+        # Send POST request with headers
+        response = self.client.post(
+            url,
+            data,
+            content_type="application/json",
+            **{"HTTP_X-User-Role": "user"}
+        )
+
+        # Check response status
+        self.assertEqual(response.status_code, 201)
+        body = response.json()
+        self.assertEqual(
+            body["success"],
+            "Användare registrerad! – kolla mejlen för aktivering"
+        )
+        user_id = body["user_id"]
+
+        # Check that the User was created
+        self.assertTrue(User.objects.filter(email=data["email"]).exists())
+        user = User.objects.get(email=data["email"])
+
+        # Verify the user belongs to the "user" group
+        self.assertTrue(user.groups.filter(name="user").exists())
+
+        # Check that the Client record was created
+        self.assertTrue(Client.objects.filter(email=data["email"]).exists())
+
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertEqual(email.to, [data["email"]])
+        self.assertIn("Välkommen till NoQ – aktivera ditt konto", email.subject)
+
+        uidb64 = urlsafe_base64_encode(force_bytes(user_id))
+        self.assertIn(f"{settings.FRONTEND_URL}{uidb64}/", email.body)
+
+        user = User.objects.get(pk=user_id)
+        self.assertFalse(user.is_active)
+        self.assertTrue(Client.objects.filter(user=user).exists())
+
+#test the email link activation api
+class TestUserActivationApi(TestCase):
+    def setUp(self):
+        # Create one inactive user
+        self.user = User.objects.create_user(
+            email="activate_me@example.com",
+            username="activate_me@example.com",
+            password="SomePass!23",
+            first_name="Activate",
+            last_name="Me",
+            is_active=False,
+        )
+        # Pre‐compute uidb64 and token for all tests
+        self.uidb64 = urlsafe_base64_encode(force_bytes(self.user.pk))
+        self.token = default_token_generator.make_token(self.user)
+        self.url = f"/api/activate/{self.uidb64}/{self.token}/"
+
+    def test_activate_user_success(self):
+        # First POST should activate the user
+        response = self.client.post(self.url, content_type="application/json")
+        self.assertEqual(response.status_code, 200)
+
+        body = response.json()
+        self.assertEqual(body.get("message"), "Konto aktiverat.")
+
+        # Reload from DB and check is_active
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_active)
+
+    def test_activate_token_reuse_fails(self):
+        # First activation
+        self.client.post(self.url, content_type="application/json")
+        # Second activation attempt should fail
+        response2 = self.client.post(self.url, content_type="application/json")
+        self.assertEqual(response2.status_code, 400)
+
+        body2 = response2.json()
+        self.assertEqual(
+            body2.get("error"),
+            "Länken är ogiltig eller har gått ut."
+        )
+        # User remains active (since first call worked)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_active)
+
+    def test_activate_with_invalid_token(self):
+        # Use a wrong token
+        bad_url = f"/api/activate/{self.uidb64}/not-a-valid-token/"
+        response = self.client.post(bad_url, content_type="application/json")
+        self.assertEqual(response.status_code, 400)
+
+        body = response.json()
+        self.assertEqual(
+            body.get("error"),
+            "Länken är ogiltig eller har gått ut."
+        )
+        # User still inactive
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_active)
+
+    def test_activate_with_bad_uid(self):
+        # Malformed uidb64
+        bad_url = f"/api/activate/bad-uidb64/{self.token}/"
+        response = self.client.post(bad_url, content_type="application/json")
+        self.assertEqual(response.status_code, 400)
+
+        body = response.json()
+        self.assertEqual(
+            body.get("error"),
+            "Ogiltig aktiveringslänk."
+        )
+        # User still inactive
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_active)
 
 # New Test Class for Login functionality
 class TestUserApi(TestCase):

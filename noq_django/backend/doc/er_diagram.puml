@@ -1,113 +1,189 @@
 @startuml
-
-!define primary_key(x) <b><color:blue>x</color></b>
-!define foreign_key(x) <color:green>x</color>
-
-
 entity Region {
-    primary_key(id) : UUID
-    name : VARCHAR
+    * id : Integer [PK]
+    --
+    name : CharField
 }
 
-entity User {
-    primary_key(id) : UUID
-    date_joined : datetime
-    email: EmailField
-    first_name : VARCHAR
-    last_name : VARCHAR
-    is_active : BOOLEAN
-    is_staff : BOOLEAN
-    is_superuser : BOOLEAN
-    last_login : datetime
-    password : VARCHAR
-    username : VARCHAR
+entity ClientRequirement {
+    * id : Integer [PK]
+    --
+    requirements : ManyToManyField
 }
 
-entity Group {
-    primary_key(id) : UUID
-    name : VARCHAR
-}
-
-entity UserGroup {
-    primary_key(id) : UUID
-    description : VARCHAR
-}
-
-entity Host {
-    primary_key(id) : UUID
-    foreign_key(region_id) : UUID
-    name : VARCHAR
-    street : VARCHAR
-    postcode : VARCHAR
-    city : VARCHAR
+entity ProductRequirement {
+    * id : Integer [PK]
+    --
+    requirements : ManyToManyField
 }
 
 entity Client {
-    primary_key(id) : UUID
-    foreign_key(region) : UUID
-    foreign_key(user) : UUID
-    foreign_key(requirements) : UUID
-    city : VARCHAR
-    country : VARCHAR
-    day_of_birth : VARCHAR
-    email : VARCHAR
-    first_name : VARCHAR
-    flag : BOOL
-    gender : VARCHAR
-    last_edit : date
-    last_name : VARCHAR
-    personnr_lastnr : VARCHAR
-    phone : VARCHAR
-    postcode : VARCHAR
-    street : VARCHAR
-    unokod : VARCHAR
+    * id : Integer [PK]
+    --
+    user : ForeignKey(User)
+    first_name : CharField
+    last_name : CharField
+    gender : CharField
+    street : CharField
+    postcode : CharField
+    city : CharField
+    country : CharField
+    phone : CharField
+    email : CharField
+    unokod : CharField
+    day_of_birth : DateField
+    personnr_lastnr : CharField
+    region : ForeignKey(Region)
+    requirements : ForeignKey(ClientRequirement)
+    last_edit : DateField
+    flag : BooleanField
+}
+
+entity Host {
+    * id : Integer [PK]
+    --
+    users : ManyToManyField(User)
+    name : CharField
+    street : CharField
+    postcode : CharField
+    city : CharField
+    region : ForeignKey(Region)
+    blocked_clients : ManyToManyField(Client)
+    caseworkers : ManyToManyField(User)
 }
 
 entity Product {
-    primary_key(id) : UUID
-    foreign_key(host) : UUID
-    foreign_key(requirements) : UUID
-    bookable : BOOL
-    description : VARCHAR
-    name : VARCHAR
-    room_location : VARCHAR
-    total_places : INTEGER
-    type : VARCHAR
-}
-
-note right of Product
-    Type =
-        ROOM_LOCATIONS = [
-            ('Sovsal', 'Sovsal'),
-            ('Dubbelrum', 'Dubbelrum'),
-            ('Eget rum', 'Eget rum'),
-        ] ???
-end note
-
-entity Booking {
-    primary_key(id) : UUID
-    foreign_key(product) : UUID
-    foreign_key(status) : UUID
-    foreign_key(user) : UUID
-    booking_time : TIMESTAMP
-    end_date : DATE
-    start_date : DATE
+    * id : Integer [PK]
+    --
+    name : CharField
+    description : CharField
+    total_places : IntegerField
+    host : ForeignKey(Host)
+    type : CharField
+    room_location : CharField
+    requirements : ForeignKey(ProductRequirement)
+    bookable : BooleanField
 }
 
 entity BookingStatus {
-    primary_key(id) : UUID
-    description : VARCHAR
+    * id : Integer [PK]
+    --
+    description : CharField
 }
 
-User }o--|| UserGroup
-Group }o--|| UserGroup
-Client ||--|| User : one to one
-Organization ||--o{ Host : "has many"
-Host ||--o{ Product : "has many"
-Region ||--o{ Host : "has many"
-Region ||--o{ Client : "has many"
-Client ||--o{ Booking : "has many"
-Booking ||--|| BookingStatus : "Booking State"
-Booking ||--o{ Product : "Has one"
+entity Booking {
+    * id : Integer [PK]
+    --
+    booking_time : DateTimeField
+    start_date : DateField
+    end_date : DateField
+    product : ForeignKey(Product)
+    user : ForeignKey(Client)
+    status : ForeignKey(BookingStatus)
+}
 
+entity Available {
+    * id : Integer [PK]
+    --
+    available_date : DateField
+    product : ForeignKey(Product)
+    places_left : IntegerField
+}
+
+entity InvoiceStatus {
+    * id : Integer [PK]
+    --
+    name : CharField
+}
+
+entity Invoice {
+    * id : Integer [PK]
+    --
+    host : ForeignKey(Host)
+    amount : DecimalField
+    created_at : DateTimeField
+    updated_at : DateTimeField
+    description : TextField
+    status : ForeignKey(InvoiceStatus)
+    due_date : DateField
+    currency : CharField
+    invoice_number : CharField
+    vat : DecimalField
+    vat_rate : DecimalField
+    sale_date : DateField
+    seller_vat_number : CharField
+    buyer_vat_number : CharField
+    buyer_name : CharField
+    buyer_address : TextField
+}
+
+entity SleepingSpace {
+    * id : Integer [PK]
+    --
+    bed_type : CharField
+    status : CharField
+}
+
+entity VolunteerProfile {
+    * id : Integer [PK]
+    --
+    user : OneToOneField(User)
+    availability : CharField
+    skills : TextField
+}
+
+entity VolunteerHostAssignment {
+    * id : Integer [PK]
+    --
+    volunteer : ForeignKey(VolunteerProfile)
+    host : ForeignKey(Host)
+    active : BooleanField
+    start_date : DateField
+    end_date : DateField
+}
+
+entity User {
+    * id : Integer [PK]
+    --
+    username : CharField
+    password : CharField
+    email : CharField
+    first_name : CharField
+    last_name : CharField
+    is_staff : BooleanField
+    is_active : BooleanField
+    date_joined : DateTimeField
+}
+
+entity Group {
+    * id : Integer [PK]
+    --
+    name : CharField
+}
+
+entity UserGroups {
+    * id : Integer [PK]
+    --
+    user_id : ForeignKey(User)
+    group_id : ForeignKey(Group)
+}
+
+' Relationships
+Region ||--o{ Client
+Region ||--o{ Host
+ClientRequirement ||--o{ Client
+ProductRequirement ||--o{ Product
+Host ||--o{ Product
+Client ||--o{ Booking
+Product ||--o{ Booking
+BookingStatus ||--o{ Booking
+Product ||--o{ Available
+Host ||--o{ Invoice
+InvoiceStatus ||--o{ Invoice
+VolunteerProfile ||--o{ VolunteerHostAssignment
+Host ||--o{ VolunteerHostAssignment
+User ||--o{ Group
+User ||--o{ Client
+User ||--o{ Host
+User ||-- VolunteerProfile
 @enduml

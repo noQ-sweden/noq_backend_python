@@ -2,11 +2,28 @@ from typing import Any
 from django.contrib import admin
 from django.contrib.auth.models import User, Group
 from django import forms
-from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus, SleepingSpace, VolunteerProfile, VolunteerHostAssignment, Resource
+from .models import (
+    Host,
+    Client,
+    Product,
+    Region,
+    Booking,
+    Available,
+    Invoice,
+    InvoiceStatus,
+    SleepingSpace,
+    VolunteerProfile,
+    VolunteerHostAssignment,
+    Activity,
+    VolunteerActivity, 
+    Resource
+)
 
 # Register the models.
 admin.site.register(Region)
 admin.site.register(SleepingSpace)
+admin.site.register(Activity)
+admin.site.register(VolunteerActivity)
 
 class CaseworkerGroupFilter(admin.SimpleListFilter):
     title = "Caseworker" #Displayed title in the admin filter sidebar

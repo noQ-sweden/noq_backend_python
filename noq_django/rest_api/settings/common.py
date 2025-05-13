@@ -1,4 +1,5 @@
 import os
+
 """
 Django settings for rest_api project.
 
@@ -16,13 +17,26 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+# CORS config
 CORS_ALLOW_HEADERS = [
     'Accept',
     'Accept-Encoding',
     'Authorization',
     'Content-Type',
     'Cookie',
+    'Cache-Control',
+    'Pragma',
+    'Expires',
 ]
+
+from corsheaders.defaults import default_headers
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "cache-control",
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
+#CORS_ALLOW_HEADERS = ['*']#hibát ad ami miatt BE nem tud kommunikálni
 
 # Application definition
 
@@ -35,6 +49,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_extensions",
+    "django_q",
     "crispy_forms",
     "corsheaders",
     "crispy_bootstrap4",
@@ -43,9 +58,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -154,3 +169,14 @@ LOGGING = {
         },
     },
 }
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', None)
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', None)
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+RESET_LINK = os.environ.get('RESET_LINK')

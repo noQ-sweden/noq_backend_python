@@ -11,7 +11,7 @@ DEBUG = True
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "noqbackend.pythonanywhere.com"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "noqbackend.pythonanywhere.com", "127.0.0.1:5173", "localhost:5173",'http://localhost:5173']
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -24,8 +24,4 @@ DATABASES = {
     }
 }
 
- 
- 
-
-
- 
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://demo.noqapp.se/login/")

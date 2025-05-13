@@ -431,6 +431,25 @@ def add_products(nbr: int = 3):
             type="woman-only",
         )
 
+def add_admin():
+    expected_username = "user.admin@test.nu"
+    user = User.objects.filter(username=expected_username).first()
+
+
+    if user:
+        print("Admin user already exists: ", user.username)
+        return
+
+    user = make_user(
+        group="admin",
+        is_test_user=True,
+        first_name="Jingwen",
+        last_name="Admin"
+    )
+
+    user.save()
+    print("Admin Test user created:", user.username)
+    
 
 def generate_resources(n=20):
     faker = Faker("sv_SE")  # Use Swedish locale for realistic names and addresses
@@ -504,7 +523,8 @@ def run(*args):
 
     add_booking_statuses()
     add_product_bookings(40, 7, v2_arg)
+    add_admin()
     generate_resources(20)
 
-    print("\n Test data generation complete.")
+   
 

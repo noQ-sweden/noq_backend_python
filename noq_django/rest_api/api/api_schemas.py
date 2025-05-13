@@ -8,6 +8,8 @@ from backend.models import (
     Booking,
     Available,
     Invoice,
+    Activity,
+    VolunteerActivity
 )
 
 from typing import List, Dict
@@ -109,6 +111,11 @@ class UserPostSchema(Schema):
     region_id: int
     unokod: str = None
 
+class UserRegistrationSchema(Schema):
+    email: str
+    password: str
+    first_name: str
+    last_name: str
 
 class UserIDSchema(Schema):
     id: int
@@ -243,6 +250,32 @@ class VolunteerCreateClientPostSchema(Schema):
     gender: str
     region: str
 
+class ActivitySchema(ModelSchema):
+    is_signed_up: bool = False
+
+    class Config:
+        model = Activity
+        model_fields = ["id", "title", "description", "start_time", "end_time", "is_approved"]
+
+class VolunteerActivitySchema(ModelSchema):
+    activity: int
+    volunteer: int
+    registered_at: datetime
+
+    class Config:
+        model = VolunteerActivity
+        model_fields = ["activity", "volunteer", "registered_at"]
+
+class VolunteerActivityCreateSchema(ModelSchema):
+    activity: int
+
+    class Config:
+        model = VolunteerActivity
+        model_fields = ["activity"]
+
+class BookingUpdateSchema(Schema):
+    booking_id: int
+
 
 class BookingUpdateSchema(Schema):
     booking_id: int
@@ -338,6 +371,26 @@ class UserShelterStayCountSchema(Schema):
     last_name: str
     user_stay_counts: List[UserStaySummarySchema]
 
+
+class ForgotPasswordSchema(Schema):
+    """
+    Schema för att begära en återställning av lösenordet.
+    """
+    username: str
+
+class ResetPasswordSchema(Schema):
+    token: str
+    uidb64: str
+    new_password: str
+      
+#---- API SCHEMAS ACTIVITIESUPDATESCHEMA ----#
+class ActivityUpdateSchema(Schema):
+    title: Optional[str] 
+    description: Optional[str]
+    start_time: Optional[datetime] 
+    end_time: Optional[datetime]
+    is_approved: Optional[bool]
+    status: Optional[str]
 
 class ResourceSchema(Schema):
     id: int
