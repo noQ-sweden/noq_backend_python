@@ -69,6 +69,7 @@ preference_router = Router(auth=None)
 
 @preference_router.get("/", response=list[UserProfileOut])
 def list_profiles(request):
+<<<<<<< HEAD
     return UserProfile.objects.all()
 
 # Creating profile
@@ -81,6 +82,65 @@ def create_profile(request, payload: UserProfileCreateSchema):
 
     if UserProfile.objects.filter(uno=payload.uno).exists():
         return 400, {"error": "UNO already exists"}
+=======
+    profiles = UserProfile.objects.all()
+    return profiles
+
+
+# @preference_router.post("/", response=UserProfileCreateSchema)
+# def create_profile(request, payload: UserProfileCreateSchema):
+#     if UserProfile.objects.filter(user=request.user).exists():
+#         raise HttpError(400, "Profile already exists for this user")
+
+#     if UserProfile.objects.filter(uno=payload.uno).exists():
+#         raise HttpError(400, "UNO already exists")
+
+#     profile = UserProfile.objects.create(user=request.user, **payload.dict())
+#     return payload
+
+# READ user profile (by ID)
+@preference_router.get("/{user_id}", response=UserProfileOut)
+def get_profile(request, user_id: int):
+    if request.user.id != user_id:
+        raise HttpError(403, "Not authorized to access this profile")
+
+    profile = UserProfile.objects.filter(user__id=user_id).first()
+    if not profile:
+        raise HttpError(404, "User profile not found")
+    return profile
+
+class SuccessResponseSchema(BaseModel):
+    success: bool
+    profile_id: int
+    
+# UPDATE user profile
+@preference_router.patch("/{user_id}", response=UserProfileCreateSchema)
+def update_profile(request, user_id: int, data: UserProfileUpdateSchema):
+    try:
+        profile = update_user_profile(user_id=user_id, data=data.dict(exclude_unset=True))
+        return profile
+    except ValidationError as e:
+         raise HttpError(400,str(e))
+    
+# DELETE user profile
+@preference_router.delete("/{user_id}")
+def delete_profile(request, user_id: int):
+    if request.user.id != user_id:
+        raise HttpError(403, "Not authorized to delete this profile")
+
+    profile = UserProfile.objects.filter(user__id=user_id).first()
+    if not profile:
+        raise HttpError(404, "User profile not found")
+    profile.delete()
+    return {"success": True}
+
+@preference_router.post("/{user_id}")
+def create_profile(request, payload: UserProfileCreateSchema,user_id: int):
+    user = request.user
+
+    if hasattr(user, "profile"):
+        return {"error": "Profile already exists"}
+>>>>>>> feature/preference_page
 
     supporting_person = None
     if payload.supporting_person_id:
@@ -100,6 +160,7 @@ def create_profile(request, payload: UserProfileCreateSchema):
         presentation=payload.presentation or "",
         supporting_person=supporting_person
     )
+<<<<<<< HEAD
     return 201, profile
 
 # Read profile (GET /preferences/{user_id})
@@ -172,6 +233,9 @@ def delete_profile(request, user_id: int):
 #         supporting_person=supporting_person
 #     )
 #     return {"success": True, "profile_id": profile.id}
+=======
+    return {"success": True, "profile_id": profile.id}
+>>>>>>> feature/preference_page
 
 # @preference_router.post("/profile", response={200: dict, 400: str})
 # def create_profile(request, payload: UserProfileCreateSchema):

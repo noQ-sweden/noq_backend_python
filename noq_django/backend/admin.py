@@ -1,7 +1,22 @@
 from typing import Any
 from django.contrib import admin
 from django.contrib.auth.models import User, Group
-from .models import Host, Client, Product, Region, Booking, Available, Invoice, InvoiceStatus, SleepingSpace, VolunteerProfile, VolunteerHostAssignment, Resource,UserProfile
+from .models import (
+    Host,
+    Client,
+    Product,
+    Region,
+    Booking,
+    Available,
+    Invoice,
+    InvoiceStatus,
+    SleepingSpace,
+    UserProfile,
+    VolunteerProfile,
+    VolunteerHostAssignment,
+    Activity,
+    VolunteerActivity
+)
 
 # Register the models.
 admin.site.register(Region)
@@ -149,35 +164,6 @@ class VolunteerProfileAdmin(admin.ModelAdmin):
 
     display_preferred_regions.short_description = 'Preferred Regions'
 
-
-@admin.register(Resource)
-class ResourceAdmin(admin.ModelAdmin):
-    list_display = (
-        'name',
-        'opening_time',
-        'closing_time',
-        'is_open_now',
-        'address',
-        'phone',
-        'email',
-        'target_group',
-        'other',
-        'applies_to',
-        
-    )
-    list_filter = ('opening_time', 'closing_time')
-    fields = (
-        'name',
-        'opening_time',
-        'closing_time',
-        'address',
-        'phone',
-        'email',
-        'target_group',
-        'other',
-        'applies_to',
-    )
-
 # @admin.register(UserProfile)
 # class UserProfileAdmin(admin.ModelAdmin):
 #     list_display = ("user", "uno", "email", "language", "telephone")
@@ -193,4 +179,5 @@ class UserProfileAdmin(admin.ModelAdmin):
         groups = obj.user.groups.values_list('name', flat=True)
         return ", ".join(groups) if groups else "Guest"
     get_role.short_description = "Role"
+
 

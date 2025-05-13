@@ -533,7 +533,7 @@ class VolunteerActivity(models.Model):
     class Meta:
         unique_together = ('activity', 'volunteer')
 
-#Preferences changes
+#Preferences Page changes
 
 SEX_CHOICES = (
     ('M', 'Male'),
@@ -572,3 +572,4 @@ class UserProfile(models.Model):
         elif self.birth_year:
             return date.today().year - self.birth_year
         return None
+
