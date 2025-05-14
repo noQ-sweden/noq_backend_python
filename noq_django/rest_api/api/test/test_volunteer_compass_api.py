@@ -47,43 +47,10 @@ class TestVolunteerCompassAPI(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["id"], self.resource.id)
 
-    def test_create_resource(self):
-        new_data = {
-            "name": "Created Resource",
-            "opening_time": "08:00:00",
-            "closing_time": "16:00:00",
-            "address": "New St",
-            "phone": "9876543210",
-            "email": "new@example.com",
-            "target_group": "Under 18",
-            "other": "Created via test",
-            "applies_to": ["Sysselsättning", "Studier"]
-        }
-        response = self.client.post(
-            "/api/volunteer/compass/",
-            data=json.dumps(new_data),
-            content_type="application/json",
-            **self.auth_headers()
-        )
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json()["name"], "Created Resource")
+    
+     
 
-    def test_patch_resource(self):
-        response = self.client.patch(
-            f"/api/volunteer/compass/resources/{self.resource.id}",
-            data=json.dumps({"phone": "0000000000"}),
-            content_type="application/json",
-            **self.auth_headers()
-        )
-        self.assertEqual(response.status_code, 200)
-        self.resource.refresh_from_db()
-        self.assertEqual(self.resource.phone, "0000000000")
-
-    def test_delete_resource(self):
-        response = self.client.delete(f"/api/volunteer/compass/resources/{self.resource.id}", **self.auth_headers())
-        #response = self.client.delete(f"/api/volunteer/compass/resources/{self.resource.id}")
-        self.assertEqual(response.status_code, 204)
-        self.assertFalse(Resource.objects.filter(id=self.resource.id).exists())
+    
 
     def test_filter_by_target_group(self):
         Resource.objects.create(

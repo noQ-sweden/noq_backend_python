@@ -14,6 +14,11 @@ import json
 from urllib.parse import urlencode
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
+from django.utils.dateparse import parse_date
+from django.utils.timezone import make_aware
+from .models import Activity, VolunteerActivity
+from django.views.decorators.http import require_POST, require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 from .models import Resource
 from django.db.models import Q
 from .models import APPLIES_TO_OPTIONS
@@ -393,6 +398,96 @@ def delete_sleeping_space(request, pk):
         sleeping_space.delete()
         return redirect('list_sleeping_spaces')
     return render(request, 'sleeping_space_confirm_delete.html', {'sleeping_space': sleeping_space})
+
+
+
+@login_required
+def activityes_list(request):
+    date_str = request.GET.get('date')
+    if not date_str:
+        return JsonResponse({'error': 'Missing date parameter (YYYY-MM-DD)'}, status=400)
+
+    try:
+        date = parse_date(date_str)
+        start_of_day = make_aware(datetime.combine(date, datetime.min.time()))
+        end_of_day = make_aware(datetime.combine(date, datetime.max.time()))
+    except Exception:
+        return JsonResponse({'error': 'Invalid date format'}, status=400)
+
+    user = request.user
+
+    activities = Activity.objects.filter(
+        is_approved=True,
+        start_time__gte=start_of_day,
+        start_time__lte=end_of_day
+    )
+
+    registered_ids = set(VolunteerActivity.objects.filter(
+        volunteer=user,
+        activity__in=activities
+    ).values_list('activity_id', flat=True))
+
+    activity_list = []
+    for activity in activities:
+        activity_list.append({
+            'id': activity.id,
+            'title': activity.title,
+            'description': activity.description,
+            'start_time': activity.start_time.isoformat(),
+            'end_time': activity.end_time.isoformat(),
+            'is_registered': activity.id in registered_ids
+        })
+
+    return JsonResponse(activity_list, safe=False)
+
+@csrf_exempt
+@login_required
+@require_POST
+def volunteer_activityes_signup(request, activity_id):
+    user = request.user
+    try:
+        activity = Activity.objects.get(id=activity_id, is_approved=True)
+        va, created = VolunteerActivity.objects.get_or_create(activity=activity, volunteer=user)
+        if not created:
+            return JsonResponse({'message': 'You are already signed up for this activity.'}, status=400)
+        return JsonResponse({'message': 'You have successfully subscribed to the activity.'})
+    except Activity.DoesNotExist:
+        return JsonResponse({'error': 'Activity not found or not approved.'}, status=404)
+
+@csrf_exempt
+@login_required
+@require_http_methods(["DELETE"])
+def volunteer_activityes_cancel(request, activity_id):
+    user = request.user
+    try:
+        activity = Activity.objects.get(id=activity_id)
+        deleted, _ = VolunteerActivity.objects.filter(activity=activity, volunteer=user).delete()
+        if deleted == 0:
+            return JsonResponse({'message': 'You were not signed up for this activity.'}, status=400)
+        return JsonResponse({'message': 'You have successfully unsubscribed from the activity.'})
+    except Activity.DoesNotExist:
+        return JsonResponse({'error': 'No activity found.'}, status=404)
+
+@login_required
+def volunteer_activityes_list(request):
+    user = request.user
+
+    volunteer_activities = VolunteerActivity.objects.filter(volunteer=user).select_related("activity")
+    result = []
+
+    for va in volunteer_activities:
+        activity = va.activity
+        result.append({
+            "id": activity.id,
+            "title": activity.title,
+            "description": activity.description,
+            "start_time": activity.start_time.isoformat(),
+            "end_time": activity.end_time.isoformat(),
+            "registered_at": va.registered_at.isoformat()
+        })
+
+    return JsonResponse(result, safe=False)
+
 
 
 

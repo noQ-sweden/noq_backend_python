@@ -33,9 +33,18 @@ urlpatterns = [
     path('sleeping_spaces/delete/<int:pk>/', views.delete_sleeping_space, name='delete_sleeping_space'),
     path('bookings/daily/', views.daily_bookings_view, name='daily_bookings_view'),
     path('host/<int:host_id>/', views.host_bookings_view, name='host_bookings'),
+    path("resources/", views.resource_list, name="resource_list"),
+
+    
     path('api/activities/list', activityes_list, name='activityes-list'),
     path('api/volunteer/activities/signup/<int:activity_id>', volunteer_activityes_signup, name='volunteer-activityes-signup'),
     path('api/volunteer/activities/cancel/<int:activity_id>', volunteer_activityes_cancel, name='volunteer-activityes-cancel'),
     path('api/volunteer/activities/list', volunteer_activityes_list, name='volunteer-activityes-list'),
     path('api/', include(router.urls)),
+=========
+    path("resources/", views.resource_list, name="resource_list"),
+    
+    
+>>>>>>>>> Temporary merge branch 2
+
 ]

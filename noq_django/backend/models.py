@@ -449,15 +449,33 @@ class VolunteerHostAssignment(models.Model):
 
     def __str__(self):
         return f"{self.volunteer.user.username} assigned to {self.host.name} - {'Active' if self.active else 'Inactive'}" 
+
+class Activity(models.Model):
+    title= models.CharField(max_length=255)
+    description = models.TextField()
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    is_approved = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.title
+class VolunteerActivity(models.Model):
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    volunteer = models.ForeignKey(User, on_delete=models.CASCADE)
+    registered_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('activity', 'volunteer')
     
 APPLIES_TO_OPTIONS = [
-    "Crime", "Abuse", "Prostitution", "Unaccompanied children",
-    "Mental illness", "New arrival", "Suicide", "Human trafficking",
-    "Disturbance", "Insecurity", "Vulnerability to violence",
-    "EU citizens", "Homelessness", "extra cold nights -7",
-    "Cooperation", "Healthcare care", "studies", "Employment",
-    "The subway", "Violence"
-]
+        "Konflikter", "Miljö", "Hälsa", "Våld", "Tunnelbana", "Hemlöshet",
+    "Otrygghet", "Ordningsstörning", "Sysselsättning", "Kriminalitet",
+    "Människohandel", "Våldutsatthet", "Immigration", "Psykisk ohälsa",
+    "Missbruk", "Sjukvård", "Samverkan", "Studier", "Akut hjälp",
+    "Direktinsats", "Juridisk rådgivning", "Stöd till barn",
+    "Socialtjänstkontakt", "Bostadssökande"
+    ]
+
 class Resource(models.Model):
     name = models.CharField(max_length=100)
     opening_time = models.TimeField()

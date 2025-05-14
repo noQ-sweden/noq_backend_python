@@ -392,6 +392,14 @@ class ActivityUpdateSchema(Schema):
     is_approved: Optional[bool]
     status: Optional[str]
 
+class ResourceSchema(Schema):
+    id: int
+    name: str
+    opening_time: str   
+    closing_time: str   
+    address: str
+    phone: str
+
 #Preferences profile schema
 
 class UserProfileCreateSchema(Schema):
@@ -426,6 +434,25 @@ class UserProfileOut(Schema):
     first_name: str
     last_name: str
     email: str
+    target_group: str
+    other: str
+    applies_to: List[str]
+
+class ResourcePatchSchema(Schema):
+    """
+    Schema for updating resources
+    """
+    name: Optional[str] = None
+    opening_time: Optional[str] = None
+    closing_time: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    target_group: Optional[str] = None
+    other: Optional[str] = None
+    applies_to: Optional[List[str]] = None
+
+
     telephone: Optional[str]
     language: str
     presentation: Optional[str]
