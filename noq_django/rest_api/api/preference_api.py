@@ -90,13 +90,15 @@ class SuccessResponseSchema(BaseModel):
     profile_id: int
     
 # UPDATE user profile
-@preference_router.patch("/{user_id}", response=UserProfileCreateSchema)
+@preference_router.patch("/{user_id}", response=UserProfileOut)
 def update_profile(request, user_id: int, data: UserProfileUpdateSchema):
+    if request.user.id != user_id:
+        raise HttpError(403, "Not authorized to update this profile")
     try:
         profile = update_user_profile(user_id=user_id, data=data.dict(exclude_unset=True))
         return profile
     except ValidationError as e:
-         raise HttpError(400,str(e))
+        raise HttpError(400, str(e))
     
 # DELETE user profile
 @preference_router.delete("/{user_id}")
@@ -120,26 +122,28 @@ def create_profile(request, payload: UserProfileCreateSchema):
     if UserProfile.objects.filter(uno=payload.uno).exists():
         raise HttpError(400, "UNO already exists")
 
-    supporting_person = None
-    if payload.supporting_person_id:
-        supporting_person = get_object_or_404(User, id=payload.supporting_person_id)
+    try:
+        supporting_person = None
+        if payload.supporting_person_id:
+            supporting_person = get_object_or_404(User, id=payload.supporting_person_id)
 
-    profile = UserProfile.objects.create(
-        user=user,
-        uno=payload.uno,
-        first_name=payload.first_name,
-        last_name=payload.last_name,
-        sex=payload.sex,
-        birthday=payload.birthday,
-        birth_year=payload.birth_year,
-        email=payload.email,
-        telephone=payload.telephone or "",
-        language=payload.language,
-        presentation=payload.presentation or "",
-        supporting_person=supporting_person
-    )
-
-    return profile
+        profile = UserProfile.objects.create(
+            user=user,
+            uno=payload.uno,
+            first_name=payload.first_name,
+            last_name=payload.last_name,
+            sex=payload.sex,
+            birthday=payload.birthday,
+            birth_year=payload.birth_year,
+            email=payload.email,
+            telephone=payload.telephone or "",
+            language=payload.language,
+            presentation=payload.presentation or "",
+            supporting_person=supporting_person
+        )
+        return profile
+    except Exception as e:
+        raise HttpError(400, str(e))
 
 # @preference_router.post("/profile", response={200: dict, 400: str})
 # def create_profile(request, payload: UserProfileCreateSchema):

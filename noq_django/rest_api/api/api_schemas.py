@@ -424,6 +424,7 @@ class UserProfileOut(Schema):
     telephone: Optional[str]
     language: str
     presentation: Optional[str]
+    supporting_person_id: Optional[int]
 
 class ResourcePatchSchema(Schema):
     """
