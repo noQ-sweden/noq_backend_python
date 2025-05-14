@@ -23,20 +23,13 @@ date_string: str
 
 class ClientSchema(ModelSchema):
     """
-
-    Region
-
-    Exempelvis Stockholm City och Farsta
-
-    Varje Host tillhör en Region
+    Client representation with core information.
     """
-
     class Meta:
         model = Client
-        exclude =\
-            ["user", "gender", "street", "postcode", "city", "country",
-             "phone", "email", "day_of_birth", "personnr_lastnr",
-             "region", "requirements", "last_edit", "flag"]
+        exclude = ["user", "gender", "street", "postcode", "city", "country",
+                  "phone", "email", "day_of_birth", "personnr_lastnr",
+                  "region", "requirements", "last_edit", "flag"]
 
 
 class SimplifiedClientSchema(Schema):
@@ -65,15 +58,13 @@ class RegionSchema(ModelSchema):
 
 class UserSchema(ModelSchema):
     """
-    User - för både Brukare och användare i systemet
-
-    Varje user tillhör en Region
+    User schema for both clients and system users.
+    Includes region information and basic user details.
     """
-
     region: RegionSchema
-    first_name: str # Add first name
-    last_name: str # Add last name
-    flag: bool # Add flag to user flase=ok, true=Danger
+    first_name: str 
+    last_name: str 
+    flag: bool # False=OK, True=Warning/Danger flag
 
     class Meta:
         model = Client
@@ -173,12 +164,9 @@ class HostPatchSchema(Schema):
 
 class ProductSchema(Schema):
     """
-    Product
-    Product är en generalisering istället för exempelvis Room
-    som gör det möjligt att Härbärge kan erbjuda många tjänster.
-    Exempelvis rum eller luncher
+    Product schema representing various services offered by hosts.
+    Examples include rooms, meals, or other services.
     """
-
     id: int
     name: str
     description: str
@@ -201,8 +189,8 @@ class StatusSchema(Schema):
 
 class BookingSchema(Schema):
     """
-    Booking för att bokningar av en Product
-
+    Represents a booking of a product by a user.
+    Includes booking status, time period, and related product/user info.
     """
     id: int
     status: StatusSchema
@@ -272,10 +260,6 @@ class VolunteerActivityCreateSchema(ModelSchema):
     class Config:
         model = VolunteerActivity
         model_fields = ["activity"]
-
-class BookingUpdateSchema(Schema):
-    booking_id: int
-
 
 class BookingUpdateSchema(Schema):
     booking_id: int
@@ -429,14 +413,17 @@ class UserProfileUpdateSchema(Schema):
     
 class UserProfileOut(Schema):
     id: int
-    user_id: int  # <-- Include here for read operations
+    user_id: int
     uno: str
     first_name: str
     last_name: str
+    sex: Optional[str]
+    birthday: Optional[date]
+    birth_year: Optional[int]
     email: str
-    target_group: str
-    other: str
-    applies_to: List[str]
+    telephone: Optional[str]
+    language: str
+    presentation: Optional[str]
 
 class ResourcePatchSchema(Schema):
     """
@@ -451,11 +438,3 @@ class ResourcePatchSchema(Schema):
     target_group: Optional[str] = None
     other: Optional[str] = None
     applies_to: Optional[List[str]] = None
-
-
-    telephone: Optional[str]
-    language: str
-    presentation: Optional[str]
-    birthday: Optional[date]
-    birth_year: Optional[int]
-    sex: Optional[str]
