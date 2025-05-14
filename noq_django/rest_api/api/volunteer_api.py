@@ -33,6 +33,7 @@ from backend.models import (
 
 from .api_schemas import (
     RegionSchema,
+    ResourceSchema,
     UserSchema,
     UserPostSchema,
     HostSchema,

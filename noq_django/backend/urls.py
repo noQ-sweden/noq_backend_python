@@ -41,10 +41,6 @@ urlpatterns = [
     path('api/volunteer/activities/cancel/<int:activity_id>', volunteer_activityes_cancel, name='volunteer-activityes-cancel'),
     path('api/volunteer/activities/list', volunteer_activityes_list, name='volunteer-activityes-list'),
     path('api/', include(router.urls)),
-=========
     path("resources/", views.resource_list, name="resource_list"),
-    
-    
->>>>>>>>> Temporary merge branch 2
 
 ]
