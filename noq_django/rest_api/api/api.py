@@ -20,6 +20,7 @@ from django.utils.encoding import force_bytes
 from django.core.mail import send_mail
 from django.conf import settings
 import os
+from rest_api.api.preference_api import preference_router
 
 from .api_schemas import (
     LoginPostSchema,
@@ -44,6 +45,7 @@ api.add_router("/volunteer/activities", "rest_api.api.volunteer_activities_api.r
 api.add_router("/so_admin/", "rest_api.api.admin_api.router")
 api.add_router("/admin/activities", "rest_api.api.admin_activities_api.router")
 api.add_router("/admin/volunteer", "rest_api.api.admin_volunteer_api.router")
+api.add_router("/preferences/", preference_router, tags=["Preferences"])
 
 
 # temporör testsektion
@@ -82,6 +84,7 @@ def get(request):
         first_name=request.user.first_name,
         last_name=request.user.last_name
     )
+
 
 
 @login_required

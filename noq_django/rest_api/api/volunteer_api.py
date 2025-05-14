@@ -1,22 +1,24 @@
-from ninja import Router, Schema
+from ninja import NinjaAPI, Schema, ModelSchema, Router
 from ninja.errors import HttpError
+from typing import Optional
 from django.db import models
-from django.utils import timezone
-from typing import List, Optional
-from django.shortcuts import get_object_or_404
-from backend.models import Resource
-from .api_schemas import ResourceSchema, ResourcePostSchema, ResourcePatchSchema
-from backend.auth import group_auth
 from django.db.models import Q
 from django.db.models.functions import Lower
 from django.core.mail import send_mail
+from django.utils import timezone
+from backend.auth import group_auth
+from typing import List
 import json
+from backend.models import Resource
 
 from django.contrib.auth import authenticate
 from datetime import datetime, date
 
 
 
+from django.shortcuts import get_object_or_404
+from ninja.security import django_auth, django_auth_superuser, HttpBearer
+from datetime import date
 from backend.models import (
     Client,
     Host,
@@ -28,10 +30,12 @@ from backend.models import (
     VolunteerProfile,
     VolunteerHostAssignment,
     User,
+    Resource,
 )
 
 from .api_schemas import (
     RegionSchema,
+    ResourceSchema,
     UserSchema,
     UserPostSchema,
     HostSchema,
