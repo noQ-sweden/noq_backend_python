@@ -1,5 +1,6 @@
 from datetime import date
 from http.client import HTTPException
+from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 from email.utils import parsedate
 from ninja import Router
@@ -73,17 +74,6 @@ def list_profiles(request):
     return profiles
 
 
-# @preference_router.post("/", response=UserProfileCreateSchema)
-# def create_profile(request, payload: UserProfileCreateSchema):
-#     if UserProfile.objects.filter(user=request.user).exists():
-#         raise HttpError(400, "Profile already exists for this user")
-
-#     if UserProfile.objects.filter(uno=payload.uno).exists():
-#         raise HttpError(400, "UNO already exists")
-
-#     profile = UserProfile.objects.create(user=request.user, **payload.dict())
-#     return payload
-
 # READ user profile (by ID)
 @preference_router.get("/{user_id}", response=UserProfileOut)
 def get_profile(request, user_id: int):
@@ -120,12 +110,15 @@ def delete_profile(request, user_id: int):
     profile.delete()
     return {"success": True}
 
-@preference_router.post("/{user_id}")
-def create_profile(request, payload: UserProfileCreateSchema,user_id: int):
+@preference_router.post("/", response=UserProfileOut)
+def create_profile(request, payload: UserProfileCreateSchema):
     user = request.user
 
-    if hasattr(user, "profile"):
-        return {"error": "Profile already exists"}
+    if UserProfile.objects.filter(user=user).exists():
+        raise HttpError(400, "Profile already exists")
+
+    if UserProfile.objects.filter(uno=payload.uno).exists():
+        raise HttpError(400, "UNO already exists")
 
     supporting_person = None
     if payload.supporting_person_id:
@@ -145,7 +138,8 @@ def create_profile(request, payload: UserProfileCreateSchema,user_id: int):
         presentation=payload.presentation or "",
         supporting_person=supporting_person
     )
-    return {"success": True, "profile_id": profile.id}
+
+    return profile
 
 # @preference_router.post("/profile", response={200: dict, 400: str})
 # def create_profile(request, payload: UserProfileCreateSchema):
