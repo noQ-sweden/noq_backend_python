@@ -9,6 +9,7 @@ from django.utils import timezone
 from backend.auth import group_auth
 from typing import List
 import json
+from backend.models import Resource
 
 from django.contrib.auth import authenticate
 from datetime import datetime, date
@@ -29,6 +30,7 @@ from backend.models import (
     VolunteerProfile,
     VolunteerHostAssignment,
     User,
+    Resource,
 )
 
 from .api_schemas import (
