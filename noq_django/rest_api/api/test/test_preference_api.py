@@ -96,7 +96,13 @@ class TestUserProfileAPI(TestCase):
             "first_name": "Jane",
             "last_name": "Smith",
             "email": "jane@example.com",
-            "language": "en"
+            "sex": "F",
+            "birthday": "1992-02-02",
+            "birth_year": 1992,
+            "telephone": "9876543210",
+            "language": "en",
+            "presentation": "Test presentation",
+            "supporting_person_id": None
         }
         response = self.client.post(
             "/api/preferences/",
@@ -105,7 +111,7 @@ class TestUserProfileAPI(TestCase):
             **self.auth_headers()
         )
         self.assertEqual(response.status_code, 400)
-        self.assertIn("UNO already exists", response.json()["detail"])
+        self.assertIn("Profile already exists", response.json()["detail"])
 
     def test_update_profile(self):
         """Test updating a profile"""
@@ -120,6 +126,7 @@ class TestUserProfileAPI(TestCase):
             content_type="application/json",
             **self.auth_headers()
         )
+        print("Update error:", response.json())
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["first_name"], "Johnny")

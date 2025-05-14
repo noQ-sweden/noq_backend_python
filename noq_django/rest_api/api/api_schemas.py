@@ -400,16 +400,17 @@ class UserProfileCreateSchema(Schema):
     supporting_person_id: Optional[int]
 
 class UserProfileUpdateSchema(Schema):
-    first_name: Optional[str]
-    last_name: Optional[str]
-    sex: Optional[str]
-    birthday: Optional[date]
-    birth_year: Optional[int]
-    email: Optional[str]
-    telephone: Optional[str]
-    language: Optional[str]
-    presentation: Optional[str]
-    supporting_person_id: Optional[int]
+    uno: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    sex: Optional[str] = None
+    birthday: Optional[date] = None
+    birth_year: Optional[int] = None
+    email: Optional[str] = None
+    telephone: Optional[str] = None
+    language: Optional[str] = None
+    presentation: Optional[str] = None
+    supporting_person_id: Optional[int] = None
     
 class UserProfileOut(Schema):
     id: int
