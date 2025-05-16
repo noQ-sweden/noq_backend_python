@@ -12,7 +12,7 @@ from datetime import time
 import random
 from .delete_all_data import reset_all_data
 
-from backend.models import Host, Client, Product, Region, Booking, BookingStatus, State, UserProfile, VolunteerProfile, VolunteerHostAssignment, Resource
+from backend.models import LANG_CHOICES, SEX_CHOICES, Host, Client, Product, Region, Booking, BookingStatus, State, UserProfile, VolunteerProfile, VolunteerHostAssignment, Resource
 from backend.models import APPLIES_TO_OPTIONS
 
 
@@ -526,50 +526,40 @@ def run(*args):
     add_admin()
     generate_resources(20)
 
+
 fake = Faker()
 
-SEX_CHOICES = ['M', 'F']
-LANG_CHOICES = ['sv', 'en', 'fi']  # Use your actual LANG_CHOICES
-
 def create_fake_user_profile():
-    # Create a User
+    # Pick random gender for Client (required)
+    gender = random.choice(SEX_CHOICES)
+
+    # Create a Client with unokod and required gender
+    unokod = fake.unique.uuid4()[:30]
+    client = Client.objects.create(unokod=unokod, gender=gender)
+
+    # Create User
     username = fake.user_name()
     user = User.objects.create_user(
         username=username,
         email=fake.email(),
-        password='password123'  # or use set_unusable_password()
+        password='password123'
     )
-    
-    # Create a UserProfile
-    uno = fake.unique.uuid4()[:30]
+    user.first_name = fake.first_name()
+    user.last_name = fake.last_name()
+    user.save()
+
+    # Create UserProfile
     birth_date = fake.date_of_birth(minimum_age=18, maximum_age=90)
     language = random.choice(LANG_CHOICES)
-    sex = random.choice(SEX_CHOICES)
 
     profile = UserProfile.objects.create(
         user=user,
-        uno=uno,
-        first_name=fake.first_name(),
-        last_name=fake.last_name(),
-        sex=sex,
+        client=client,
         birthday=birth_date,
         birth_year=birth_date.year,
-        email=user.email,
         telephone=fake.phone_number(),
         language=language,
         presentation=fake.paragraph(nb_sentences=3),
-        supporting_person=None  # You can assign another user randomly if needed
+        supporting_person=None
     )
     return profile
-
-# Generate 10 fake profiles
-for _ in range(10):
-    profile = create_fake_user_profile()
-    print(f"Created profile for {profile.user.username}")
-
-    
-
-   
-
-
-
