@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime, date
 from typing import Dict, List
 from ninja import Router, ModelSchema, Schema
 from backend.models import Activity, VolunteerActivity, VolunteerProfile
@@ -34,12 +34,50 @@ class ActivityUpdateSchema(ModelSchema):
     class Config:
         model = Activity
         model_fields = ["title", "description", "start_time", "end_time", "is_approved"]
+
+
+class SimpleVolunteerSchema(Schema):
+    id: int
+    first_name: str
+    last_name: str
+
+class ActivityListSchema(Schema):
+    id: int
+    title: str
+    description: str
+    start_time: datetime
+    end_time: datetime
+    is_approved: bool
+    volunteers: List[SimpleVolunteerSchema]
+
 #---- API ENDPOINTS ----#
 
 # List all activities without volunteers' detail
-@router.get("/", response=list[ActivitySchema], tags=["Admin Activities"])
+@router.get("/", response=List[ActivityListSchema], tags=["Admin Activities"])
 def list_activities(request):
-    return Activity.objects.all()
+    activities = Activity.objects.all()
+    result = []
+    for activity in activities:
+        tasks = VolunteerActivity.objects.filter(activity_id=activity.id).select_related("volunteer")
+        volunteers = [
+            {
+                "id": task.volunteer.id,
+                "first_name": task.volunteer.first_name,
+                "last_name": task.volunteer.last_name,
+            }
+            for task in tasks
+        ]
+        result.append({
+            "id": activity.id,
+            "title": activity.title,
+            "description": activity.description,
+            "start_time": activity.start_time,
+            "end_time": activity.end_time,
+            "is_approved": activity.is_approved,
+            "volunteers": volunteers
+        })
+    return result
+
 
 # Get details with volunteers' info of a specific activity by ID
 @router.get("/{activity_id}", response=ActivityDetailSchema, tags=["Admin Activities"])
@@ -57,12 +95,12 @@ def activity_detail(request, activity_id: int):
         }
         for task in tasks
     ]
-    
+
     return {
         **ActivitySchema.from_orm(activity).dict(),
         "volunteers": volunteers
     }
-    
+
 # Add an activity
 @router.post("/", response=ActivitySchema, tags=["Admin Activities"])
 def create_activity(request, payload: ActivityCreateSchema):
