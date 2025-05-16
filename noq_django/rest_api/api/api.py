@@ -157,7 +157,7 @@ def register_user(request, user_data: UserRegistrationSchema):
             region_obj = Region.objects.first()
             if not region_obj:
                 raise ValueError("Regionen finns inte i databasen.")
-            
+
             # Create the user account
             userClient = User.objects.create_user(
                 email=user_data.email,
@@ -181,7 +181,7 @@ def register_user(request, user_data: UserRegistrationSchema):
                 email=user_data.email,
                 gender="",
                 street="",
-                postcode="",  
+                postcode="",
                 city="",
                 country="",
                 day_of_birth=None,
@@ -207,9 +207,9 @@ def register_user(request, user_data: UserRegistrationSchema):
 
             # Send email after registration
             send_mail(
-                subject,           
-                message,          
-                None,            
+                subject,
+                message,
+                None,
                 [user_data.email],
                 fail_silently=False,
             )
@@ -230,7 +230,7 @@ def activate_account(request, uidb64: str, token: str):
         user = User.objects.get(pk=uid)
     except Exception:
         return 400, {"error": "Ogiltig aktiveringslänk."}
-    
+
     if user.is_active:
         return 400, {"error": "Länken är ogiltig eller har gått ut."}
 
@@ -250,7 +250,7 @@ def forgot_password(request, payload: ForgotPasswordSchema):
         user = User.objects.get(username=payload.username)
     except User.DoesNotExist:
         return JsonResponse({"status": False, "message": "User not found"}, status=404)
-    
+
     token = default_token_generator.make_token(user)
     uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
 

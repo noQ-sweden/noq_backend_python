@@ -4,6 +4,8 @@ from ninja.errors import HttpError
 from datetime import datetime, timedelta
 from django.db import transaction
 from django.utils import timezone
+from django.contrib.auth.models import User, Group
+
 
 from backend.models import (
     Client,
@@ -35,6 +37,7 @@ from .api_schemas import (
     InvoiceCreateSchema,
     InvoiceResponseSchema,
     BookingUpdateSchema,
+    VolunteersSchema
 )
 
 from backend.auth import group_auth
@@ -67,7 +70,7 @@ def count_bookings(request):
         status__description__in=['pending', 'advised_against', 'accepted'],
         start_date__gte=current_date  # Only count bookings with start dates today or in the future
     ).count()
-    
+
     arrivals_count = Booking.objects.filter(
         product__host=host,
         start_date=date.today()
@@ -160,7 +163,7 @@ def get_pending_bookings(request, limiter: Optional[
     int] = None):  # Limiter example /pending?limiter=10 for 10 results, empty returns all
     host = Host.objects.get(users=request.user)
     status_list = ['pending', 'accepted', 'advised_against']
-    
+
     # Get current date
     current_date = timezone.now().date()
 
@@ -400,3 +403,20 @@ def create_invoice(request, payload: InvoiceCreateSchema):
         status=status
     )
     return invoice
+
+@router.get("/volunteerlist/", response=list[VolunteersSchema], tags=["Host"])
+def get_volunteers(request):
+    volunteer_group = Group.objects.get(name="volunteer")
+    users_in_group = User.objects.filter(groups=volunteer_group)
+
+    user_list = []
+    for user in users_in_group:
+        user_data = VolunteersSchema(
+            first_name = user.first_name,
+            last_name = user.last_name,
+            email = user.username,
+            date_joined = user.date_joined
+        )
+        user_list.append(user_data)
+
+    return user_list
