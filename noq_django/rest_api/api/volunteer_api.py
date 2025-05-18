@@ -353,6 +353,7 @@ def list_compass_resources(request):
         ResourceSchema(
             id=resource.id,
             name=resource.name,
+            type=resource.type,
             opening_time=resource.opening_time.strftime("%H:%M:%S"),
             closing_time=resource.closing_time.strftime("%H:%M:%S"),
             address=resource.address,
@@ -377,6 +378,7 @@ def get_resource_by_id(request, resource_id: int):
     return ResourceSchema(
         id=resource.id,
         name=resource.name,
+        type=resource.type,
         opening_time=resource.opening_time.strftime("%H:%M:%S"),
         closing_time=resource.closing_time.strftime("%H:%M:%S"),
         address=resource.address,

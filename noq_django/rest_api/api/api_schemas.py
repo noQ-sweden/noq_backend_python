@@ -395,6 +395,7 @@ class ActivityUpdateSchema(Schema):
 class ResourceSchema(Schema):
     id: int
     name: str
+    type: str
     opening_time: str   
     closing_time: str   
     address: str
@@ -411,6 +412,7 @@ class ResourcePostSchema(Schema):
     Schema for creating new resources
     """
     name: str
+    type: str
     opening_time: str
     closing_time: str
     address: str
@@ -425,6 +427,7 @@ class ResourcePatchSchema(Schema):
     Schema for updating resources
     """
     name: Optional[str] = None
+    type: Optional[str] = None
     opening_time: Optional[str] = None
     closing_time: Optional[str] = None
     address: Optional[str] = None
