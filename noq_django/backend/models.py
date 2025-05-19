@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from django.utils import timezone
 from enum import IntEnum
 
@@ -493,3 +493,44 @@ class Resource(models.Model):
     def is_open_now(self):
         now = timezone.localtime().time()
         return self.opening_time <= now <= self.closing_time
+
+#Preferences changes
+
+SEX_CHOICES = (
+    ('M', 'Male'),
+    ('F', 'Female'),
+    ('O', 'Other'),
+)
+
+LANG_CHOICES = (
+    ('sv', 'Swedish'),
+    ('en', 'English'),
+    ('ro', 'Romanian'),
+    ('pl', 'Polish'),
+)
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    uno = models.CharField(max_length=30, unique=True)  # Can't be changed after registration
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    sex = models.CharField(max_length=1, choices=SEX_CHOICES, blank=True)
+    birthday = models.DateField(null=True, blank=True)
+    birth_year = models.PositiveIntegerField(null=True, blank=True)
+    email = models.EmailField()
+    telephone = models.CharField(max_length=20, blank=True)
+    language = models.CharField(max_length=2, choices=LANG_CHOICES, default='sv')
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    presentation = models.TextField(blank=True)
+    supporting_person = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="supported_user")
+
+    def __str__(self):
+        return f"{self.user.username} Profile"
+
+    def age(self):
+        if self.birthday:
+            return date.today().year - self.birthday.year
+        elif self.birth_year:
+            return date.today().year - self.birth_year
+        return None
+

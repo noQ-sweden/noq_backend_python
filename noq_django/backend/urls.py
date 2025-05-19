@@ -3,7 +3,7 @@ from . import views
 from .views import activityes_list, volunteer_activityes_signup, volunteer_activityes_cancel, volunteer_activityes_list
 from .views_volunteer_task import VolunteerTaskViewSet
 from rest_framework.routers import DefaultRouter
-
+from rest_api.api.preference_api import preference_router
 # from views import book_room_view
 
 # Django documentation
@@ -20,7 +20,7 @@ router.register(r'volunteer-tasks', VolunteerTaskViewSet, basename='volunteer-ta
 urlpatterns = [
     path("", views.main_view, name="main_view"),
     path("search", views.search_view, name="search_view"),
-    path( "available/", views.available_list, name="available_list"), 
+    path("available/", views.available_list, name="available_list"), 
     path("book/<int:available_id>/", views.book_room_view, name="book_room_view"),
     path('products/', views.product_list, name='product_list'),
     path('products/<int:pk>/', views.product_detail, name='product_detail'),
@@ -41,5 +41,6 @@ urlpatterns = [
     path('api/volunteer/activities/cancel/<int:activity_id>', volunteer_activityes_cancel, name='volunteer-activityes-cancel'),
     path('api/volunteer/activities/list', volunteer_activityes_list, name='volunteer-activityes-list'),
     path('api/', include(router.urls)),
+    path("resources/", views.resource_list, name="resource_list"),
 
 ]
