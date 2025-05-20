@@ -205,6 +205,7 @@ class ResourceAdmin(admin.ModelAdmin):
     form = ResourceAdminForm
     list_display = (
         'name',
+        'type',
         'opening_time',
         'closing_time',
         'is_open_now',
@@ -218,6 +219,7 @@ class ResourceAdmin(admin.ModelAdmin):
     list_filter = ('opening_time', 'closing_time')
     fields = (
         'name',
+        'type',
         'opening_time',
         'closing_time',
         'address',

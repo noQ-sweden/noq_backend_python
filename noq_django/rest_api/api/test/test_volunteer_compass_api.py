@@ -126,3 +126,15 @@ class TestVolunteerCompassAPI(TestCase):
         response = self.client.get("/api/volunteer/compass/?sort=name", **self.auth_headers())
         names = [r["name"] for r in response.json() if r["name"] in ["Alpha Resource", "Beta Resource"]]
         self.assertEqual(names, sorted(names))
+
+
+    def test_resource_contains_type_field(self):
+        self.resource.type = "direktinsats"
+        self.resource.save()
+
+        response = self.client.get("/api/volunteer/compass/", **self.auth_headers())
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertTrue("type" in data[0])
+        self.assertEqual(data[0]["type"], "direktinsats")
