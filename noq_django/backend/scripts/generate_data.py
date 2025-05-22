@@ -480,6 +480,7 @@ def generate_resources(n=20):
 
         Resource.objects.create(
             name=name,
+            type=random.choice(["direktinsats", "mottagning"]),
             opening_time=opening_time,
             closing_time=closing_time,
             address=address,

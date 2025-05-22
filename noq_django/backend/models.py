@@ -477,6 +477,11 @@ APPLIES_TO_OPTIONS = [
     ]
 
 class Resource(models.Model):
+    SERVICE_TYPE_CHOICES = [
+        ('direktinsats', 'Direktinsats'),
+        ('mottagning', 'Mottagning'),
+    ]
+    type = models.CharField(max_length=30,default="mottagning", choices=SERVICE_TYPE_CHOICES)
     name = models.CharField(max_length=100)
     opening_time = models.TimeField()
     closing_time = models.TimeField()
