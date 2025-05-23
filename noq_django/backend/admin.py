@@ -231,7 +231,7 @@ class ResourceAdmin(admin.ModelAdmin):
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "uno", "email", "language", "telephone", "get_role", "supporting_person")
+    list_display = ("user", "uno", "email", "language", "get_role", "supporting_person")
     search_fields = ("user__username", "user__email", "client__unokod", "user__first_name", "user__last_name")
     list_filter = ("language",)
     autocomplete_fields = ["user", "supporting_person"]

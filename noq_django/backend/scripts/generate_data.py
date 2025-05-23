@@ -549,13 +549,12 @@ def create_fake_user_profile():
     user.save()
 
     # Create UserProfile
-    # birth_date = fake.date_of_birth(minimum_age=18, maximum_age=90)
+    birth_date = fake.date_of_birth(minimum_age=18, maximum_age=90)
     language = random.choice(LANG_CHOICES)
 
     profile = UserProfile.objects.create(
         user=user,
         client=client,
-
         language=language,
         presentation=fake.paragraph(nb_sentences=3),
         supporting_person=None
