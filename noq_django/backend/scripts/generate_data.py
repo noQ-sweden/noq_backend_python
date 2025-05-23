@@ -555,9 +555,6 @@ def create_fake_user_profile():
     profile = UserProfile.objects.create(
         user=user,
         client=client,
-        birthday=birth_date,
-        birth_year=birth_date.year,
-        telephone=fake.phone_number(),
         language=language,
         presentation=fake.paragraph(nb_sentences=3),
         supporting_person=None
