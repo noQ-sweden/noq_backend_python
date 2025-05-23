@@ -511,7 +511,7 @@ LANG_CHOICES = (
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
-    birthday = models.DateField(null=True, blank=True)
+    
     birth_year = models.PositiveIntegerField(null=True, blank=True)
     telephone = models.CharField(max_length=20, blank=True)
     language = models.CharField(max_length=2, choices=LANG_CHOICES, default='sv')
