@@ -512,8 +512,8 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     
-    birth_year = models.PositiveIntegerField(null=True, blank=True)
-    telephone = models.CharField(max_length=20, blank=True)
+   
+   
     language = models.CharField(max_length=2, choices=LANG_CHOICES, default='sv')
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     presentation = models.TextField(blank=True)
