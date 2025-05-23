@@ -273,9 +273,6 @@ class VolunteerActivityCreateSchema(ModelSchema):
         model = VolunteerActivity
         model_fields = ["activity"]
 
-class BookingUpdateSchema(Schema):
-    booking_id: int
-
 
 class BookingUpdateSchema(Schema):
     booking_id: int
@@ -317,7 +314,7 @@ class BookingCounterSchema(Schema):
 class LoginPostSchema(Schema):
     email: str
     password: str
-    
+
 class LoginSchema(Schema):
     login_status: bool
     message: str
@@ -342,7 +339,7 @@ class InvoiceCreateSchema(Schema):
     buyer_vat_number: Optional[str] = None
     buyer_name: Optional[str] = None
     buyer_address: Optional[str] = None
-    status: str = 'open' 
+    status: str = 'open'
 
 
 class InvoiceResponseSchema(ModelSchema):
@@ -351,9 +348,9 @@ class InvoiceResponseSchema(ModelSchema):
     class Config:
         model = Invoice
         model_fields = ['id', 'host', 'amount', 'description', 'status', 'due_date', 'currency', 'invoice_number', 'vat', 'vat_rate', 'sale_date', 'seller_vat_number', 'buyer_vat_number', 'buyer_name', 'buyer_address']
-        
 
-    
+
+
 class UserStaySummarySchema(Schema):
     """
     Sammanfattning av användarens övernattningar, inklusive användarens ID,
@@ -382,12 +379,12 @@ class ResetPasswordSchema(Schema):
     token: str
     uidb64: str
     new_password: str
-      
+
 #---- API SCHEMAS ACTIVITIESUPDATESCHEMA ----#
 class ActivityUpdateSchema(Schema):
-    title: Optional[str] 
+    title: Optional[str]
     description: Optional[str]
-    start_time: Optional[datetime] 
+    start_time: Optional[datetime]
     end_time: Optional[datetime]
     is_approved: Optional[bool]
     status: Optional[str]
@@ -406,7 +403,7 @@ class ResourceSchema(Schema):
     applies_to: List[str]
     is_open_now: bool
 
-     
+
 class ResourcePostSchema(Schema):
     """
     Schema for creating new resources
@@ -437,3 +434,9 @@ class ResourcePatchSchema(Schema):
     other: Optional[str] = None
     applies_to: Optional[List[str]] = None
 
+
+class VolunteersSchema(Schema):
+    first_name: str
+    last_name: str
+    email: str
+    date_joined: datetime

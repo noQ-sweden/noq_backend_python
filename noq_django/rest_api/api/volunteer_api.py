@@ -1,4 +1,5 @@
 from ninja import Router, Schema
+from django.contrib.auth.models import User, Group
 from ninja.errors import HttpError
 from django.db import models
 from django.utils import timezone
@@ -50,7 +51,7 @@ from .api_schemas import (
 )
 router = Router(auth=lambda request: group_auth(request, "volunteer"))
 
- 
+
 
 # TODO: Test live email server setup to ensure delivery in production
 # TODO: Use the created modules for volunteer profile when confirming bookings to make sure they have the right to request booking at the specific host
@@ -240,7 +241,7 @@ def search_guest(
         ):
             matching_clients.append(client)
 
-    
+
     return [
         {
             "id": client.id,
@@ -389,5 +390,3 @@ def get_resource_by_id(request, resource_id: int):
         applies_to=resource.applies_to,
         is_open_now=resource.is_open_now()
     )
-
-
