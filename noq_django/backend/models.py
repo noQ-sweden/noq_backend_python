@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from django.utils import timezone
 from enum import IntEnum
 
@@ -498,3 +498,58 @@ class Resource(models.Model):
     def is_open_now(self):
         now = timezone.localtime().time()
         return self.opening_time <= now <= self.closing_time
+    
+    
+SEX_CHOICES = (
+    ('M', 'Male'),
+    ('F', 'Female'),
+    ('O', 'Other'),
+)
+
+LANG_CHOICES = (
+    ('sv', 'Swedish'),
+    ('en', 'English'),
+    ('ro', 'Romanian'),
+    ('pl', 'Polish'),   
+)
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    client = models.ForeignKey(Client, on_delete=models.CASCADE)
+    
+   
+   
+    language = models.CharField(max_length=2, choices=LANG_CHOICES, default='sv')
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    presentation = models.TextField(blank=True)
+    supporting_person = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="supported_user")
+
+    
+    def __str__(self):
+        return f"{self.user.username} Profile"
+    @property
+    def uno(self):
+        return self.client.unokod if self.client else None
+
+    @property
+    def email(self):
+        return self.user.email
+
+    @property
+    def first_name(self):
+        return self.user.first_name
+
+    @property
+    def last_name(self):
+        return self.user.last_name
+
+    @property
+    def sex(self):
+        return getattr(self.user, 'sex', None)
+    
+    def age(self):
+        if self.birthday:
+            return date.today().year - self.birthday.year
+        elif self.birth_year:
+            return date.today().year - self.birth_year
+        return None
