@@ -1,5 +1,6 @@
 from typing import Any
 from django.contrib import admin
+from django.utils.html import format_html
 from django.contrib.auth.models import User, Group
 from django import forms
 from .models import (
@@ -233,12 +234,19 @@ class ResourceAdmin(admin.ModelAdmin):
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "uno", "email", "language", "get_role", "supporting_person")
+    list_display = ("user", "uno", "email", "language", "get_role", "supporting_person", "avatar_preview")
     search_fields = ("user__username", "user__email", "client__unokod", "user__first_name", "user__last_name")
     list_filter = ("language",)
     autocomplete_fields = ["user", "supporting_person"]
+    readonly_fields = ("avatar_preview",)
 
     def get_role(self, obj):
         groups = obj.user.groups.values_list('name', flat=True)
         return ", ".join(groups) if groups else "Guest"
     get_role.short_description = "Role"
+
+    def avatar_preview(self, obj):
+        if obj.avatar:
+            return format_html('<img src="{}" style="height: 50px; border-radius: 4px;" />', obj.avatar.url)
+        return "No avatar"
+    avatar_preview.short_description = "Avatar"

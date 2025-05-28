@@ -16,7 +16,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
-
+from .preference_api import preference_router
 from django.core.mail import send_mail
 from django.conf import settings
 import os
@@ -44,6 +44,7 @@ api.add_router("/volunteer/activities", "rest_api.api.volunteer_activities_api.r
 api.add_router("/so_admin/", "rest_api.api.admin_api.router")
 api.add_router("/admin/activities", "rest_api.api.admin_activities_api.router")
 api.add_router("/admin/volunteer", "rest_api.api.admin_volunteer_api.router")
+api.add_router("/preferences/", preference_router)
 
 
 # temporör testsektion

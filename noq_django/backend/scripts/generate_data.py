@@ -530,11 +530,15 @@ def run(*args):
 
 fake = Faker()
 
+# Example LANG and SEX choices (replace with actual)
+LANG_CHOICES = ['en', 'sv']
+SEX_CHOICES = ['M', 'F']
+
 def create_fake_user_profile():
-    # Pick random gender for Client (required)
+    # Pick random gender for Client
     gender = random.choice(SEX_CHOICES)
 
-    # Create a Client with unokod and required gender
+    # Create a Client with unokod
     unokod = fake.unique.uuid4()[:30]
     client = Client.objects.create(unokod=unokod, gender=gender)
 
@@ -549,15 +553,16 @@ def create_fake_user_profile():
     user.last_name = fake.last_name()
     user.save()
 
-    # Create UserProfile
-    # birth_date = fake.date_of_birth(minimum_age=18, maximum_age=90)
+    # Choose language
     language = random.choice(LANG_CHOICES)
 
+    # Create UserProfile
     profile = UserProfile.objects.create(
         user=user,
         client=client,
         language=language,
         presentation=fake.paragraph(nb_sentences=3),
-        supporting_person=None
+        supporting_person=None  # Optionally pick another user
     )
+
     return profile

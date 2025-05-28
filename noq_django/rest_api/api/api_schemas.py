@@ -1,5 +1,11 @@
 from ninja import NinjaAPI, Schema, ModelSchema
 from typing import Optional
+from ninja import File
+from pydantic import BaseModel
+from typing import Optional
+from ninja.files import UploadedFile
+from ninja import Form
+from typing import Optional
 from backend.models import (
     Client,
     Host,
@@ -440,3 +446,30 @@ class VolunteersSchema(Schema):
     last_name: str
     email: str
     date_joined: datetime
+
+
+class UserProfileCreateSchema(BaseModel):
+    language: Optional[str] = Form(None)
+    presentation: Optional[str] = Form(None)
+    supporting_person_id: Optional[int] = Form(None)
+
+class UserProfileUpdateSchema(BaseModel):
+    language: Optional[str] = Form(None)
+    presentation: Optional[str] = Form(None)
+    supporting_person_id: Optional[int] = Form(None)
+
+class UserProfileOut(BaseModel):
+    id: int
+    user_id: int
+    uno: str
+    first_name: str
+    last_name: str
+    sex: Optional[str]
+    email: str
+    language: Optional[str]
+    avatar: Optional[str]
+    presentation: Optional[str]
+    supporting_person_id: Optional[int]
+
+    class Config:
+        orm_mode = True
