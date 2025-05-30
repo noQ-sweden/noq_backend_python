@@ -31,19 +31,39 @@ def get_profile(request, user_id: int):
 
 @preference_router.get("/", response=List[UserProfileOut])
 def list_profiles(request):
-    profiles = UserProfile.objects.filter(user=request.user)
-    return UserProfileOut(
-        user_id=profiles.user.id,
-        uno=profiles.uno,
-        first_name=profiles.user.first_name,
-        last_name=profiles.user.last_name,
-        sex=profiles.sex,
-        email=profiles.user.email,
-        language=profiles.language,
-        avatar=profiles.avatar.url if profiles.avatar else None,
-        presentation=profiles.presentation,
-        supporting_person_id=profiles.supporting_person.id if profiles.supporting_person else None,
-    )
+    profiles = UserProfile.objects.all()
+    return [
+        UserProfileOut(
+            id=profile.id,
+            user_id=profile.user.id,
+            uno=profile.uno,
+            first_name=profile.user.first_name,
+            last_name=profile.user.last_name,
+            sex=profile.sex,
+            email=profile.user.email,
+            language=profile.language,
+            avatar=profile.avatar.url if profile.avatar else None,
+            presentation=profile.presentation,
+            supporting_person_id=profile.supporting_person.id if profile.supporting_person else None,
+        )
+        for profile in profiles
+    ]
+
+# @preference_router.get("/", response=List[UserProfileOut])
+# def list_profiles(request):
+#     profiles = UserProfile.objects.filter(user=request.user)
+#     return UserProfileOut(
+#         user_id=profiles.user.id,
+#         uno=profiles.uno,
+#         first_name=profiles.user.first_name,
+#         last_name=profiles.user.last_name,
+#         sex=profiles.sex,
+#         email=profiles.user.email,
+#         language=profiles.language,
+#         avatar=profiles.avatar.url if profiles.avatar else None,
+#         presentation=profiles.presentation,
+#         supporting_person_id=profiles.supporting_person.id if profiles.supporting_person else None,
+#     )
 
 @preference_router.post("/", response=UserProfileOut)
 def create_profile(
