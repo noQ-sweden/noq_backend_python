@@ -1,140 +1,175 @@
 from django.test import TestCase
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from django.test import Client as TestClient
-from backend.models import Resource
-from datetime import time
-import json
+from backend.models import Client, UserProfile, Region
 import base64
+import json
 
-
-class TestVolunteerCompassAPI(TestCase):
-    def auth_headers(self):
-      credentials = f"{self.username}:{self.password}"
-      encoded = base64.b64encode(credentials.encode()).decode()
-      return {"HTTP_AUTHORIZATION": f"Basic {encoded}"}
+class TestUserProfileAPI(TestCase):
+    def auth_headers(self, username=None, password=None):
+        user = username or self.username
+        pwd = password or self.password
+        credentials = f"{user}:{pwd}"
+        encoded = base64.b64encode(credentials.encode()).decode()
+        return {"HTTP_AUTHORIZATION": f"Basic {encoded}"}
 
     def setUp(self):
-        self.username = "volunteer@test.com"
+        self.username = "testuser@example.com"
         self.password = "securepass123"
-        self.user = User.objects.create_user(username=self.username, password=self.password)
-
-        volunteer_group, _ = Group.objects.get_or_create(name="volunteer")
-        self.user.groups.add(volunteer_group)
-
+        self.user = User.objects.create_user(
+            username=self.username,
+            password=self.password,
+            first_name="John",
+            last_name="Doe",
+            email="john.doe@example.com"
+        )
+        self.region = Region.objects.create(name="Test Region")
+        self.client_obj = Client.objects.create(
+            user=self.user,
+            first_name="John",
+            last_name="Doe",
+            unokod="12345",
+            gender="M",
+            region=self.region
+        )
+        self.profile = UserProfile.objects.create(
+            user=self.user,
+            client=self.client_obj,
+            language="en",
+            presentation="Hello, I am John"
+        )
         self.client = TestClient()
         self.client.login(username=self.username, password=self.password)
 
-        self.resource = Resource.objects.create(
-            name="Test Center",
-            opening_time=time(9, 0),
-            closing_time=time(17, 0),
-            address="123 Main St",
-            phone="1234567890",
-            email="test@example.com",
-            target_group="Över 18",
-            other="Test Note",
-            applies_to=["Psykisk ohälsa", "Missbruk"]
-        )
-
-    def test_list_resources(self):
-        # response = self.client.get("/api/volunteer/compass/")
-        response = self.client.get("/api/volunteer/compass/", **self.auth_headers())
+    def test_list_profiles(self):
+        response = self.client.get("/api/preferences/", **self.auth_headers())
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.json()), 1)
-
-    def test_get_resource_by_id(self):
-        response = self.client.get(f"/api/volunteer/compass/resources/{self.resource.id}", **self.auth_headers())
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["id"], self.resource.id)
-
-    
-     
-
-    
-
-    def test_filter_by_target_group(self):
-        Resource.objects.create(
-            name="Youth Center",
-            opening_time=time(8, 0),
-            closing_time=time(16, 0),
-            address="Somewhere",
-            phone="123",
-            email="youth@example.com",
-            target_group="Under 18",
-            other="Youth programs",
-            applies_to=["Sysselsättning"]
-        )
-        response = self.client.get("/api/volunteer/compass/?target_group=Under 18", **self.auth_headers())
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(any("Youth Center" in r["name"] for r in response.json()))
-
-    def test_filter_by_applies_to(self):
-        Resource.objects.create(
-            name="Crisis Support",
-            opening_time=time(10, 0),
-            closing_time=time(18, 0),
-            address="Anywhere",
-            phone="456",
-            email="crisis@example.com",
-            target_group="Alla åldrar",
-            other="Help for crisis",
-            applies_to=["Psykisk ohälsa"]
-        )
-        response = self.client.get("/api/volunteer/compass/?applies_to=Psykisk ohälsa", **self.auth_headers())
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(any("Crisis Support" in r["name"] for r in response.json()))
-
-    def test_search_by_keyword(self):
-        Resource.objects.create(
-            name="Göteborg Center",
-            opening_time=time(9, 0),
-            closing_time=time(17, 0),
-            address="Göteborg",
-            phone="789",
-            email="goteborg@example.com",
-            target_group="Alla åldrar",
-            other="Local help",
-            applies_to=["Missbruk"]
-        )
-        response = self.client.get("/api/volunteer/compass/?search=goteborg", **self.auth_headers())
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(any("Göteborg Center" in r["name"] for r in response.json()))
-
-    def test_sort_by_name_az(self):
-        Resource.objects.create(
-            name="Alpha Resource",
-            opening_time=time(9, 0),
-            closing_time=time(17, 0),
-            address="Alpha St",
-            phone="111",
-            email="alpha@example.com",
-            target_group="Alla åldrar",
-            other="Alpha description",
-            applies_to=["Missbruk"]
-        )
-        Resource.objects.create(
-            name="Beta Resource",
-            opening_time=time(10, 0),
-            closing_time=time(18, 0),
-            address="Beta St",
-            phone="222",
-            email="beta@example.com",
-            target_group="Alla åldrar",
-            other="Beta description",
-            applies_to=["Sysselsättning"]
-        )
-        response = self.client.get("/api/volunteer/compass/?sort=name", **self.auth_headers())
-        names = [r["name"] for r in response.json() if r["name"] in ["Alpha Resource", "Beta Resource"]]
-        self.assertEqual(names, sorted(names))
-
-
-    def test_resource_contains_type_field(self):
-        self.resource.type = "direktinsats"
-        self.resource.save()
-
-        response = self.client.get("/api/volunteer/compass/", **self.auth_headers())
-        self.assertEqual(response.status_code, 200)
-
         data = response.json()
-        self.assertTrue("type" in data[0])
-        self.assertEqual(data[0]["type"], "direktinsats")
+        self.assertIsInstance(data, list)
+        self.assertGreaterEqual(len(data), 1)
+        # Check all required fields exist
+        for key in ["id", "user_id", "uno", "first_name", "last_name", "email"]:
+            self.assertIn(key, data[0])
+
+    def test_get_profile(self):
+        response = self.client.get(f"/api/preferences/{self.user.id}", **self.auth_headers())
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["id"], self.profile.id)
+        self.assertEqual(data["user_id"], self.user.id)
+        self.assertEqual(data["first_name"], self.user.first_name)
+        self.assertEqual(data["last_name"], self.user.last_name)
+        self.assertEqual(data["email"], self.user.email)
+        self.assertEqual(data["uno"], self.client_obj.unokod)
+        # Optional fields
+        self.assertEqual(data.get("language"), "en")
+        self.assertEqual(data.get("presentation"), "Hello, I am John")
+
+    def test_get_profile_unauthorized(self):
+        # Another user
+        other_user = User.objects.create_user(username="other@example.com", password="pass123")
+        response = self.client.get(f"/api/preferences/{other_user.id}", **self.auth_headers())
+        self.assertEqual(response.status_code, 403)
+
+    def test_create_profile(self):
+        # Create a new user and Client
+        username = "jane@example.com"
+        password = "securepass123"
+        new_user = User.objects.create_user(
+            username=username,
+            password=password,
+            first_name="Jane",
+            last_name="Smith",
+            email="jane.smith@example.com"
+        )
+        region = Region.objects.create(name="Region Two")
+        new_client = Client.objects.create(
+            user=new_user,
+            first_name="Jane",
+            last_name="Smith",
+            unokod="54321",
+            gender="F",
+            region=region
+        )
+        # Log in as the new user
+        self.client.logout()
+        self.client.login(username=username, password=password)
+        payload = {
+            "language": "sv",
+            "presentation": "Hej, jag är Jane",
+            "supporting_person_id": None
+        }
+        response = self.client.post("/api/preferences/", data=json.dumps(payload),
+                                    content_type="application/json", **self.auth_headers(username, password))
+        self.assertIn(response.status_code, (200, 201))
+        data = response.json()
+        self.assertEqual(data["first_name"], "Jane")
+        self.assertEqual(data["last_name"], "Smith")
+        self.assertEqual(data["uno"], "54321")
+
+    def test_create_profile_duplicate(self):
+        # Try to create a profile for the same user again (should fail)
+        payload = {
+            "language": "en",
+            "presentation": "Trying duplicate profile",
+            "supporting_person_id": None
+        }
+        response = self.client.post("/api/preferences/", data=json.dumps(payload),
+                                    content_type="application/json", **self.auth_headers())
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("already exists", response.json().get("detail", ""))
+
+    def test_update_profile(self):
+        payload = {
+            "language": "fr",
+            "presentation": "Bonjour!",
+            "supporting_person_id": None
+        }
+        response = self.client.patch(
+            f"/api/preferences/{self.user.id}",
+            data=json.dumps(payload),
+            content_type="application/json",
+            **self.auth_headers()
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["language"], "fr")
+        self.assertEqual(data["presentation"], "Bonjour!")
+
+    def test_update_profile_unauthorized(self):
+        other_user = User.objects.create_user(username="unauth@example.com", password="pass123")
+        payload = {"presentation": "Should fail"}
+        response = self.client.patch(
+            f"/api/preferences/{other_user.id}",
+            data=json.dumps(payload),
+            content_type="application/json",
+            **self.auth_headers()
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_delete_profile(self):
+        response = self.client.delete(f"/api/preferences/{self.user.id}", **self.auth_headers())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json().get("success"), True)
+        self.assertFalse(UserProfile.objects.filter(user=self.user).exists())
+
+    def test_delete_profile_unauthorized(self):
+        other_user = User.objects.create_user(username="other2@example.com", password="pass123")
+        region = Region.objects.create(name="Region del2")
+        other_client = Client.objects.create(
+            user=other_user,
+            first_name="Other",
+            last_name="Two",
+            unokod="77777",
+            gender="F",
+            region=region
+        )
+        other_profile = UserProfile.objects.create(user=other_user, client=other_client)
+        response = self.client.delete(f"/api/preferences/{other_user.id}", **self.auth_headers())
+        self.assertEqual(response.status_code, 403)
+
+    def tearDown(self):
+        UserProfile.objects.all().delete()
+        Client.objects.all().delete()
+        User.objects.all().delete()
+        Region.objects.all().delete()

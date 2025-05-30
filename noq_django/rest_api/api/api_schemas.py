@@ -448,28 +448,34 @@ class VolunteersSchema(Schema):
     date_joined: datetime
 
 
+from pydantic import BaseModel
+from typing import Optional
+
+# CREATE: Used when creating a new profile (JSON input)
 class UserProfileCreateSchema(BaseModel):
-    language: Optional[str] = Form(None)
-    presentation: Optional[str] = Form(None)
-    supporting_person_id: Optional[int] = Form(None)
+    language: Optional[str] = None
+    presentation: Optional[str] = None
+    supporting_person_id: Optional[int] = None
 
+# UPDATE: Used for PATCH/PUT updates to profile (JSON input)
 class UserProfileUpdateSchema(BaseModel):
-    language: Optional[str] = Form(None)
-    presentation: Optional[str] = Form(None)
-    supporting_person_id: Optional[int] = Form(None)
+    language: Optional[str] = None
+    presentation: Optional[str] = None
+    supporting_person_id: Optional[int] = None
 
+# OUT: Used as the response for GET/POST/PATCH/DELETE endpoints
 class UserProfileOut(BaseModel):
     id: int
     user_id: int
     uno: str
     first_name: str
     last_name: str
-    sex: Optional[str]
+    sex: Optional[str] = None
     email: str
-    language: Optional[str]
-    avatar: Optional[str]
-    presentation: Optional[str]
-    supporting_person_id: Optional[int]
+    language: Optional[str] = None
+    avatar: Optional[str] = None
+    presentation: Optional[str] = None
+    supporting_person_id: Optional[int] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True  # Allows use of Django ORM models directly
