@@ -24,3 +24,4 @@ psycopg2>=2.9.9,<2.9.10
 uWSGI>=2.0.19.1,<2.1
 setuptools>=42.0.0
 djangorestframework==3.15.2
+Pillow>=11.2.1
