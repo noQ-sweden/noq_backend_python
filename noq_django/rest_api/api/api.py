@@ -6,7 +6,6 @@ from django.utils.encoding import force_bytes, force_str
 from ninja import NinjaAPI
 from backend.models import (Host, Client, Region)
 from django.contrib.auth.models import User, Group
-from ninja.responses import Response
 from django.db import transaction, IntegrityError
 from django.http import JsonResponse
 from django.core.validators import validate_email
@@ -240,7 +239,6 @@ def activate_account(request, uidb64: str, token: str):
         return 200, {"message": "Konto aktiverat."}
     else:
         return 400, {"error": "Länken är ogiltig eller har gått ut."}
-    return 201, {"success": "Användare registrerad!", "user_id": userClient.id}
 
 
 @api.post("/forgot-password/", tags=["Password Reset"])

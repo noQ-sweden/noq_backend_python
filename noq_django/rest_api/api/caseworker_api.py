@@ -1,15 +1,13 @@
-from django.db.models import Q
-from ninja import NinjaAPI, Schema, ModelSchema, Router
+from ninja import Router
 from ninja.errors import HttpError
-from ninja.responses import Response
 from django.db import transaction
-from datetime import datetime, timedelta, date
+from datetime import date
 from django.http import JsonResponse
 from backend.auth import group_auth
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.contrib.auth.models import User, Group
-from typing import List, Dict, Optional
+from typing import List, Optional
 from django.shortcuts import get_object_or_404
 from django.db import transaction, IntegrityError
 from backend.models import (
@@ -21,26 +19,10 @@ from backend.models import (
     Available,
     Product,
     BookingStatus,
-    State,
-    Invoice,
-    InvoiceStatus,
 )
 
 from .api_schemas import (
-    RegionSchema,
-    UserSchema,
-    UserPostSchema,
-    HostSchema,
-    HostPostSchema,
-    HostPatchSchema,
-    ProductSchema,
     BookingSchema,
-    BookingPostSchema,
-    BookingCounterSchema,
-    AvailableSchema,
-    AvailablePerDateSchema,
-    InvoiceCreateSchema,
-    InvoiceResponseSchema,
     BookingUpdateSchema,
     ProductSchemaWithPlacesLeft,
     UserStaySummarySchema,

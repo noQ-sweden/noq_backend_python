@@ -1,11 +1,10 @@
-from ninja import NinjaAPI, Schema, ModelSchema, Router
+from ninja import Router
 from ninja.errors import HttpError
 from django.db import models
 from django.utils import timezone
 from backend.models import (
     Client,
     Host,
-    Region,
     Product,
     Booking,
     BookingStatus,
@@ -13,18 +12,10 @@ from backend.models import (
 )
 
 from .api_schemas import (
-    RegionSchema,
-    UserSchema,
-    UserPostSchema,
     HostSchema,
-    HostPostSchema,
-    HostPatchSchema,
-    ProductSchema,
     BookingSchema,
     BookingPostSchema,
-    AvailableSchema,
     AvailableProductsSchema,
-    ProductSchemaWithPlacesLeft,
     AvailableHostProductsSchema,
     ProductSchemaWithDates,
     AvailableDateSchema,
