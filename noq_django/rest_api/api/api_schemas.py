@@ -440,3 +440,48 @@ class VolunteersSchema(Schema):
     last_name: str
     email: str
     date_joined: datetime
+
+class TaskStatusSchema(Schema):
+    status: str
+
+
+class ActivitySchema(ModelSchema):
+    class Config:
+        model = Activity
+        model_fields = ["id", "title", "description", "start_time", "end_time", "is_approved"]
+
+class VolunteerProfileSchema(Schema):
+    id: int
+    first_name: str
+    last_name: str
+    email: str
+    date_joined: date
+    registered_at: date
+
+class ActivityDetailSchema(ActivitySchema):
+    volunteers: List[VolunteerProfileSchema]
+
+class ActivityCreateSchema(ModelSchema):
+    class Config:
+        model = Activity
+        model_fields = ["title", "description", "start_time", "end_time", "is_approved"]
+
+class ActivityUpdateSchema(ModelSchema):
+    class Config:
+        model = Activity
+        model_fields = ["title", "description", "start_time", "end_time", "is_approved"]
+
+
+class SimpleVolunteerSchema(Schema):
+    id: int
+    first_name: str
+    last_name: str
+
+class ActivityListSchema(Schema):
+    id: int
+    title: str
+    description: str
+    start_time: datetime
+    end_time: datetime
+    is_approved: bool
+    volunteers: List[SimpleVolunteerSchema]

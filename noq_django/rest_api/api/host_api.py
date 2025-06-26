@@ -1,5 +1,5 @@
 from django.db.models import Q
-from ninja import NinjaAPI, Schema, ModelSchema, Router
+from ninja import Router
 from ninja.errors import HttpError
 from datetime import datetime, timedelta
 from django.db import transaction
@@ -8,29 +8,20 @@ from django.contrib.auth.models import User, Group
 
 
 from backend.models import (
-    Client,
     Host,
-    Region,
     Product,
     Booking,
     Available,
     Product,
     BookingStatus,
-    State,
     Invoice,
     InvoiceStatus,
 )
 
 from .api_schemas import (
-    RegionSchema,
-    UserSchema,
-    UserPostSchema,
     HostSchema,
-    HostPostSchema,
-    HostPatchSchema,
     ProductSchema,
     BookingSchema,
-    BookingPostSchema,
     BookingCounterSchema,
     AvailableSchema,
     AvailablePerDateSchema,
