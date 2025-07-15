@@ -1,11 +1,7 @@
-from ninja import Router, ModelSchema, Query
+from ninja import Router
 from backend.models import Activity, VolunteerActivity
-from backend.auth import group_auth
 from django.shortcuts import get_object_or_404
-from datetime import datetime, date
-from ninja.responses import Response
-from django.http import JsonResponse
-from django.db.models import Q
+
 
 router = Router()
 

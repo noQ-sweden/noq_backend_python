@@ -1,14 +1,15 @@
 # rest_api/api/admin_volunteer_api.py
-from ninja import Router, Schema
+from ninja import Router
 from backend.models import VolunteerTask
-from backend.auth import group_auth
 from django.shortcuts import get_object_or_404
 
+from .api_schemas import (
+    TaskStatusSchema
+)
+
+#TODO This needs to be changed !!!!!!!!
 router = Router()
 
-#---- API SCHEMAS ----#
-class TaskStatusSchema(Schema):
-    status: str
 
 @router.get("/tasks", response=list, tags=["Admin Volunteer"])
 def get_available_tasks(request):
