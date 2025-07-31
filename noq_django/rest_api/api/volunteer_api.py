@@ -256,6 +256,9 @@ def list_guests(request):
         for client in clients
     ]
 
+@router.get("/region/list", response=List[str])
+def list_regions(request):
+    return list(Region.objects.values_list("name", flat=True))
 
 @router.post("/guest/create", response=ClientSchema, tags=["Volunteer"])
 def create_client(request, client_data: VolunteerCreateClientPostSchema):
