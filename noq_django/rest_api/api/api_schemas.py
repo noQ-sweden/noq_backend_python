@@ -116,6 +116,7 @@ class UserRegistrationSchema(Schema):
     password: str
     first_name: str
     last_name: str
+    phone: str
 
 class UserIDSchema(Schema):
     id: int

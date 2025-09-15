@@ -147,6 +147,9 @@ def register_user(request, user_data: UserRegistrationSchema):
 
     if not user_data.password or not user_data.password.strip():
         return 400, {"error": "Lösenord måste anges och får inte vara tomt."}
+    
+    if not user_data.phone or not user_data.phone.strip():
+        return 400, {"error": "Telefonnummer måste anges och får inte vara tomt."}
 
     if User.objects.filter(email=user_data.email).exists():
         return 400, {"error": "Användare med denna e-postadress finns redan."}
@@ -176,7 +179,7 @@ def register_user(request, user_data: UserRegistrationSchema):
                 first_name=user_data.first_name,
                 last_name=user_data.last_name,
                 region=region_obj,
-                phone="",
+                phone=user_data.phone,
                 email=user_data.email,
                 gender="",
                 street="",
