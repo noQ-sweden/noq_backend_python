@@ -28,7 +28,8 @@ class TestVolunteerRegistrationApi(TestCase):
             "email": "volunteertestuser1234@example.com",
             "password": "SecurePass123!",
             "first_name": "volunteer",
-            "last_name": "User"
+            "last_name": "User",
+            "phone": "+46701234567"
         }
         url = "/api/register/"
 
