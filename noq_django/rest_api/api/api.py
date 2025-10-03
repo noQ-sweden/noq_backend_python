@@ -43,6 +43,7 @@ api.add_router("/volunteer/activities", "rest_api.api.volunteer_activities_api.r
 api.add_router("/so_admin/", "rest_api.api.admin_api.router")
 api.add_router("/admin/activities", "rest_api.api.admin_activities_api.router")
 api.add_router("/admin/volunteer", "rest_api.api.admin_volunteer_api.router")
+api.add_router("/", "rest_api.api.volunteer_profile_api.router")
 
 
 # temporör testsektion
