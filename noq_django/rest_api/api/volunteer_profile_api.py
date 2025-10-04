@@ -211,7 +211,7 @@ def change_password(request, password_data: PasswordChangeSchema):
         return 400, {"error": "Fel vid ändring av lösenord."}
 
 
-@router.delete("/my_profile", response={204: NoneType, 400: dict, 404: dict}, tags=["Profile"])
+@router.delete("/my_profile", response={204: None, 400: dict, 404: dict}, tags=["Profile"])
 def delete_my_profile(request):
     """
     This does not delete the user from the database but anonymizes all personal information.
@@ -258,7 +258,7 @@ def delete_my_profile(request):
                 user_profile.presentation = "This profile has been anonymized"
                 user_profile.save()
             
-            return 204
+            return 204, None
             
     except Client.DoesNotExist:
         return 404, {"error": "Användarprofilen hittades inte."}
