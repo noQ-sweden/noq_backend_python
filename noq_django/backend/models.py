@@ -451,14 +451,20 @@ class VolunteerHostAssignment(models.Model):
         return f"{self.volunteer.user.username} assigned to {self.host.name} - {'Active' if self.active else 'Inactive'}" 
 
 class Activity(models.Model):
+    organization = models.CharField(max_length=255, default="Test Organization")
+    activity_type = models.CharField(max_length=255, default="Test Activity")
     title= models.CharField(max_length=255)
     description = models.TextField()
+    date = models.DateField(default=timezone.now)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
+    contact_person = models.CharField(max_length=255, default="Test Contact")
+    optional_instructions = models.CharField(max_length=255, blank=True, null=True, default="None")
     is_approved = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
+    
 class VolunteerActivity(models.Model):
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
     volunteer = models.ForeignKey(User, on_delete=models.CASCADE)

@@ -394,58 +394,58 @@ def delete_sleeping_space(request, pk):
 
 
 
-@login_required
-def activityes_list(request):
-    date_str = request.GET.get('date')
-    if not date_str:
-        return JsonResponse({'error': 'Missing date parameter (YYYY-MM-DD)'}, status=400)
+# @login_required
+# def activityes_list(request):
+#     date_str = request.GET.get('date')
+#     if not date_str:
+#         return JsonResponse({'error': 'Missing date parameter (YYYY-MM-DD)'}, status=400)
 
-    try:
-        date = parse_date(date_str)
-        start_of_day = make_aware(datetime.combine(date, datetime.min.time()))
-        end_of_day = make_aware(datetime.combine(date, datetime.max.time()))
-    except Exception:
-        return JsonResponse({'error': 'Invalid date format'}, status=400)
+#     try:
+#         date = parse_date(date_str)
+#         start_of_day = make_aware(datetime.combine(date, datetime.min.time()))
+#         end_of_day = make_aware(datetime.combine(date, datetime.max.time()))
+#     except Exception:
+#         return JsonResponse({'error': 'Invalid date format'}, status=400)
 
-    user = request.user
+#     user = request.user
 
-    activities = Activity.objects.filter(
-        is_approved=True,
-        start_time__gte=start_of_day,
-        start_time__lte=end_of_day
-    )
+#     activities = Activity.objects.filter(
+#         is_approved=True,
+#         start_time__gte=start_of_day,
+#         start_time__lte=end_of_day
+#     )
 
-    registered_ids = set(VolunteerActivity.objects.filter(
-        volunteer=user,
-        activity__in=activities
-    ).values_list('activity_id', flat=True))
+#     registered_ids = set(VolunteerActivity.objects.filter(
+#         volunteer=user,
+#         activity__in=activities
+#     ).values_list('activity_id', flat=True))
 
-    activity_list = []
-    for activity in activities:
-        activity_list.append({
-            'id': activity.id,
-            'title': activity.title,
-            'description': activity.description,
-            'start_time': activity.start_time.isoformat(),
-            'end_time': activity.end_time.isoformat(),
-            'is_registered': activity.id in registered_ids
-        })
+#     activity_list = []
+#     for activity in activities:
+#         activity_list.append({
+#             'id': activity.id,
+#             'title': activity.title,
+#             'description': activity.description,
+#             'start_time': activity.start_time.isoformat(),
+#             'end_time': activity.end_time.isoformat(),
+#             'is_registered': activity.id in registered_ids
+#         })
 
-    return JsonResponse(activity_list, safe=False)
+#     return JsonResponse(activity_list, safe=False)
 
-@csrf_exempt
-@login_required
-@require_POST
-def volunteer_activityes_signup(request, activity_id):
-    user = request.user
-    try:
-        activity = Activity.objects.get(id=activity_id, is_approved=True)
-        va, created = VolunteerActivity.objects.get_or_create(activity=activity, volunteer=user)
-        if not created:
-            return JsonResponse({'message': 'You are already signed up for this activity.'}, status=400)
-        return JsonResponse({'message': 'You have successfully subscribed to the activity.'})
-    except Activity.DoesNotExist:
-        return JsonResponse({'error': 'Activity not found or not approved.'}, status=404)
+# @csrf_exempt
+# @login_required
+# @require_POST
+# def volunteer_activityes_signup(request, activity_id):
+#     user = request.user
+#     try:
+#         activity = Activity.objects.get(id=activity_id, is_approved=True)
+#         va, created = VolunteerActivity.objects.get_or_create(activity=activity, volunteer=user)
+#         if not created:
+#             return JsonResponse({'message': 'You are already signed up for this activity.'}, status=400)
+#         return JsonResponse({'message': 'You have successfully subscribed to the activity.'})
+#     except Activity.DoesNotExist:
+#         return JsonResponse({'error': 'Activity not found or not approved.'}, status=404)
 
 @csrf_exempt
 @login_required
