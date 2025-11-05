@@ -168,4 +168,4 @@ noq_django/my_project_visualized.png
 .vscode/settings.json
 .vscode/*
 .pytest_cache/*
-
+noq_django/media/

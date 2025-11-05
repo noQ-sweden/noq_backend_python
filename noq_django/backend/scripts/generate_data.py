@@ -56,7 +56,7 @@ def make_user(group: str, is_test_user: bool, first_name: str, last_name: str) -
         if last_name is None:
             last_name = faker.last_name()
 
-    user = User.objects.create_user(username=email, password=password, first_name=first_name, last_name=last_name)
+    user = User.objects.create_user(username=email, password=password, first_name=first_name, last_name=last_name, email=email)
     group_obj, created = Group.objects.get_or_create(name=group)
     user.groups.add(group_obj)
 
@@ -172,7 +172,7 @@ def add_caseworkers(nbr: int) -> int:
 
 def add_volunteers(nbr: int) -> int:
     from random import choice, sample
-    faker = Faker()
+    faker = Faker("sv_SE")
     print("\n---- VOLUNTEERS ----")
     volunteers_created = 0  
 
@@ -215,8 +215,28 @@ def add_volunteers(nbr: int) -> int:
                 active=True,
                 start_date=timezone.now().date()
             )
+    
+    # Create Client data for the test volunteer if not exist
+    if not Client.objects.filter(user=test_user).exists():
+        region_obj = all_regions[0] if all_regions else None
+        if not region_obj:
+            raise ValueError("No regions available. Please create regions first.")
+        
+        test_client = Client(
+            user=test_user,
+            first_name="Test",
+            last_name="Volunteer",
+            region=region_obj,
+            phone="070" + f"{random.randint(0,9)}-{random.randint(121212,909090)}",
+            email="user.volunteer@test.nu",
+            unokod=f"{random.randint(1000,9999)}",
+            gender="M" if random.randint(0, 1) > 0 else "F",
+            street=faker.street_address(),
+            city=random.choice(get_cities(0)) if all_regions else "Stockholm",
+        )
+        test_client.save(fake_data=datetime.now() - timedelta(days=random.randint(0, 31)))
 
-        volunteers_created += 1
+    volunteers_created += 1
 
     # Calculate remaining volunteers to create
     additional_users_needed = nbr - volunteers_created
@@ -232,6 +252,34 @@ def add_volunteers(nbr: int) -> int:
             first_name=first_name,
             last_name=last_name
         )
+
+        # Create Client data for the volunteer
+        if not Client.objects.filter(user=volunteer_user).exists():
+            regioner = Region.objects.all()
+            ix = random.randint(0, len(regioner) - 1)
+            region = get_region(ix)
+            region_obj = Region.objects.filter(name=region).first()
+            
+            if not region_obj:
+                raise ValueError(f"Region is null! ({region} and {region_obj})")
+            
+            stad = random.choice(get_cities(ix))
+            gender = "M" if random.randint(0, 1) > 0 else "F"
+            last_edit = datetime.now() - timedelta(days=random.randint(0, 31))
+
+            volunteer_client = Client(
+                user=volunteer_user,
+                first_name=first_name,
+                last_name=last_name,
+                region=region_obj,
+                phone="070" + f"{random.randint(0,9)}-{random.randint(121212,909090)}",
+                email=f"{first_name}.{last_name}@hotmejl.se".lower(),
+                unokod=f"{random.randint(1000,9999)}",
+                gender=gender,
+                street=faker.street_address(),
+                city=stad,
+            )
+            volunteer_client.save(fake_data=last_edit)
 
         if not VolunteerProfile.objects.filter(user=volunteer_user).exists():
             profile = VolunteerProfile.objects.create(

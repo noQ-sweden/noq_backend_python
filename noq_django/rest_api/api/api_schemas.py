@@ -486,3 +486,46 @@ class ActivityListSchema(Schema):
     end_time: datetime
     is_approved: bool
     volunteers: List[SimpleVolunteerSchema]
+
+
+class VolunteerUserProfileSchema(Schema):
+    """
+    Schema for volunteer profile data combining User, Client, and UserProfile information
+    """
+    # From User model
+    first_name: str
+    last_name: str
+    email: str
+
+    # From Client model
+    phone: str
+    gender: Optional[str] = None
+    day_of_birth: Optional[date] = None
+    city: Optional[str] = None
+    postcode: Optional[str] = None
+    address: Optional[str] = None
+
+    # From UserProfile model
+    avatar: Optional[str] = None
+    presentation: Optional[str] = None
+
+
+class VolunteerProfileUpdateSchema(Schema):
+    """
+    Schema for updating volunteer profile data
+    """
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    gender: Optional[str] = None
+    day_of_birth: Optional[date] = None
+    city: Optional[str] = None
+    postcode: Optional[str] = None
+    address: Optional[str] = None
+    presentation: Optional[str] = None
+
+
+class PasswordChangeSchema(Schema):
+    current_password: str
+    new_password: str

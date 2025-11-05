@@ -25,3 +25,8 @@ DATABASES = {
 }
 
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://demo.noqapp.se/login/")
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'static'
