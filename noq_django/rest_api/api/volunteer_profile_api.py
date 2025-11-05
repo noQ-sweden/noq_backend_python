@@ -45,7 +45,7 @@ def get_my_profile(request):
     # Build avatar URL if avatar exists
     avatar_url = None
     if user_profile.avatar:
-        avatar_url = user_profile.avatar.url
+        avatar_url = request.build_absolute_uri(user_profile.avatar.url)
     
     return VolunteerUserProfileSchema(
         first_name=request.user.first_name,
