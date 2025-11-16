@@ -465,12 +465,12 @@ class ActivityDetailSchema(ActivitySchema):
 class ActivityCreateSchema(ModelSchema):
     class Config:
         model = Activity
-        model_fields = ["title", "description", "start_time", "end_time", "is_approved"]
+        model_fields = ["organization", "activity_type", "title", "description", "date", "start_time", "end_time", "contact_person", "optional_instructions", "is_approved"]
 
 class ActivityUpdateSchema(ModelSchema):
     class Config:
         model = Activity
-        model_fields = ["title", "description", "start_time", "end_time", "is_approved"]
+        model_fields = ["organization", "activity_type", "title", "description", "date", "start_time", "end_time", "contact_person", "optional_instructions", "is_approved"]
 
 
 class SimpleVolunteerSchema(Schema):

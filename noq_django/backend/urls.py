@@ -1,6 +1,6 @@
 from django.urls import path, include
 from . import views
-from .views import activityes_list, volunteer_activityes_signup, volunteer_activityes_cancel, volunteer_activityes_list
+from .views import volunteer_activityes_list
 from .views_volunteer_task import VolunteerTaskViewSet
 from rest_framework.routers import DefaultRouter
 
@@ -36,9 +36,9 @@ urlpatterns = [
     path("resources/", views.resource_list, name="resource_list"),
 
     
-    path('api/activities/list', activityes_list, name='activityes-list'),
-    path('api/volunteer/activities/signup/<int:activity_id>', volunteer_activityes_signup, name='volunteer-activityes-signup'),
-    path('api/volunteer/activities/cancel/<int:activity_id>', volunteer_activityes_cancel, name='volunteer-activityes-cancel'),
+    #path('api/activities/list', activityes_list, name='activityes-list'),
+    #path('api/volunteer/activities/signup/<int:activity_id>', volunteer_activityes_signup, name='volunteer-activityes-signup'),
+    #path('api/volunteer/activities/cancel/<int:activity_id>', volunteer_activityes_cancel, name='volunteer-activityes-cancel'),
     path('api/volunteer/activities/list', volunteer_activityes_list, name='volunteer-activityes-list'),
     path('api/', include(router.urls)),
 
